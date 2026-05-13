@@ -24,7 +24,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt \
+    # optional tool-adapter python bindings (best-effort; errors are non-fatal)
+    && pip install --user --no-cache-dir \
+        openrouter \
+        python-whois \
+        r2pipe \
+    || true
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime
@@ -45,9 +51,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \
         tini \
+        whois \
+        radare2 \
+        git \
+        wget \
+        unzip \
+        default-jdk-headless \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 raven \
-    && useradd  --system --uid 10001 --gid raven --create-home --shell /usr/sbin/nologin raven
+    && useradd  --system --uid 10001 --gid raven --create-home --shell /usr/sbin/nologin raven \
+    # Download jadx (Android decompiler)
+    && JADX_VER=1.5.1 \
+    && wget -q "https://github.com/skylot/jadx/releases/download/v${JADX_VER}/jadx-${JADX_VER}.zip" -O /tmp/jadx.zip \
+    && mkdir -p /opt/jadx \
+    && unzip -q /tmp/jadx.zip -d /opt/jadx \
+    && rm /tmp/jadx.zip \
+    && chmod +x /opt/jadx/bin/jadx \
+    && ln -sf /opt/jadx/bin/jadx /usr/local/bin/jadx
+
+ENV JADX_HOME=/opt/jadx
 
 # Copy Python deps from builder
 COPY --from=builder /root/.local /home/raven/.local

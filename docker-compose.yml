@@ -16,15 +16,21 @@ services:
     environment:
       RAVEN_ENVIRONMENT: dev
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://raven:${POSTGRES_PASSWORD:?set in .env}@db:5432/raven}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://raven:${POSTGRES_PASSWORD:-ravendevpass}@db:5432/raven}
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY:?set a 32+ char value in .env}
+      SECRET_KEY: ${SECRET_KEY:-change-me-to-a-random-32-char-or-longer-string}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
-      AI_PROVIDER: ${AI_PROVIDER:-lmstudio}
+      AI_PROVIDER: ${AI_PROVIDER:-openrouter}
+      AI_MODEL: ${AI_MODEL:-openrouter/auto}
       AI_API_KEY: ${AI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_HTTP_REFERER: ${OPENROUTER_HTTP_REFERER:-https://raven.local}
+      OPENROUTER_TITLE: ${OPENROUTER_TITLE:-Project Raven}
       SHODAN_API_KEY: ${SHODAN_API_KEY:-}
       SCAN_ROOT: /var/lib/raven/repos
+      WHOIS_TIMEOUT: ${WHOIS_TIMEOUT:-15}
+      CYBERCHEF_URL: ${CYBERCHEF_URL:-http://cyberchef:3000}
     depends_on:
       db:
         condition: service_healthy
@@ -57,12 +63,21 @@ services:
     networks:
       - raven-net
 
+  cyberchef:
+    image: mpepping/cyberchef:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - raven-net
+    profiles:
+      - tools
+
   db:
     image: postgres:15-alpine
     environment:
       POSTGRES_DB: raven
       POSTGRES_USER: raven
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ravendevpass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

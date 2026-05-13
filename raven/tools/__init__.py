@@ -42,6 +42,10 @@ __all__ = [
     "JadxAnalyzer",
     "CyberChefClient",
     "X64DbgClient",
+    "WhoisClient",
+    # Solana / blockchain auditing
+    "AresAdapter",
+    "EBPFGhidraSetup",
     # MCP server registry
     "MCPRegistry",
     "MCPServer",
@@ -75,6 +79,9 @@ _module_map = {
     "FridaAdapter": ".frida",
     "VolatilityAdapter": ".volatility",
     "CyberchefAdapter": ".cyberchef",
+    # Solana / blockchain auditing
+    "AresAdapter":      ".ares",
+    "EBPFGhidraSetup":  ".ebpf_ghidra",
     # Legacy shims
     "ExploitDBClient": ".exploitdb_client",
     "RadareClient": ".radare_client",

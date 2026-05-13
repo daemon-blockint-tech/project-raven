@@ -41,6 +41,10 @@ def _load_adapters() -> Dict[str, str]:
         "frida":     "raven.tools.frida:FridaAdapter",
         "volatility":"raven.tools.volatility:VolatilityAdapter",
         "cyberchef": "raven.tools.cyberchef:CyberchefAdapter",
+        "whois":       "raven.tools.whois_client:WhoisClient",
+        # Solana / blockchain auditing
+        "ares":        "raven.tools.ares:AresAdapter",
+        "ebpf_ghidra": "raven.tools.ebpf_ghidra:EBPFGhidraSetup",
     }
 
 

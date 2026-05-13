@@ -22,6 +22,8 @@ Project Raven transforms reactive security into proactive threat hunting by comb
 planning. Run fully on-premise with LM Studio or Ollama — or swap to OpenAI, Anthropic,
 OpenRouter, or Nous Research with a single command. No restart required.
 
+Raven is built around **Compositional Defense Pipelines (CDP)** — an architectural primitive in which every LLM-emitted finding must be grounded in a deterministic tool oracle, a classical-ML detector, or an explicitly scored hypothesis. See [`docs/methodology.md`](docs/methodology.md) for the concise summary or the full [**Whitepaper**](docs/Whitepaper/README.md) for the formal grammar, grounding theorem, and empirical evaluation.
+
 ## Key Features
 
 **AI layer**
@@ -56,8 +58,14 @@ OpenRouter, or Nous Research with a single command. No restart required.
 - **Helm chart** with HPA (3–12 replicas), PodDisruptionBudget, NetworkPolicy, ServiceMonitor, non-root + read-only rootfs
 - **Prod safety guard** refuses to start with default `SECRET_KEY`, `APPROVAL_MODE=off`, wildcard CORS, or `OFFENSIVE_REDTEAM_ENABLED` without a session token
 
-**Tool orchestration**
-- SSH (strict host-key check, `RejectPolicy` + known_hosts), Bash (`shell=False` by default), Nmap, Metasploit, Nuclei, Empire C2, Ghidra, Shodan
+**Tool orchestration (20+ adapters under unified `ToolAdapter` interface)**
+- **Smart-contract auditing** — **ARES-v3** (deterministic Solana static auditor, 97 % recall) · **Solana-eBPF-for-Ghidra** (compiled `.so` decompilation)
+- **Binary analysis** — Ghidra (analyzeHeadless), radare2 (+ r2ghidra), jadx, Frida, Volatility 3
+- **Malware** — YARA family signatures
+- **Recon** — subfinder · naabu · httpx · interactsh · nuclei · recon-ng · whois · Shodan
+- **Exploitation** — Metasploit · Empire C2 · searchsploit
+- **Network** — Nmap, **strict SSH** (`RejectPolicy` + known_hosts), **safe Bash** (`shell=False` default)
+- **Data ops** — CyberChef
 
 ## AI Provider Support
 

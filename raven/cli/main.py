@@ -13,6 +13,13 @@ Commands:
     raven model set <model>           # supports provider:model shorthand
     raven model list
     raven model status
+    raven agent chat                  # interactive OpenRouter agent REPL
+    raven agent tools                 # list registered security tools
+    raven tools list                  # adapter availability matrix
+    raven tools whois <domain>        # WHOIS lookup
+    raven tools searchsploit --query  # Exploit-DB search
+    raven tools run <name> <method>   # generic tool dispatch
+    raven tui                         # launch claude-code-style interactive TUI
 """
 
 from __future__ import annotations
@@ -25,6 +32,9 @@ from raven.cli.commands.prompt import app as prompt_app
 from raven.cli.commands.approval import app as approval_app
 from raven.cli.commands.redteam import app as redteam_app
 from raven.cli.commands.train import app as train_app
+from raven.cli.commands.agent import app as agent_app
+from raven.cli.commands.tools import app as tools_app
+from raven.cli.commands.tui import app as tui_app
 
 # ---------------------------------------------------------------------------
 # ASCII banner (logo/ascii/ascii-art.txt)
@@ -80,6 +90,9 @@ app.add_typer(prompt_app, name="prompt")
 app.add_typer(approval_app, name="approval")
 app.add_typer(redteam_app, name="redteam")
 app.add_typer(train_app, name="train")
+app.add_typer(agent_app, name="agent")
+app.add_typer(tools_app, name="tools")
+app.add_typer(tui_app, name="tui")
 
 
 @app.command("version")

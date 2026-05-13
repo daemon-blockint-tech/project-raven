@@ -378,6 +378,8 @@ class KillChainPlanner:
 
     def _execute_scan(self, task: DeclarativeTask) -> Dict[str, Any]:
         results = {}
+        if "whois" in self.tools:
+            results["whois"] = self.tools["whois"].query(task.target)
         if "nmap_scanner" in self.tools:
             results["nmap"] = self.tools["nmap_scanner"].scan_network(task.target, ports="top_100")
         if "projectdiscovery" in self.tools:
@@ -387,6 +389,7 @@ class KillChainPlanner:
         if "recon_ng" in self.tools:
             results["recon"] = self.tools["recon_ng"].execute_workspace("default", "recon/domains-hosts/brute_hosts", {})
         return {"scan_result": results, "stage": task.stage.value}
+
 
     def _execute_exploit(self, task: DeclarativeTask) -> Dict[str, Any]:
         results = []

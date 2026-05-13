@@ -50,6 +50,121 @@ Every invocation increments `raven_tool_invocations_total{tool, outcome}`.
 | Ghidra | (existing) `GhidraAnalyzer` + MCP | analyzeHeadless | [NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra) |
 | nmap | (existing) `NmapScanner` | python-nmap | upstream nmap |
 | Empire | (existing) `EmpireClient` | REST | [BC-SECURITY/Empire](https://github.com/BC-SECURITY/Empire) |
+| **ARES-v3** | `AresAdapter` | `scan(target)` · `benchmark()` · `list_classes()` | [daemon-blockint-tech/ARES-v3](https://github.com/daemon-blockint-tech/ARES-v3) |
+| **eBPF-for-Ghidra** | `EBPFGhidraSetup` | `setup_status()` · `analyze_solana_so(path)` | [blastrock/Solana-eBPF-for-Ghidra](https://github.com/blastrock/Solana-eBPF-for-Ghidra) |
+
+---
+
+## Solana smart contract auditing
+
+### ARES-v3
+
+ARES-v3 is a deterministic static analysis framework for Solana smart contracts. It runs a 4-phase pipeline — regex extraction → AST parsing → taint analysis → deterministic judge — achieving **97% micro-averaged recall** and **0.94 F1** across 20 benchmark protocols with **zero API cost** and sub-5-second scans.
+
+**Vulnerability classes detected:**
+
+| Class | Description |
+|---|---|
+| `type-cosplay` | Account discriminator not validated → wrong account type accepted |
+| `ownership-check` | Missing `owner == program_id` guard |
+| `has-one-constraint` | Missing Anchor `has_one` constraint |
+| `seeds-constraint` | PDA seeds not validated |
+| `signer-authorization` | Missing `Signer` check → any caller accepted |
+| `arbitrary-cpi` | `invoke()` without `program_id` validation |
+| `initialization-frontrunning` | `init` accounts with predictable PDA can be front-run |
+| `reentrancy-risk` | CPI back into the program before state write |
+| `duplicate-mutable-accounts` | Same account passed twice as mutable |
+| `arithmetic-overflow` | Unchecked integer arithmetic |
+| `close-account` | Account closed without zeroing data |
+| `account-reloading` | Stale account state after CPI |
+
+**Install:**
+
+```bash
+git clone https://github.com/daemon-blockint-tech/ARES-v3
+cd ARES-v3
+cargo install --path crates/ares-cli
+```
+
+**Usage via Raven:**
+
+```bash
+# CLI
+raven tools ares ./my_anchor_program
+raven tools ares ./my_program --format md --output report.md
+raven tools ares ./my_program --llm   # enable LLM-as-Judge
+
+# REST API
+curl -X POST /tools/ares/call \
+  -d '{"method":"scan","kwargs":{"target":"./my_program","fmt":"json"}}'
+
+# Agent (auto-selects tool when asked to audit a Solana program)
+# Tool name: solana_audit
+```
+
+**Optional LLM-as-Judge:**
+
+```bash
+ares llm setup --provider openai --api-key sk-...
+# or via Raven:
+raven tools run ares setup_llm provider=openai api_key=sk-...
+```
+
+**Environment variables:**
+
+| Variable | Default | Description |
+|---|---|---|
+| `ARES_BINARY` | `ares` | Binary name / path |
+| `ARES_TIMEOUT` | `120` | Max seconds per scan |
+| `ARES_POLICY_FILE` | _(empty)_ | Default `ares.toml` policy path |
+
+---
+
+### Solana eBPF-for-Ghidra
+
+A Ghidra processor module (Java + Sleigh) that adds support for decompiling compiled Solana programs (`.so` BPF ELF files). Pairs with the existing `GhidraAnalyzer` adapter.
+
+**What it enables:**
+- Load a compiled Solana `.so` into Ghidra and get full decompiled output
+- Navigate the sBPF instruction set with type-annotated pseudo-C
+- Use all Ghidra analysis passes (data-flow, call graph, symbol recovery) on Solana programs
+
+**Install (Option A — Gradle build):**
+
+```bash
+git clone https://github.com/blastrock/Solana-eBPF-for-Ghidra
+cd Solana-eBPF-for-Ghidra
+GHIDRA_INSTALL_DIR=${GHIDRA_HOME} gradle
+# Then in Ghidra: File → Install Extensions → select the built .zip
+```
+
+**Install (Option B — pre-built release):**
+
+Download from https://github.com/blastrock/Solana-eBPF-for-Ghidra/releases and install via `File → Install Extensions`.
+
+**Check status via Raven:**
+
+```bash
+# CLI
+raven tools ebpf-ghidra
+
+# REST
+curl /tools/ebpf_ghidra/call -d '{"method":"setup_status","kwargs":{}}'
+
+# Agent tool name: ebpf_ghidra_status
+```
+
+**Decompile a Solana program:**
+
+```bash
+# REST
+curl -X POST /tools/ebpf_ghidra/call \
+  -d '{"method":"analyze_solana_so","kwargs":{"binary_path":"./program.so"}}'
+```
+
+**Known limitations (upstream):**
+- Functions with >5 parameters may not decompile correctly (see `data/languages/eBPFSol.cspec`)
+- Rebasing after import can misalign relocations — specify base address at import time
 
 ### Tools requiring host-side install
 
@@ -93,3 +208,85 @@ curl -X POST localhost:8000/tools/subfinder/run \
 |---|---|
 | [ProjectDiscovery/pd-agent](https://github.com/projectdiscovery/pd-agent) | Subprocess + JSONL parse + result-upload pattern |
 | [mrphrazer/agentic-malware-analysis](https://github.com/mrphrazer/agentic-malware-analysis) | Multi-phase orchestrator + MCP backend selection + bundled YARA rules |
+
+## ARES-v3 (Solana Static Auditor)
+
+ARES-v3 is a deterministic static analyzer for Solana smart contracts (Anchor & Solitaire). It detects 12 critical vulnerability classes via AST parsing and taint analysis.
+
+### Installation
+
+Strategy A is used (installed natively on the host):
+```bash
+git clone https://github.com/daemon-blockint-tech/ARES-v3
+cd ARES-v3
+cargo install --path crates/ares-cli
+```
+
+*Note: For Docker deployments, a multi-stage Rust build can be used (adds ~1.5 GB), but native installation keeps the image lightweight.*
+
+### Usage
+
+**REST API:**
+```bash
+curl -X POST localhost:8000/tools/ares/run \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"scan","kwargs":{"target":"./path/to/solana/program", "fmt":"json"}}'
+```
+
+**CLI:**
+```bash
+raven tools ares ./path/to/program           # json output
+raven tools ares ./path/to/program --format md  # markdown
+```
+
+**TUI:**
+```
+/run ares scan target=./path/to/program
+```
+
+### Vulnerability Catalogue
+- `type-cosplay`
+- `ownership-check`
+- `has-one-constraint`
+- `seeds-constraint`
+- `signer-authorization`
+- `arbitrary-cpi`
+- `initialization-frontrunning`
+- `reentrancy-risk`
+- `duplicate-mutable-accounts`
+- `arithmetic-overflow`
+- `close-account`
+- `account-reloading`
+
+---
+
+## Solana-eBPF-for-Ghidra
+
+A Ghidra processor module that enables decompression and decompilation of compiled Solana `.so` programs.
+
+### Installation
+
+1. Clone and build the extension:
+```bash
+git clone https://github.com/blastrock/Solana-eBPF-for-Ghidra
+cd Solana-eBPF-for-Ghidra
+GHIDRA_INSTALL_DIR=${GHIDRA_HOME} gradle
+```
+2. In Ghidra, go to **File → Install Extensions**, click the plus icon, and select the `.zip` file generated in `dist/`.
+
+### Usage
+
+The `EBPFGhidraSetup` tool adapter validates the installation and wraps `analyzeHeadless` for Solana programs:
+
+**CLI:**
+```bash
+raven tools ebpf-ghidra
+```
+**API:**
+```bash
+curl -X POST localhost:8000/tools/ebpf_ghidra/run \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"analyze_solana_so","kwargs":{"binary_path":"./target/deploy/program.so"}}'
+```

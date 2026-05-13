@@ -12,6 +12,245 @@ Five Hermes Agent-inspired safety primitives wrap the whole stack: JWT/RBAC auth
 
 ---
 
+## High-level architecture
+
+Raven is organised in eight horizontal layers, each with a single responsibility. The five-layer safety gate (G1–G5) is a *vertical cross-cut* that wraps every request before it reaches any domain code.
+
+```mermaid
+flowchart TB
+    subgraph CLIENT["🔌 Client surfaces"]
+        CLI["raven CLI<br/>(Typer)"]
+        TUI["raven tui<br/>(rich + prompt_toolkit)"]
+        REST["REST / OpenAPI<br/>FastAPI"]
+        SDK["Python SDK<br/>(import raven)"]
+    end
+
+    subgraph EDGE["🛡️ Edge: ASGI middleware (cross-cut G1–G2, audit, metrics)"]
+        direction LR
+        CORS["CORS"] --> G1["G1<br/>Parseltongue<br/>33 decoders"]
+        G1 --> G2["G2<br/>Jailbreak detector<br/>8 L1B3RT4S families"]
+        G2 --> AUDIT["Audit log<br/>X-Request-ID"]
+        AUDIT --> METRICS["Prometheus<br/>25+ metrics"]
+    end
+
+    subgraph AUTH["🔐 Auth + RBAC (G3)"]
+        JWT["JWT (HS256/RS256)<br/>15m access + 7d refresh"]
+        ARGON["Argon2id<br/>(OWASP-2023 params)"]
+        ROLES["Roles<br/>viewer | operator | admin"]
+        JWT --> ROLES
+        ARGON --> JWT
+    end
+
+    subgraph APPROVAL["⚖️ Approval gate (G4 + G5)"]
+        G4["G4 Approval<br/>manual | smart | off"]
+        G5["G5 UNRECOVERABLE_BLOCKLIST<br/>no override possible"]
+        G4 --> G5
+    end
+
+    subgraph DOMAIN["🧠 Domain layer — CDP executor"]
+        AGENT["OpenRouterAgent<br/>tool-calling loop"]
+        HUNT["Threat hunting<br/>variant + precondition<br/>+ algorithm-semantic"]
+        KC["Kill-chain planner<br/>(Incalmo, MITRE ATT&CK)"]
+        AGENT --> KC
+        HUNT --> KC
+    end
+
+    subgraph EVIDENCE["📚 Evidence sources (CDP grounding)"]
+        direction TB
+        subgraph T["T — Tool oracles (20)"]
+            T1["Solana audit<br/>ARES-v3"]
+            T2["Solana binary<br/>Ghidra + eBPF"]
+            T3["Binary RE<br/>radare2 · jadx · Frida"]
+            T4["Malware<br/>YARA · Volatility 3"]
+            T5["Recon<br/>subfinder · naabu · httpx<br/>· nuclei · whois · Shodan"]
+            T6["Exploit<br/>Metasploit · Empire · EDB"]
+            T7["Network<br/>Nmap · SSH · Bash · CyberChef"]
+        end
+        subgraph M["M — Classical ML"]
+            M1["IsolationForest<br/>(anomaly)"]
+            M2["RandomForest<br/>(zero-day)"]
+            M3["Autoencoder<br/>(behavioural)"]
+        end
+        subgraph L["L — LLM providers (8, hot-swap)"]
+            L1["Local<br/>lmstudio · ollama"]
+            L2["Cloud<br/>openai · anthropic<br/>· openrouter · nous"]
+            L3["Raven-trained<br/>tinker LoRA"]
+        end
+    end
+
+    subgraph VERIFY["✅ Grounding verifier (Rule G-Bind)"]
+        VB["Refuse ungrounded<br/>conclusions"]
+    end
+
+    subgraph LEARN["🔁 Continual learning loop (Tinker)"]
+        DS["5 dataset builders<br/>(audit · cybergym ·<br/>killchain · redteam · distill)"]
+        SFT["SFT / DPO / RL<br/>LoRA fine-tune"]
+        AB["A/B router<br/>5% traffic,<br/>auto-promote @ 95% win"]
+        DS --> SFT --> AB
+    end
+
+    subgraph OBS["📡 Observability"]
+        LOGS["structlog<br/>JSON"]
+        OTEL["OpenTelemetry<br/>traces"]
+        PROM["Prometheus<br/>/metrics"]
+    end
+
+    subgraph DEPLOY["☸️ Deployment plane"]
+        DOCKER["Docker<br/>non-root, ro-fs,<br/>seccomp RuntimeDefault"]
+        HELM["Helm chart<br/>HPA 3–12 · PDB · NetPol"]
+        COSIGN["cosign keyless<br/>signed images"]
+    end
+
+    CLIENT --> EDGE
+    EDGE --> AUTH
+    AUTH --> APPROVAL
+    APPROVAL --> DOMAIN
+    DOMAIN --> EVIDENCE
+    EVIDENCE --> VERIFY
+    VERIFY -->|grounded| CLIENT
+    VERIFY -->|refused| EDGE
+    AUDIT -.->|approved actions| LEARN
+    G2 -.->|jailbreak attempts| LEARN
+    DOMAIN -.-> OBS
+    LEARN -.-> L3
+    DEPLOY -.-> EDGE
+
+    classDef gate fill:#fee,stroke:#c33,stroke-width:2px,color:#000
+    classDef ml fill:#eef,stroke:#33c,stroke-width:1px,color:#000
+    classDef tool fill:#efe,stroke:#3c3,stroke-width:1px,color:#000
+    classDef llm fill:#fef,stroke:#a3a,stroke-width:1px,color:#000
+
+    class G1,G2,G4,G5 gate
+    class M1,M2,M3 ml
+    class T1,T2,T3,T4,T5,T6,T7 tool
+    class L1,L2,L3 llm
+```
+
+### ASCII fallback (for non-mermaid renderers)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  CLIENTS:   raven CLI  │  raven tui  │  REST/OpenAPI  │  Python SDK                │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  EDGE MIDDLEWARE (cross-cut):                                                     │
+│  ┌──────┐  ┌──────────────┐  ┌────────────┐  ┌──────────┐  ┌───────────┐         │
+│  │ CORS │─►│ G1           │─►│ G2         │─►│ Audit    │─►│ Metrics    │         │
+│  │      │  │ Parseltongue │  │ Jailbreak  │  │ log      │  │ Prometheus │         │
+│  │      │  │ 33 decoders  │  │ detector   │  │ X-Req-ID │  │ /metrics   │         │
+│  └──────┘  └──────────────┘  └────────────┘  └──────────┘  └───────────┘         │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  AUTH + RBAC (G3):  Argon2id ─► JWT (15m + 7d) ─► viewer | operator | admin       │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  APPROVAL GATE:                                                                   │
+│   G4  manual | smart | off  ─►  G5  UNRECOVERABLE_BLOCKLIST  (no override)        │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  DOMAIN (CDP executor):                                                            │
+│   OpenRouterAgent  ◄──►  Threat hunting (variant/precond/alg-sem)                  │
+│           │              │                                                         │
+│           └─────► Kill-chain planner (Incalmo, MITRE ATT&CK)                       │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   ▼
+┌─────────────────────── EVIDENCE SOURCES (CDP grounding) ────────────────────────┐
+│                                                                                   │
+│  T — Tool oracles (20)                  M — Classical ML       L — LLM (8 prov.) │
+│  ┌─────────────────────────────┐   ┌──────────────────┐   ┌─────────────────┐   │
+│  │ ARES-v3 (Solana audit)      │   │ IsolationForest  │   │ Local:           │   │
+│  │ Ghidra + eBPF Solana        │   │  (anomaly)       │   │  lmstudio/ollama │   │
+│  │ radare2 · jadx · Frida      │   │ RandomForest     │   │ Cloud:           │   │
+│  │ YARA · Volatility 3         │   │  (zero-day)      │   │  openai/anthropic│   │
+│  │ subfinder · naabu · httpx   │   │ Autoencoder      │   │  openrouter/nous │   │
+│  │ nuclei · whois · Shodan     │   │  (behavioural)   │   │ Raven-trained:   │   │
+│  │ Metasploit · Empire · EDB   │   │                  │   │  tinker LoRA     │   │
+│  │ Nmap · SSH · Bash · CChef   │   │                  │   │ (HOT-SWAP)       │   │
+│  └─────────────────────────────┘   └──────────────────┘   └─────────────────┘   │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  GROUNDING VERIFIER  (Rule G-Bind):                                                │
+│   admissible? ─► return conclusion + evidence trace                                │
+│   refused?    ─► 4xx with reason                                                   │
+└────────────────┬─────────────────────────────────────────────────────────────────┘
+                 │
+                 ├──────► CONTINUAL-LEARNING LOOP (Tinker)                            
+                 │        5 dataset builders ─► SFT/DPO/RL LoRA ─► A/B (5% → promote) 
+                 │                                                                     
+                 └──────► OBSERVABILITY                                                
+                          structlog · OpenTelemetry · Prometheus                       
+
+────────────────────── DEPLOYMENT PLANE ────────────────────────────────────────────
+  Docker (non-root, read-only fs, seccomp)  ·  Helm (HPA, PDB, NetworkPolicy)         
+  cosign keyless-signed images  ·  pre-commit (ruff/bandit/gitleaks)                  
+  CI: lint + mypy + bandit + Trivy + pytest + helm lint + kubeval                     
+```
+
+### Layer summary
+
+| # | Layer | Files / packages | Cross-cuts |
+|---|-------|------------------|-----------|
+| 1 | **Clients** | `raven/cli/` (Typer + Rich TUI), `raven/api/` (FastAPI) | — |
+| 2 | **Edge middleware** | `raven/redteam/middleware.py`, `raven/api/middleware/` | G1, G2, audit, metrics |
+| 3 | **Auth + RBAC** | `raven/auth/` | G3 |
+| 4 | **Approval gate** | `raven/approval/` | G4, G5 |
+| 5 | **Domain (CDP executor)** | `raven/ai/openrouter_agent.py`, `raven/hunters/` | — |
+| 6 | **Evidence sources (T, M, L)** | `raven/tools/`, `raven/ml/`, `raven/ai/providers/` | grounded by verifier |
+| 7 | **Grounding verifier** | `raven/ai/grounding_verifier.py` | Rule G-Bind |
+| 8 | **Continual learning** | `raven/training/` (Tinker + Mock) | feeds layer 6 (`tinker` provider) |
+| ⊥ | **Deployment** | `Dockerfile`, `deployment/helm/raven/`, `.github/workflows/` | wraps layers 1–8 |
+| ⊥ | **Observability** | `raven/observability/` | wraps layers 2–8 |
+
+---
+
+## Architectural primitive — Compositional Defense Pipelines (CDP)
+
+Raven is organised around a single primitive we call a **Compositional Defense Pipeline**: an auditable, directed graph in which every LLM-produced assertion is bound to one of three deterministic evidence sources before it can exit the agent.
+
+```
+user input
+   │
+   ▼  G1  Parseltongue obfuscation normaliser     (33 decoders)
+   ▼  G2  Jailbreak fingerprint detector          (8 L1B3RT4S families)
+   ▼  G3  RBAC                                    (viewer | operator | admin)
+   │
+   ▼     L   LLM plan (multi-provider, hot-swap)
+   │
+   ▼     T   Tool oracles (parallel, deterministic)
+   │           ARES-v3 · YARA · radare2 · Ghidra · Nmap · …
+   ▼     M   Classical-ML detectors
+   │           IsolationForest · RandomForest · autoencoder
+   │
+   ▼     L   LLM summary with evidence trace
+   │
+   ▼  Grounding verifier (Rule G-Bind — refuses ungrounded claims)
+   ▼  G4  Approval gate                           (manual | smart | off)
+   ▼  G5  UNRECOVERABLE_BLOCKLIST                 (no override possible)
+   │
+   ▼  conclusion c, evidence E
+```
+
+**Three sources** ground every claim:
+
+| Source | Set | Examples |
+|--------|-----|----------|
+| Tool oracle | `T` (20 adapters) | ARES-v3 (Solana audit) · YARA · radare2 · Ghidra · Volatility 3 · Nmap · CyberChef · … |
+| Classical-ML detector | `M` | IsolationForest anomaly · RandomForest zero-day · autoencoder behavioural baseline |
+| Scored LLM hypothesis | `L` (tagged) | Explicitly `unsourced=true` with confidence `s ∈ [0,1]` |
+
+**Grounding rule (G-Bind):** an LLM conclusion is admissible iff it carries a non-empty evidence trace pointing to `T` or `M` outputs, *or* is explicitly tagged unsourced with a confidence score. The grounding verifier (`raven/ai/grounding_verifier.py`) enforces this on every LLM completion.
+
+**Why this matters:** LLM hallucination is reduced to *tool fidelity*, a strictly easier and auditable problem. Every Raven finding can be traced to a specific `ToolResult` envelope.
+
+See [`docs/methodology.md`](docs/methodology.md) for the operator summary, or the full whitepaper at [`docs/Whitepaper/`](docs/Whitepaper/README.md) for the formal grammar (§3), grounding theorem (§3.6), and empirical evaluation (§5).
+
+---
+
 ## Core Components
 
 ### 1. Multi-Provider AI Layer
@@ -132,12 +371,23 @@ raven/training/
 - **Zero-Day Prediction**: Ensemble (IsolationForest + RandomForest). `load_models()` gated the same way.
 - **Behavioral Profiling**: Baseline + deviation flagging.
 
-### 7. Tool Orchestration Layer
-- **SSH Manager**: `paramiko.RejectPolicy()` + operator-supplied `known_hosts`. No `AutoAddPolicy`.
-- **Bash Executor**: `shell=False` by default with `shlex.split`. Opt-in `allow_shell=True` for legacy callers.
-- **Metasploit / NMAP / Nuclei / Empire / Ghidra / Shodan**: integration adapters with structured result types.
-- **Remediation engine**: patch IDs regex-validated + `shlex.quote`-wrapped.
-- **Containment actions**: pid coerced to positive `int` — no string interpolation into `kill -9`.
+### 7. Tool Orchestration Layer (the `T` set in CDP)
+
+All 20 tool oracles inherit from `raven.tools.adapter_base.ToolAdapter` and return a uniform `ToolResult` envelope.  Adapter map in `raven/api/routes_tools.py::_load_adapters()`.
+
+- **Smart-contract auditing**
+  - `AresAdapter` — [ARES-v3](https://github.com/daemon-blockint-tech/ARES-v3) deterministic Solana static auditor. 97 % micro-recall, 0.94 F1, sub-5-sec scans, zero API cost. Detects 12 classes: type-cosplay, ownership-check, signer-authorization, arbitrary-cpi, reentrancy-risk, arithmetic-overflow, close-account, account-reloading, and 4 more. Exposed as agent tool `solana_audit`, REST `POST /tools/ares/call`, CLI `raven tools ares <path>`.
+  - `EBPFGhidraSetup` — [Solana-eBPF-for-Ghidra](https://github.com/blastrock/Solana-eBPF-for-Ghidra) Ghidra processor extension. Decompiles compiled Solana `.so` BPF programs. Agent tool `ebpf_ghidra_status`, CLI `raven tools ebpf-ghidra`.
+- **Binary analysis** — `GhidraAnalyzer`, `Radare2Adapter`, `JadxAdapter`, `FridaAdapter`, `VolatilityAdapter`.
+- **Malware** — `YaraScanner` (Python module + CLI fallback).
+- **Recon** — `SubfinderAdapter`, `NaabuAdapter`, `HttpxAdapter`, `InteractshAdapter`, `NucleiScanner`, `ReconNgAdapter`, `WhoisClient`, `ShodanClient`.
+- **Exploitation** — `MetasploitIntegration`, `EmpireClient`, `SearchsploitAdapter`.
+- **Network** — `NmapScanner`; `SSHManager` (`paramiko.RejectPolicy` + operator-supplied `known_hosts`, no `AutoAddPolicy`); `BashExecutor` (`shell=False` default with `shlex.split`).
+- **Data ops** — `CyberchefAdapter` (HTTP to gchq/CyberChef server).
+- **Remediation engine** — patch IDs regex-validated + `shlex.quote`-wrapped.
+- **Containment actions** — pid coerced to positive `int` — no string interpolation into `kill -9`.
+
+Full catalogue, install instructions, and `install_hint` strings: [`docs/tools.md`](docs/tools.md).
 
 ### 8. Proactive Threat Hunting Module
 
@@ -336,4 +586,19 @@ Pre-existing `tests/test_ghidra_analyzer.py` is env-coupled (requires absence of
 | [Anthropic 0-days](https://red.anthropic.com/2026/zero-days/) | Variant + precondition + algorithm-semantic techniques |
 | [Hermes Agent](https://github.com/NousResearch/hermes-agent) | YOLO + approval modes + G0DM0D3 fingerprints |
 | [Tinker](https://thinkingmachines.ai/tinker/) | Managed LoRA fine-tuning |
+| [ARES-v3](https://github.com/daemon-blockint-tech/ARES-v3) | Deterministic Solana smart-contract static auditor (`solana_audit` tool oracle) |
+| [Solana-eBPF-for-Ghidra](https://github.com/blastrock/Solana-eBPF-for-Ghidra) | Ghidra processor for compiled Solana `.so` programs |
 | [WRECK-IT 7.0](https://wreckit.id) | Subtema 1 — Autonomous Defense & AI-Driven Threat Hunting |
+
+---
+
+## Further reading
+
+- **Methodology summary** — [`docs/methodology.md`](docs/methodology.md)
+- **Whitepaper (full)** — [`docs/Whitepaper/`](docs/Whitepaper/README.md)
+  - §3 Compositional Defense Pipelines — formal grammar + grounding theorem
+  - §5 Empirical evaluation (5 axes, replication scripts in `bench/whitepaper/`)
+  - §6 Case studies (Anchor audit, compiled `.so` triage)
+- **Tools catalogue** — [`docs/tools.md`](docs/tools.md)
+- **Approval & red-team operator guide** — [`docs/approval-and-redteam.md`](docs/approval-and-redteam.md)
+- **Training pipeline** — [`docs/training.md`](docs/training.md)

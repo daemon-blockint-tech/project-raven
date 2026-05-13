@@ -19,6 +19,8 @@ requests==2.31.0
 # AI provider SDKs (optional — only needed for specific providers)
 anthropic>=0.28.0          # required only when AI_PROVIDER=anthropic
 typer[all]>=0.12.0         # Raven CLI (`raven provider set`, `raven model set`)
+prompt_toolkit>=3.0.43     # Raven TUI sticky-bottom input + history
+Pillow>=10.0.0             # Raven TUI PNG logo rendering (falls back to .txt)
 
 # Shodan internet intelligence
 shodan==1.31.0
@@ -27,6 +29,15 @@ shodan==1.31.0
 python-nmap==0.7.1
 paramiko==3.4.0
 pymetasploit3==1.0.5
+
+# OpenRouter — official Python Client SDK
+openrouter>=0.9.1
+
+# Tool adapters — optional; adapters fall back gracefully when absent
+python-whois>=0.9.2        # WhoisClient python-whois module fallback
+r2pipe>=1.9.0              # Radare2Adapter python binding
+yara-python>=4.3.0         # YaraScanner python module
+volatility3>=2.5.0         # VolatilityAdapter python package
 
 
 # Data Processing

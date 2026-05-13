@@ -20,7 +20,11 @@ os.environ.setdefault(
     "raven-test-suite-secret-key-deterministic-fixture-aaaaaaaaaaaaaaaa",
 )
 os.environ.setdefault("RAVEN_ENVIRONMENT", "dev")
-# Do NOT set CORS_ORIGINS as an env var — pydantic-settings tries to
-# JSON-decode List[str] fields from env vars, which would clash with our
-# before-validator that handles comma-separated strings. The field default
-# already matches what tests need (http://localhost:3000).
+# Provide test-safe overrides so the .env file values don't cause parse
+# errors when pydantic-settings reads them before our validators run.
+os.environ.setdefault("DATABASE_URL", "postgresql://raven:test@localhost/raven_test")
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+# CORS_ORIGINS must be a JSON array string for pydantic-settings List[str]
+# when loaded from env; the before-validator handles plain comma strings too
+# but pydantic-settings JSON-decodes first, so we give a JSON array here.
+os.environ.setdefault("CORS_ORIGINS", '["http://localhost:3000"]')

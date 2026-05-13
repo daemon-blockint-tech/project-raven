@@ -27,6 +27,7 @@ from raven.tools.recon_ng_client import ReconNgClient
 from raven.tools.jadx_analyzer import JadxAnalyzer
 from raven.tools.cyberchef_client import CyberChefClient
 from raven.tools.x64dbg_client import X64DbgClient
+from raven.tools.whois_client import WhoisClient
 
 from raven.hunters.hypothesis_generator import HypothesisGenerator
 from raven.hunters.automated_investigator import AutomatedInvestigator
@@ -64,6 +65,7 @@ from raven.api.routes_approval import router as approval_router
 from raven.api.routes_redteam import router as redteam_router
 from raven.api.routes_training import router as training_router
 from raven.api.routes_tools import router as tools_router
+from raven.api.routes_agent import router as agent_router
 from raven.redteam.middleware import JailbreakDetectionMiddleware
 
 # Configure structured logging early (JSON in prod/staging, console in dev)
@@ -86,6 +88,7 @@ app.include_router(approval_router)
 app.include_router(redteam_router)
 app.include_router(training_router)
 app.include_router(tools_router)
+app.include_router(agent_router)
 
 # Observability middleware (order matters: metrics → audit → jailbreak → CORS)
 app.add_middleware(MetricsMiddleware)
@@ -187,6 +190,7 @@ async def startup_event():
     components["jadx"] = JadxAnalyzer(config)
     components["cyberchef"] = CyberChefClient(config)
     components["x64dbg"] = X64DbgClient(config)
+    components["whois"] = WhoisClient(config)
 
 
     ai_client = components["ai"]
