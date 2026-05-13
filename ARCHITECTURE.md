@@ -5,244 +5,335 @@
 # Project Raven — Architecture
 
 ## Overview
-Project Raven is an ML/AI-powered autonomous defense system that transforms reactive security into proactive threat hunting, detecting and mitigating zero-day threats before they reach critical targets. The AI layer is **runtime-switchable** — operators can hot-swap between local and cloud LLM providers without restarting the server.
+
+Project Raven is an autonomous defense system that transforms reactive security into proactive threat hunting. It combines a runtime-switchable multi-provider AI layer, ML anomaly + zero-day detection, Incalmo-style declarative kill-chain planning, and a closed continual-learning loop that lets the agent *get better with use*.
+
+Five Hermes Agent-inspired safety primitives wrap the whole stack: JWT/RBAC auth, audit logging, an approval gate with a hardline `UNRECOVERABLE_BLOCKLIST`, an inbound jailbreak detector, and a gated offensive red-team capability. Production safety guards refuse insecure defaults at startup.
+
+---
 
 ## Core Components
 
-### 1. **Multi-Provider AI Layer**
+### 1. Multi-Provider AI Layer
 
-The AI layer is a provider-agnostic abstraction that can hot-swap LLM backends at runtime without restarting the server. Pattern inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent) (`provider:model` shorthand) and [Claude Code](https://github.com/anthropics/claude-code) (in-session `/model` switching).
+Provider-agnostic abstraction that hot-swaps LLM backends at runtime. Inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent) (`provider:model` shorthand) and [Claude Code](https://github.com/anthropics/claude-code) (`/model` switching).
 
 ```
 raven/ai/
-├── base.py              BaseAIClient (ABC) + AIMessage + AIResponse + SUPPORTED_PROVIDERS
-├── factory.py           create_client_from_config() — routes to correct adapter
-├── registry.py          ProviderRegistry singleton — thread-safe hot-swap + named profiles
-├── model_orchestrator.py  Multi-role orchestrator: FAST / REASON / VISION
-├── lmstudio_client.py   Backward-compat shim → raven.ai.providers.lmstudio
+├── base.py                 BaseAIClient ABC + SUPPORTED_PROVIDERS catalogue
+├── factory.py              create_client_from_config() — router
+├── registry.py             ProviderRegistry singleton — thread-safe hot-swap + named profiles
+├── model_orchestrator.py   FAST / REASON / VISION role routing
+├── lmstudio_client.py      Backward-compat shim
 └── providers/
-    ├── lmstudio.py          LM Studio native v1 API + OpenAI-compat fallback
-    ├── openai_compat.py     OpenAI / OpenRouter / Ollama / Nous / OpenCode (single adapter)
-    └── anthropic_provider.py  Anthropic native SDK (graceful degradation if not installed)
+    ├── lmstudio.py           LM Studio native v1 API + OpenAI-compat fallback
+    ├── openai_compat.py      OpenAI / OpenRouter / Ollama / Nous / OpenCode
+    ├── anthropic_provider.py Anthropic native SDK (graceful degradation)
+    └── tinker_provider.py    Raven-trained LoRA fine-tunes via Tinker
 ```
 
 **Supported providers:**
 
-| Provider | Transport | Key |
+| Provider | Transport | Key | Notes |
+|---|---|---|---|
+| `lmstudio` | LM Studio native v1 | — | Local default |
+| `openai` | OpenAI-compat | ✅ | |
+| `openrouter` | OpenAI-compat | ✅ | 300+ models |
+| `anthropic` | Anthropic SDK | ✅ | |
+| `ollama` | OpenAI-compat | — | Local |
+| `nous` | OpenAI-compat | ✅ | Hermes models |
+| `opencode` | OpenAI-compat | ✅ | |
+| `tinker` | Tinker SDK / OpenAI-compat | ✅ | Raven-trained fine-tunes |
+
+**Runtime switching** — CLI `raven provider set …` or `POST /ai/provider` (admin). `base_url` validated against `AI_ALLOWED_BASE_URLS` allowlist to close credential-exfil class.
+
+### 2. Authentication & RBAC
+
+```
+raven/auth/
+├── models.py         User, Role (viewer | operator | admin), TokenPair
+├── password.py       Argon2id hashing (OWASP 2023 params: t=2, m=19_456, p=1)
+├── jwt_manager.py    HS256/RS256 + access (15m) + refresh (7d) + revocation set
+├── user_store.py     Thread-safe in-memory store (Phase 3 → SQLAlchemy)
+├── dependencies.py   FastAPI Depends(current_user) + require_role()
+└── routes.py         /auth/login /auth/refresh /auth/logout /auth/me
+```
+
+**Role hierarchy:** `admin > operator > viewer`. Every mutating route declares `Depends(require_admin)` or `Depends(require_operator)`. Refresh-token rotation on every `/auth/refresh` + revocation set guard against theft.
+
+### 3. Approval Gate (Hermes-style)
+
+```
+raven/approval/
+├── models.py         ApprovalMode (manual/smart/off), ApprovalVerdict
+├── patterns.py       DANGEROUS_PATTERNS + UNRECOVERABLE_BLOCKLIST
+├── store.py          PendingApprovalStore + AllowlistStore
+├── smart.py          SmartApprover — LLM-assisted risk triage
+├── gate.py           ApprovalGate singleton — decision orchestrator
+└── dependencies.py   approval_required() factory for FastAPI routes
+```
+
+**Evaluation order for every dangerous command:**
+1. `UNRECOVERABLE_BLOCKLIST` — `rm -rf /`, fork bomb, `mkfs /dev/sd*`, `dd of=/dev/sd*`, `curl|sh`. **No override possible.** Not even YOLO + admin.
+2. Permanent allowlist — operator-approved regex patterns.
+3. Dangerous-pattern match — branches on `ApprovalMode`:
+   - `manual` → enqueue `PendingApproval`, return 202 with `request_id` for operator polling
+   - `smart` → `ModelOrchestrator(FAST)` triages → auto-approve / auto-deny / escalate to manual
+   - `off` (YOLO) → auto-approve. **Refused in prod by the safety validator.**
+
+### 4. Red-Team Subsystem
+
+```
+raven/redteam/
+├── normalizer.py             ParseltongueNormaliser (33 obfuscation decoders)
+├── jailbreak_patterns.py     Fingerprint library (8 L1B3RT4S families)
+├── detector.py               JailbreakDetector — weighted score 0..1
+├── middleware.py             Buffers inbound /ai/* /hunt/* bodies → scans → blocks
+├── hardness_test.py          ProviderHardnessTest — 10 canaries → 0–10 score
+└── offensive.py              OffensiveGodmode (triple-gated, default off)
+```
+
+**Defensive pipeline (always on):**
+1. Inbound prompt → `ParseltongueNormaliser` decodes zero-width / leetspeak / Unicode homoglyphs / Base64 / hex / Braille / Morse / Pig Latin / math alphabets / brackets / acrostic.
+2. Decoded text → fingerprint scan against L1B3RT4S patterns (boundary_inversion, refusal_inversion, og_godmode, unfiltered_liberated, dan, injection, role_play, content).
+3. Score ≥ `JAILBREAK_BLOCK_THRESHOLD` → 403 + `X-Raven-Jailbreak-Score` header on response.
+
+**Hardness test (admin):** `POST /redteam/hardness` runs 10 canary jailbreaks against the active provider → resistance score with weakest-family breakdown.
+
+**Offensive Godmode (triple-gated, default off):** requires (a) `OFFENSIVE_REDTEAM_ENABLED=true`, (b) admin role, (c) `X-Raven-Authorization-Token` matching `OFFENSIVE_REDTEAM_SESSION_TOKEN` via `hmac.compare_digest`, (d) `sandbox_session_id` in body. Strategies are synthesised at runtime — L1B3RT4S templates are NOT redistributed.
+
+### 5. Continual Learning (Tinker)
+
+```
+raven/training/
+├── client.py                 TinkerClient (lazy SDK) + MockTinkerClient (offline)
+├── models.py                 Dataset, TrainingJob, ModelVersion, ABTestRun
+├── datasets/
+│   ├── base.py                 JsonlWriter + pii_scrub
+│   ├── from_audit_log.py       Mutation history → SFT pairs
+│   ├── from_cybergym.py        CyberGym verdicts → RL trajectories
+│   ├── from_killchain.py       Approved tasks → tool-use SFT
+│   ├── from_redteam.py         Jailbreaks → DPO (chosen, rejected)
+│   └── distillation.py         Teacher → student corpus
+├── jobs/                       DistillJob · SFTJob · CodeRLJob
+├── registry.py                 ModelRegistry — versions/jobs/abtests/datasets
+├── secrets.py                  FernetVault — encrypted-at-rest TINKER_API_KEY
+├── eval.py                     Hardness + canary + CyberGym smoke
+└── abtest.py                   Bernoulli router with auto-promote/rollback
+```
+
+**Loop:** audit log + CyberGym verdicts + kill-chain approvals → JSONL → Tinker LoRA fine-tune → `ModelVersion` row → eval → A/B test (5% traffic, 95% win threshold) → auto-promote / auto-rollback.
+
+**Mock-friendly:** `MockTinkerClient` replays a 3-tick state machine when `TINKER_API_KEY` is absent — entire pipeline runs offline for CI and hackathon demos.
+
+### 6. Threat Detection Engine (ML/AI Core)
+- **Anomaly Detection**: Isolation Forest + Autoencoders. `load_model()` gated by `ALLOW_PICKLE_MODELS` + `MODEL_PATH` jail.
+- **Signature-Based Detection**: Known pattern matching.
+- **Zero-Day Prediction**: Ensemble (IsolationForest + RandomForest). `load_models()` gated the same way.
+- **Behavioral Profiling**: Baseline + deviation flagging.
+
+### 7. Tool Orchestration Layer
+- **SSH Manager**: `paramiko.RejectPolicy()` + operator-supplied `known_hosts`. No `AutoAddPolicy`.
+- **Bash Executor**: `shell=False` by default with `shlex.split`. Opt-in `allow_shell=True` for legacy callers.
+- **Metasploit / NMAP / Nuclei / Empire / Ghidra / Shodan**: integration adapters with structured result types.
+- **Remediation engine**: patch IDs regex-validated + `shlex.quote`-wrapped.
+- **Containment actions**: pid coerced to positive `int` — no string interpolation into `kill -9`.
+
+### 8. Proactive Threat Hunting Module
+
+Implements the three techniques described in Anthropic's Claude Opus 4.6 zero-day research:
+- **Variant analysis** — `raven/ml/variant_analyzer.py` mines git history for security commits, finds sibling code lacking the fix
+- **Precondition reasoning** — extracts control-flow constraints around dangerous patterns
+- **Algorithm-semantic mining** — surfaces implicit invariants in compression / parser / crypto code
+
+Plus Incalmo-style declarative kill-chain planning (`raven/hunters/kill_chain_planner.py`) with MITRE ATT&CK alignment and HITL approval on destructive stages (exploitation, lateral movement, exfiltration, privilege escalation, post-exploitation).
+
+### 9. Mitigation Response
+- Containment (process kill via SSH, IP block)
+- Remediation (apt-get patch, configuration hardening)
+- Response orchestrator chains containment + remediation per threat type
+
+### 10. Observability
+
+```
+raven/observability/
+├── logging.py     structlog JSON in prod, console in dev. Request ID propagated.
+├── metrics.py     Prometheus exposition + MetricsMiddleware
+└── tracing.py     OpenTelemetry auto-instrumentation when OTEL_ENDPOINT set
+```
+
+**25+ metrics** including request latency, AI tokens prompt/completion, provider switches, kill-chain stages, approval verdicts, blocklist hits, jailbreak detections, provider hardness, training jobs, A/B win rates.
+
+### 11. Production Safety
+
+`raven/config/__init__.py` runs a `_enforce_secret_key_floor` validator on every start and `_enforce_prod_safety` when `RAVEN_ENVIRONMENT=prod`. Refuses to boot when:
+
+| Condition | All envs | Prod only |
 |---|---|---|
-| `lmstudio` | LM Studio native v1 REST | — |
-| `openai` | OpenAI-compat | ✅ |
-| `openrouter` | OpenAI-compat | ✅ |
-| `anthropic` | Anthropic SDK | ✅ |
-| `ollama` | OpenAI-compat | — |
-| `opencode` | OpenAI-compat | ✅ |
-| `nous` | OpenAI-compat | ✅ |
+| `SECRET_KEY` is the dev default | ✅ unless `ALLOW_INSECURE_DEFAULTS=true` | also refuses the opt-in itself |
+| `DEBUG=true` | — | ✅ |
+| `CORS_ORIGINS` contains `*` or is unset | — | ✅ |
+| `APPROVAL_MODE=off` (YOLO) | — | ✅ |
+| `OFFENSIVE_REDTEAM_ENABLED=true` without session token | ✅ | ✅ |
+| `CONTINUAL_LEARNING_ENABLED=true` without `TINKER_API_KEY` | ✅ | ✅ |
 
-**Runtime switching:**
-```bash
-# CLI (profile: ~/.raven/profiles/<name>.json, mode 600)
-raven provider set openrouter --key sk-or-... --model nous/hermes-2-mixtral-8x7b
-raven model set anthropic:claude-3-5-sonnet-20241022
-raven provider save work-profile && raven provider load work-profile
+---
 
-# REST (no restart)
-POST /ai/provider   {"provider":"openrouter","api_key":"sk-or-..."}
-POST /ai/model      {"model":"anthropic:claude-opus-4-5"}
-PUT  /ai/provider/profiles/work-profile
-```
-
-### 2. **Threat Detection Engine** (ML/AI Core)
-- **Anomaly Detection**: Isolation Forest + Autoencoders for behavioral pattern analysis
-- **Signature-Based Detection**: Known threat pattern matching
-- **Zero-Day Prediction**: Ensemble ML (IsolationForest + RandomForest) for novel threats
-- **Behavioral Profiling**: Baseline establishment + deviation flagging
-
-### 3. **Tool Orchestration Layer**
-- **SSH Manager**: Secure remote command execution across infrastructure
-- **Bash Automation**: Script execution for response actions
-- **Metasploit Integration**: Vulnerability scanning and exploitation testing
-- **NMAP Integration**: Network discovery and port scanning
-- **Nuclei**: Template-based vulnerability scanning
-- **Empire C2**: Post-exploitation framework integration
-- **Ghidra**: Headless binary analysis via subprocess
-- **Shodan**: Internet-facing host intelligence
-
-### 4. **Proactive Threat Hunting Module**
-- **Hypothesis Generation**: AI-driven threat hypothesis creation via `BaseAIClient.generate_hypothesis()`
-- **Automated Investigation**: Autonomous evidence gathering
-- **Kill-Chain Planning**: Incalmo-style declarative planning with MITRE ATT&CK alignment
-- **Human-in-the-Loop**: Approval gates before destructive stages
-
-### 5. **Zero-Day Detection System**
-- **Behavioral Analysis**: Detect unknown patterns through ML
-- **Memory Forensics**: RAM analysis for in-memory attacks
-- **Network Telemetry**: Deep packet inspection and flow analysis
-
-### 6. **Automated Mitigation Response**
-- **Containment Actions**: Isolate compromised systems
-- **Patch Deployment**: Automated vulnerability remediation
-- **Configuration Hardening**: Dynamic security rule updates
-- **Incident Response**: Coordinated multi-step response workflows
-
-### 7. **Monitoring & Dashboard**
-- **Alert Management**: Prioritized and contextualized alerts
-- **Metrics Dashboard**: Prometheus-compatible metrics
-- **Audit Trail**: Complete logging of all actions
-
-## Data Flow
+## End-to-end request flow
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      Data Sources                        │
-│              (Logs, Network, Endpoints)                  │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Ingestion & Normalization               │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                  ML/AI Engine                            │
-│   Anomaly Detection · Zero-Day Prediction · Profiling   │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│               Multi-Provider AI Layer                    │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │              ProviderRegistry (singleton)           │ │
-│  │   hot-swap · named profiles · thread-safe          │ │
-│  └──────────────────────┬─────────────────────────────┘ │
-│         ┌───────────────┼──────────────────┐            │
-│    LM Studio      OpenRouter / OpenAI    Anthropic       │
-│    Ollama             Nous                 …             │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                    Threat Hunting                        │
-│       Hypothesis · Investigation · Kill-Chain            │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                   Decision Engine                        │
-│              Risk Scoring · Response Plan                │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Tool Orchestration                      │
-│      SSH · Bash · Metasploit · Nmap · Ghidra · Shodan   │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                     Mitigation                          │
-│           Containment · Remediation · Hardening         │
-└─────────────────────────────────────────────────────────┘
+                  ┌────────────────────────────────────┐
+   HTTP request ─►│  CORSMiddleware                    │
+                  └────────────────┬───────────────────┘
+                                   ▼
+                  ┌────────────────────────────────────┐
+                  │  JailbreakDetectionMiddleware       │
+                  │  Parseltongue.normalise → score     │
+                  │  403 if ≥ threshold                 │
+                  └────────────────┬───────────────────┘
+                                   ▼
+                  ┌────────────────────────────────────┐
+                  │  AuditLogMiddleware                 │
+                  │  X-Request-ID propagation +         │
+                  │  per-mutation audit entry           │
+                  └────────────────┬───────────────────┘
+                                   ▼
+                  ┌────────────────────────────────────┐
+                  │  MetricsMiddleware                  │
+                  │  Prometheus latency + count         │
+                  └────────────────┬───────────────────┘
+                                   ▼
+                  ┌────────────────────────────────────┐
+                  │  Route handler                      │
+                  │  Depends(current_user) →            │
+                  │  Depends(require_admin/operator)    │
+                  └────────────────┬───────────────────┘
+                                   ▼
+                  ┌────────────────────────────────────┐
+                  │  ApprovalGate.check() if dangerous  │
+                  │  UNRECOVERABLE_BLOCKLIST →          │
+                  │  Allowlist → mode-specific          │
+                  └────────────────┬───────────────────┘
+                                   ▼
+       ┌───────────────────────────┼───────────────────────────┐
+       │ Domain layer              │                            │
+       │  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
+       │  │ Hunting     │  │ ML/AI engine │  │ Tools         │  │
+       │  │ Hypothesis  │  │ Anomaly      │  │ SSH (Reject)  │  │
+       │  │ Kill-chain  │  │ Zero-day     │  │ Bash (no sh)  │  │
+       │  └──────┬──────┘  └──────┬───────┘  │ Nmap/Nuclei   │  │
+       │         │                │           └───────────────┘  │
+       │         └────────┬───────┘                              │
+       │                  ▼                                       │
+       │   ┌──────────────────────────────────────────────────┐  │
+       │   │ Multi-Provider AI Layer                          │  │
+       │   │  ProviderRegistry singleton (hot-swap)            │  │
+       │   │  lmstudio · openai · anthropic · openrouter ·     │  │
+       │   │  ollama · nous · opencode · TINKER                │  │
+       │   │  System prompt injected by _build_messages        │  │
+       │   └──────────────────────────────────────────────────┘  │
+       └────────────────────────────┬─────────────────────────────┘
+                                    ▼
+                  ┌────────────────────────────────────┐
+                  │  Mitigation                         │
+                  │  Containment + Remediation          │
+                  └────────────────┬───────────────────┘
+                                   ▼
+                  ┌────────────────────────────────────┐
+                  │  Telemetry                          │
+                  │  audit · prom · structlog · OTel    │
+                  │  + (if approved) Tinker training-    │
+                  │  data candidate                     │
+                  └────────────────────────────────────┘
 ```
+
+---
 
 ## Technology Stack
 
-### Core Framework
-- **Language**: Python 3.11+
-- **ML Framework**: PyTorch, scikit-learn, TensorFlow
-- **API**: FastAPI for REST endpoints
-- **CLI**: Typer (`raven provider`, `raven model`)
-- **Task Queue**: Celery with Redis
-- **Database**: PostgreSQL + TimescaleDB for time-series data
+### Core
+- **Language:** Python 3.11+
+- **API:** FastAPI + Pydantic v2
+- **CLI:** Typer (`raven {provider, model, prompt, approval, redteam, train}`)
+- **Pkg:** uv-friendly, pinned `requirements.txt`
 
 ### AI / LLM
-- **Local inference**: LM Studio (native v1 API), Ollama (OpenAI-compat)
-- **Cloud**: OpenAI, Anthropic (native SDK), OpenRouter (300+ models), Nous Research
-- **Abstraction**: `BaseAIClient` ABC — all providers share the same interface
-- **Hot-swap**: `ProviderRegistry` singleton — `POST /ai/provider` or `raven provider set`
-- **Profiles**: `~/.raven/profiles/<name>.json` (mode 600)
+- **Local:** LM Studio (native v1), Ollama (OpenAI-compat)
+- **Cloud:** OpenAI, Anthropic, OpenRouter, Nous, OpenCode
+- **Trained:** Tinker (Llama-3.1, Qwen-2.5) — Raven's own fine-tunes
+- **Abstraction:** `BaseAIClient` ABC with shared task helpers
+- **Hot-swap:** `ProviderRegistry` singleton — REST or CLI, no restart
 
-### Security Tools
-- **NMAP**: Network scanning and discovery
-- **Metasploit**: Vulnerability assessment
-- **Nuclei**: Template-based CVE scanning
-- **Empire C2**: Post-exploitation framework
-- **Ghidra**: Headless binary analysis
-- **Shodan**: Internet intelligence API
-- **YARA**: Malware pattern matching
+### Security primitives
+- **Auth:** PyJWT (HS256/RS256), Argon2id (`argon2-cffi`)
+- **Rate-limit:** `slowapi`
+- **Crypto-at-rest:** Fernet (`cryptography`) for `TINKER_API_KEY`
 
-### ML/AI Components
-- **Anomaly Detection**: Isolation Forest, Autoencoders
-- **Classification**: Random Forest, Neural Networks
-- **Sequence Analysis**: LSTM, Transformers for log analysis
-- **Graph Analysis**: NetworkX for attack graph mapping
+### ML
+- **Frameworks:** PyTorch, scikit-learn, TensorFlow, numpy, pandas, scipy
+- **Models:** Isolation Forest, RandomForest, Autoencoders, LSTM, Transformers
+- **Graph:** NetworkX for attack-graph mapping
+
+### Security tools
+- Nmap (`python-nmap`), Metasploit (`pymetasploit3`), Nuclei (subprocess), Empire C2 (HTTP), Ghidra (`pyghidra` / headless), Shodan (`shodan` SDK), YARA, Suricata, Scapy
+
+### Observability
+- **Logs:** `structlog` (JSON in prod, console in dev)
+- **Metrics:** `prometheus_client` — `/metrics` exposition
+- **Tracing:** OpenTelemetry — FastAPI + requests auto-instrumentation
+
+### Data plane
+- **Persistence:** PostgreSQL + TimescaleDB (Phase 3, planned), in-memory thread-safe stores today
+- **Cache / queue:** Redis (jwt revocation), Celery
+- **Streaming:** Kafka (planned)
 
 ### Infrastructure
-- **Containerization**: Docker + Kubernetes
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
-- **Message Queue**: Apache Kafka for event streaming
+- **Containers:** Docker multi-stage, distroless-ish runtime, non-root (uid 10001)
+- **Orchestration:** Kubernetes via bundled Helm chart at `deployment/helm/raven/`
+- **Security context:** runAsNonRoot, readOnlyRootFilesystem, drop ALL caps, seccomp `RuntimeDefault`
+- **Networking:** Ingress + cert-manager + NetworkPolicy (deny-all + allowlisted egress)
+- **HA:** HPA 3–12 replicas, PodDisruptionBudget `minAvailable: 2`, topologySpreadConstraints across zones
 
-## Security Considerations
+### CI/CD
+- **GitHub Actions:** lint (ruff) + type-check (mypy) + bandit + Trivy + pytest (3.11/3.12) + helm lint + kubeval
+- **Release:** multi-arch image (amd64+arm64) + cosign keyless signing + Helm chart OCI push
+- **Pre-commit:** ruff, bandit, gitleaks
 
-### Self-Protection
-- **Authentication**: Multi-factor auth for all access
-- **Encryption**: TLS 1.3 for all communications
-- **Audit Logging**: Immutable logs for all actions
-- **Rate Limiting**: Prevent abuse of the system itself
+---
 
-### Fail-Safe Mechanisms
-- **Manual Override**: Human intervention capability
-- **Rollback**: Automatic rollback of harmful actions
-- **Sandboxing**: All automated actions in isolated environments
-- **Circuit Breakers**: Prevent cascading failures
+## Tests
 
-## Deployment Architecture
+**224 passed, 24 skipped** as of `f767416`:
 
-### Components
-1. **Edge Sensors**: Deployed on protected networks
-2. **Analysis Cluster**: Central ML/AI processing
-3. **Response Nodes**: Distributed mitigation execution
-4. **Management Console**: Human oversight interface
+```
+tests/test_ai_factory.py            18  Multi-provider factory + parser
+tests/test_anomaly_detector.py       7  ML core
+tests/test_approval.py              34  Approval gate + blocklist + modes
+tests/test_auth.py                  23  JWT + Argon2 + role hierarchy
+tests/test_behavioral_profiler.py    4
+tests/test_empire_client.py          7
+tests/test_provider_registry.py     19  Hot-swap + profiles
+tests/test_nuclei_scanner.py         5
+tests/test_redteam.py               18  Parseltongue + detector + offensive gating
+tests/test_security_findings.py     21  F1-F6 regression
+tests/test_system_prompt.py         30  Prompt injection / load / scoping
+tests/test_threat_detector.py        4
+tests/test_training.py              31  Datasets + jobs + registry + ABTest + Fernet
+tests/test_vuln_fixes.py            17  VULN-1/3/4 regression
+```
 
-### Scalability
-- **Horizontal Scaling**: Add more analysis nodes
-- **Data Partitioning**: Sharded by network segments
-- **Load Balancing**: Distribute detection workload
-- **Caching**: Redis for frequently accessed data
+Pre-existing `tests/test_ghidra_analyzer.py` is env-coupled (requires absence of `/opt/ghidra`) and skipped here.
 
-## Success Metrics
+---
 
-### Detection Effectiveness
-- **True Positive Rate**: >95%
-- **False Positive Rate**: <5%
-- **Zero-Day Detection**: Detect novel threats within 24h
-- **MTTD (Mean Time to Detect)**: <5 minutes
+## Reference research
 
-### Response Efficiency
-- **MTTR (Mean Time to Respond)**: <15 minutes
-- **Automated Response Rate**: >80%
-- **Containment Success**: >90%
-- **System Uptime**: >99.9%
-
-## Development Phases
-
-### Phase 1: Core Infrastructure
-- Project setup and tool integration
-- Basic data ingestion pipeline
-- Simple rule-based detection
-
-### Phase 2: ML/AI Integration
-- Anomaly detection models
-- Behavioral profiling
-- Initial threat hunting capabilities
-
-### Phase 3: Advanced Features
-- Zero-day prediction
-- Automated response workflows
-- Proactive hunting automation
-
-### Phase 4: Production Hardening
-- Performance optimization
-- Security hardening
-- Comprehensive testing
+| Source | Used for |
+|---|---|
+| [Incalmo](https://arxiv.org/abs/2501.16466) | Declarative kill-chain planner |
+| [ZeroDayBench](https://arxiv.org/abs/2603.02297) | Dangerous-pattern grep library |
+| [CyberGym](https://arxiv.org/abs/2506.02548) | Vulnerability benchmark (integration planned) |
+| [Anthropic 0-days](https://red.anthropic.com/2026/zero-days/) | Variant + precondition + algorithm-semantic techniques |
+| [Hermes Agent](https://github.com/NousResearch/hermes-agent) | YOLO + approval modes + G0DM0D3 fingerprints |
+| [Tinker](https://thinkingmachines.ai/tinker/) | Managed LoRA fine-tuning |
+| [WRECK-IT 7.0](https://wreckit.id) | Subtema 1 — Autonomous Defense & AI-Driven Threat Hunting |

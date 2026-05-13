@@ -24,15 +24,40 @@ OpenRouter, or Nous Research with a single command. No restart required.
 
 ## Key Features
 
-- **Multi-Provider AI** — switch between LM Studio, OpenAI, Anthropic, OpenRouter, Ollama, Nous at runtime via CLI or REST API
-- **Named Profiles** — save/load provider+model+key configurations as named profiles (`raven provider save work`)
-- **Multi-Model LLM Orchestration** — three specialist models via `ModelOrchestrator`, role-routed by task type
-- **LLM-Driven Threat Hunting** — hypothesis generation and kill-chain re-planning powered by any provider
-- **Zero-Day Detection** — ensemble ML (IsolationForest + RandomForest) for novel attack patterns
-- **Automated Kill-Chain Planning** — Incalmo-style declarative planning with MITRE ATT&CK alignment
-- **Human-in-the-Loop** — approval gates before destructive stages (exploitation, lateral movement, exfiltration)
-- **Tool Orchestration** — SSH, Bash, Nmap, Metasploit, Nuclei, Empire C2, Ghidra, Shodan
-- **Automated Mitigation** — containment and remediation workflows
+**AI layer**
+- **Multi-provider AI** — LM Studio / OpenAI / Anthropic / OpenRouter / Ollama / Nous / Tinker, swap at runtime via CLI or REST
+- **Named profiles** — save/load provider + model + key configurations (`raven provider save work`)
+- **Three-role orchestrator** — FAST / REASON / VISION models, routed by task type
+- **System prompt manager** — load `RAVEN_SYSTEM_PROMPT.md` once, auto-injected into every call
+
+**Defensive AI primitives (Hermes Agent-inspired)**
+- **Approval gate** — `manual` / `smart` / `off` modes for destructive actions, with an `UNRECOVERABLE_BLOCKLIST` floor that *nothing* can bypass (not YOLO, not admin)
+- **Smart triage** — auxiliary LLM (`ModelOrchestrator.FAST`) auto-approves benign commands, escalates ambiguous ones
+- **Jailbreak detector** — 8 attack families fingerprinted on every `/ai/*` inbound; `Parseltongue` decodes 33 obfuscation techniques first
+- **Provider hardness test** — score the active provider's jailbreak resistance 0–10
+- **Offensive Godmode** — triple-gated red-team capability (default off, admin+token+sandbox required)
+
+**Threat hunting & detection**
+- **LLM-driven hypothesis generation** — variant analysis + precondition reasoning + algorithm-semantic mining (Anthropic 0-days techniques)
+- **Zero-day detection** — IsolationForest + RandomForest ensemble for novel patterns
+- **Kill-chain planning** — Incalmo-style declarative tasks aligned to MITRE ATT&CK
+- **Human-in-the-loop** — approval gates on exploitation, lateral movement, exfiltration, privilege escalation, post-exploitation
+
+**Self-improvement (Tinker)**
+- **Continual learning loop** — mine audit log + CyberGym + kill-chain → JSONL → managed LoRA fine-tune → A/B test → auto-promote
+- **5 dataset builders** with PII scrubbing (`from_audit_log` / `from_cybergym` / `from_killchain` / `from_redteam` / `distillation`)
+- **A/B router** — Bernoulli traffic split, auto-promote at 95% win rate, auto-rollback on regression
+- **Mock-friendly** — runs offline via `MockTinkerClient` until Tinker beta access lands
+
+**Production hardening**
+- **JWT auth + 3-tier RBAC** (viewer / operator / admin), Argon2id passwords, refresh-token rotation, revocation list
+- **Audit log** — every authenticated mutation recorded with actor, request ID, latency, status
+- **Structured logs + OTel tracing + Prometheus metrics** (`/metrics` exposition + 20+ counters/gauges/histograms)
+- **Helm chart** with HPA (3–12 replicas), PodDisruptionBudget, NetworkPolicy, ServiceMonitor, non-root + read-only rootfs
+- **Prod safety guard** refuses to start with default `SECRET_KEY`, `APPROVAL_MODE=off`, wildcard CORS, or `OFFENSIVE_REDTEAM_ENABLED` without a session token
+
+**Tool orchestration**
+- SSH (strict host-key check, `RejectPolicy` + known_hosts), Bash (`shell=False` by default), Nmap, Metasploit, Nuclei, Empire C2, Ghidra, Shodan
 
 ## AI Provider Support
 
@@ -47,6 +72,7 @@ Switch providers without restarting the server. Supports `provider:model` shorth
 | `anthropic` | ✅ | `claude-opus-4-5`, `claude-3-5-sonnet-20241022` |
 | `nous` | ✅ | `nous-hermes-2-mixtral-8x7b`, `hermes-3-llama-3.1-405b` |
 | `opencode` | ✅ | — |
+| `tinker` | ✅ | Raven-trained LoRA fine-tunes (Llama-3.1, Qwen-2.5) |
 
 ### Switching providers at runtime
 
@@ -114,95 +140,176 @@ cp .env.example .env
 ## Quick Start
 
 ```bash
-# Option A: Local (LM Studio — no API key)
-# 1. Start LM Studio → load granite-4-micro and nemotron-3-nano-4b
-# 2. Start Raven
+# 1. Configure (minimum: a strong SECRET_KEY)
+cp .env.example .env
+echo "SECRET_KEY=$(openssl rand -hex 32)" >> .env
+echo "BOOTSTRAP_ADMIN_PASSWORD=$(openssl rand -base64 24)" >> .env
+
+# 2. Local AI (LM Studio) — load granite-4-micro + nemotron-3-nano-4b, then:
 uvicorn raven.api.main:app --host 0.0.0.0 --port 8000
 
-# Option B: Cloud provider
-uvicorn raven.api.main:app --host 0.0.0.0 --port 8000 &
-raven provider set openrouter --key sk-or-... --model nous/hermes-2-mixtral-8x7b
-
-# Check active provider
-curl http://localhost:8000/ai/provider
-
-# Check model orchestrator status
-curl http://localhost:8000/ai/models/status
-
-# Run a kill-chain exercise (requires HITL approval for destructive stages)
-curl -X POST http://localhost:8000/hunt/killchain \
+# 3. Login → grab access token
+TOKEN=$(curl -s -X POST localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"objective": "assess lateral movement risk", "target_network": "192.168.1.0/24"}'
+  -d "{\"username\":\"admin\",\"password\":\"$BOOTSTRAP_ADMIN_PASSWORD\"}" \
+  | jq -r .access_token)
 
-# Approve / reject a pending destructive task
-curl -X POST http://localhost:8000/hunt/killchain/approve
-curl -X POST http://localhost:8000/hunt/killchain/reject
+# 4. Run a kill-chain exercise (HITL-gated)
+curl -X POST localhost:8000/hunt/killchain \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"objective":"assess lateral movement risk","target_network":"192.168.1.0/24"}'
+
+# 5. Test provider hardness
+curl -X POST localhost:8000/redteam/hardness \
+  -H "Authorization: Bearer $TOKEN" -d '{}'
+
+# 6. Train a Raven-specialist model (offline mock by default)
+raven train dataset-build --source audit --out data/audit.jsonl
+raven train job-start --recipe distill --dataset-id <id>
+raven train model-eval <model_id>
+raven train model-promote <model_id>
 ```
+
+For production deployment via Helm on Kubernetes see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Project Structure
 
 ```
 raven/
-├── ai/
-│   ├── base.py            # BaseAIClient ABC + AIMessage + AIResponse + SUPPORTED_PROVIDERS
-│   ├── factory.py         # create_client_from_config() — routes to correct adapter
-│   ├── registry.py        # ProviderRegistry singleton — hot-swap + named profiles
-│   ├── model_orchestrator.py  # Multi-role LM Studio orchestrator (FAST/REASON/VISION)
-│   ├── lmstudio_client.py # Backward-compat re-export shim
-│   └── providers/
-│       ├── lmstudio.py         # LM Studio native v1 API + OpenAI-compat fallback
-│       ├── openai_compat.py    # OpenAI / OpenRouter / Ollama / Nous / OpenCode
-│       └── anthropic_provider.py  # Anthropic native SDK
-├── api/              # FastAPI endpoints (includes /ai/provider runtime switch)
-├── cli/
-│   ├── main.py            # `raven` CLI entry point (typer)
-│   └── commands/
-│       ├── provider.py    # raven provider set/save/load/list/delete/providers
-│       └── model.py       # raven model set/list/status
-├── core/             # ThreatDetector, AnomalyDetector, BehavioralProfiler
-├── hunters/          # HypothesisGenerator, AutomatedInvestigator, KillChainPlanner
-├── ml/               # ZeroDayDetector, BehavioralAnalyzer, CVEMatcher, ...
-├── tools/            # SSH, Bash, Nmap, Metasploit, Nuclei, Empire, Ghidra, Shodan
-├── mitigation/       # ContainmentActions, RemediationEngine, ResponseOrchestrator
-├── monitoring/       # MetricsCollector, AlertManager, DashboardAPI
-└── config/           # Settings and environment (pydantic-settings)
+├── ai/                   Multi-provider AI runtime
+│   ├── base.py             BaseAIClient ABC + SUPPORTED_PROVIDERS
+│   ├── factory.py          create_client_from_config() router
+│   ├── registry.py         ProviderRegistry singleton — hot-swap + profiles
+│   ├── model_orchestrator.py  FAST / REASON / VISION role routing
+│   └── providers/          lmstudio · openai_compat · anthropic · tinker
+├── auth/                 JWT + RBAC (viewer/operator/admin) + Argon2id
+├── approval/             Hermes-style approval gate + UNRECOVERABLE_BLOCKLIST
+├── redteam/              Jailbreak detector + Parseltongue + hardness + gated godmode
+├── training/             Tinker continual-learning subsystem
+│   ├── client.py           Real Tinker SDK + MockTinkerClient
+│   ├── datasets/           5 builders with PII scrubbing
+│   ├── jobs/               DistillJob · SFTJob · CodeRLJob
+│   ├── registry.py         ModelVersion + TrainingJob + ABTestRun store
+│   ├── abtest.py           Bernoulli router + auto-promote/rollback
+│   └── eval.py             Hardness + canary + CyberGym smoke
+├── audit/                Mutation audit log + middleware (X-Request-ID)
+├── observability/        structlog + OpenTelemetry + Prometheus metrics
+├── api/                  FastAPI app + routers per subsystem
+├── cli/                  `raven` Typer CLI (provider/model/prompt/approval/redteam/train)
+├── core/                 ThreatDetector + AnomalyDetector + BehavioralProfiler
+├── hunters/              Hypothesis + Investigation + KillChainPlanner (Incalmo)
+├── ml/                   ZeroDayDetector + VariantAnalyzer (ZeroDayBench)
+├── tools/                SSH (RejectPolicy) · Bash (no shell) · Nmap · Nuclei · Empire · Ghidra · Shodan
+├── mitigation/           Containment + Remediation + ResponseOrchestrator
+└── config/               Pydantic-settings with prod-mode safety guard
 deployment/
-├── lmstudio.service  # systemd unit for LM Studio daemon
-└── raven.service     # systemd unit for Raven API
+├── helm/raven/             Helm chart (HPA + PDB + NetworkPolicy + ServiceMonitor)
+├── lmstudio.service        systemd unit for local dev
+└── raven.service           systemd unit for local dev
+docs/
+├── approval-and-redteam.md
+├── training.md
+├── benchmark.md          (planned — CyberGym integration)
+└── runbooks/
 ```
 
 ## API Endpoints
 
-### AI Provider (runtime switch)
+All mutating routes require JWT bearer + role. Read routes accept any authenticated user.
+
+### Authentication
+
+| Method | Path | Role | Description |
+|---|---|---|---|
+| `POST` | `/auth/login` | — | username + password → access + refresh tokens |
+| `POST` | `/auth/refresh` | — | refresh token → new pair |
+| `POST` | `/auth/logout` | viewer | revoke refresh token |
+| `GET` | `/auth/me` | viewer | current user info |
+
+### AI provider runtime switching
+
+| Method | Path | Role |
+|---|---|---|
+| `GET`/`POST` | `/ai/provider` | viewer / admin |
+| `POST` | `/ai/model` | admin |
+| `GET`/`POST`/`PUT`/`DELETE` | `/ai/provider/profiles[/{name}]` | viewer / admin |
+| `GET`/`POST`/`DELETE` | `/ai/system-prompt` | viewer / admin |
+
+### Threat hunting
+
+| Method | Path | Role |
+|---|---|---|
+| `POST` | `/analyze` `/hunt` `/hunt/variant` `/hunt/code` `/investigate/target` | operator |
+| `POST` | `/hunt/killchain` | operator |
+| `POST` | `/hunt/killchain/approve` `/hunt/killchain/reject` | admin |
+| `POST` | `/mitigate` | operator |
+
+### Approval gate (Hermes-style)
+
+| Method | Path | Role |
+|---|---|---|
+| `GET`/`PATCH` | `/approval/mode` | viewer / admin |
+| `GET` | `/approval/decisions` | viewer |
+| `POST` | `/approval/decisions/{id}/{approve,deny}` | operator |
+| `GET`/`POST`/`DELETE` | `/approval/allowlist[/{pattern}]` | viewer / admin |
+
+### Red-team
+
+| Method | Path | Role |
+|---|---|---|
+| `POST` | `/redteam/scan` `/redteam/decode` | operator |
+| `POST` | `/redteam/hardness` | admin |
+| `POST` | `/redteam/godmode` | admin + `X-Raven-Authorization-Token` |
+
+### Training (Tinker)
+
+| Method | Path | Role |
+|---|---|---|
+| `GET` | `/training/tinker/status` `/training/datasets` `/training/jobs` `/training/models` | viewer |
+| `POST` | `/training/datasets` `/training/jobs[/{id}/cancel|finalize]` | admin |
+| `POST` | `/training/models/{id}/{eval,promote,rollback}` | admin |
+| `POST`/`GET` | `/training/abtest[/{id}/{record,stop}]` | admin / viewer |
+
+### Operational
 
 | Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/ai/provider` | Active provider status |
-| `POST` | `/ai/provider` | **Hot-swap provider** (no restart) |
-| `POST` | `/ai/model` | Change model (`provider:model` shorthand supported) |
-| `GET` | `/ai/providers` | List all supported providers |
-| `GET` | `/ai/provider/profiles` | List saved profiles |
-| `POST` | `/ai/provider/profiles/{name}` | Save current config as profile |
-| `PUT` | `/ai/provider/profiles/{name}` | Load a saved profile |
-| `DELETE` | `/ai/provider/profiles/{name}` | Delete a profile |
+|---|---|---|
+| `GET` | `/health` `/health/ready` `/health/startup` | K8s probes |
+| `GET` | `/metrics` | Prometheus exposition |
+| `GET` | `/audit/log` | Recent mutation audit entries (admin) |
 
-### Threat Hunting & Analysis
+## CLI
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/ai/status` | Active provider reachability + loaded models |
-| `GET` | `/ai/models/status` | Specialist model roles (FAST/REASON/VISION) |
-| `POST` | `/ai/analyze` | Code security analysis via active LLM |
-| `POST` | `/ai/hypothesis` | Generate threat hunting hypothesis |
-| `POST` | `/ai/validate` | Validate vulnerability finding |
-| `POST` | `/hunt` | Run threat hunting session |
-| `POST` | `/hunt/killchain` | Start autonomous kill-chain exercise |
-| `POST` | `/hunt/killchain/approve` | Approve pending HITL task |
-| `POST` | `/hunt/killchain/reject` | Reject pending HITL task |
-| `POST` | `/investigate/target` | Set SSH investigation target |
-| `GET` | `/metrics` | Prometheus-compatible metrics |
-| `GET` | `/alerts` | Active security alerts |
+```bash
+raven version
+raven provider {set|status|list|save|load|delete|providers}
+raven model {set|list|status}
+raven prompt {show|set|load|clear}
+raven approval {mode|status|allow|forget|test}
+raven redteam {scan|decode|hardness|godmode}
+raven train {status|dataset-build|dataset-list|job-start|job-status|job-list|
+             model-list|model-eval|model-promote|model-rollback}
+```
+
+## Security
+
+| Hardening | Reference |
+|---|---|
+| Default `SECRET_KEY` refused in **every** environment | `_enforce_secret_key_floor` |
+| `APPROVAL_MODE=off` (YOLO) refused in prod | `_enforce_prod_safety` |
+| Wildcard CORS refused in prod | `_enforce_prod_safety` |
+| `pickle`/`joblib` model loading gated by `ALLOW_PICKLE_MODELS` + `MODEL_PATH` jail | `raven/core/anomaly_detector.py`, `raven/ml/zero_day_detector.py` |
+| `BashExecutor` defaults to `shell=False`; opt-in `allow_shell=True` | `raven/tools/bash_executor.py` |
+| Patch IDs regex-validated + `shlex.quote`-wrapped | `raven/mitigation/remediation_engine.py` |
+| PIDs coerced to positive `int` | `raven/mitigation/containment_actions.py` |
+| SSH `paramiko.RejectPolicy` + operator-supplied `known_hosts` | `raven/tools/ssh_manager.py` |
+| Provider `base_url` allowlist | `raven/api/main.py` |
+| Scan paths jailed to `SCAN_ROOT` | `raven/api/main.py` |
+| Jailbreak detector on every `/ai/*` inbound | `raven/redteam/middleware.py` |
+
+Security policy + threat model: [SECURITY.md](SECURITY.md).
+Vulnerability disclosures: see `.windsurf/automation-memory/project-raven---flagged-vulnerabilities.json`.
 
 ## License
 
