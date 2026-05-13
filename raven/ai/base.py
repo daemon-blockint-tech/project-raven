@@ -150,6 +150,21 @@ class BaseAIClient(ABC):
         self.max_tokens: int = int(
             config.get("ai_max_tokens", config.get("lmstudio_max_tokens", 4096))
         )
+        # System prompt injected as the first message on every chat call.
+        # Set by ProviderRegistry.set_system_prompt() or overridden per-call.
+        self.system_prompt: str = config.get("ai_system_prompt", "")
+
+    # ------------------------------------------------------------------
+    # System prompt helpers
+    # ------------------------------------------------------------------
+
+    def _build_messages(self, messages: List[AIMessage]) -> List[AIMessage]:
+        """Prepend the system prompt if set and not already present."""
+        if not self.system_prompt:
+            return messages
+        if messages and messages[0].role == "system":
+            return messages
+        return [AIMessage(role="system", content=self.system_prompt)] + list(messages)
 
     # ------------------------------------------------------------------
     # Abstract — must implement in subclass
@@ -196,10 +211,10 @@ class BaseAIClient(ABC):
             if context
             else f"Analyze this code for security vulnerabilities:\n```\n{code}\n```"
         )
-        return self.chat([
+        return self.chat(self._build_messages([
             AIMessage(role="system", content=system),
             AIMessage(role="user", content=user),
-        ])
+        ]))
 
     def generate_hypothesis(self, indicators: Dict[str, Any]) -> AIResponse:
         system = (
@@ -209,10 +224,10 @@ class BaseAIClient(ABC):
             "Respond in JSON."
         )
         user = f"Security indicators:\n{json.dumps(indicators, indent=2)}"
-        return self.chat([
+        return self.chat(self._build_messages([
             AIMessage(role="system", content=system),
             AIMessage(role="user", content=user),
-        ], temperature=0.1)
+        ]), temperature=0.1)
 
     def validate_vulnerability(self, vuln_data: Dict[str, Any]) -> AIResponse:
         system = (
@@ -222,10 +237,10 @@ class BaseAIClient(ABC):
             "confidence (0-1), reasoning. Respond in JSON."
         )
         user = f"Potential vulnerability:\n{json.dumps(vuln_data, indent=2)}"
-        return self.chat([
+        return self.chat(self._build_messages([
             AIMessage(role="system", content=system),
             AIMessage(role="user", content=user),
-        ], temperature=0.0)
+        ]), temperature=0.0)
 
     def explain_cve(self, cve_id: str, description: str) -> AIResponse:
         system = (
@@ -233,10 +248,10 @@ class BaseAIClient(ABC):
             "root cause, affected versions, exploitation difficulty, mitigation."
         )
         user = f"CVE: {cve_id}\nDescription: {description}\n\nProvide a technical explanation."
-        return self.chat([
+        return self.chat(self._build_messages([
             AIMessage(role="system", content=system),
             AIMessage(role="user", content=user),
-        ])
+        ]))
 
     # ------------------------------------------------------------------
     # LM Studio model management stubs (no-op for cloud providers)

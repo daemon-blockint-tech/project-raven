@@ -21,6 +21,7 @@ import typer
 
 from raven.cli.commands.provider import app as provider_app
 from raven.cli.commands.model import app as model_app
+from raven.cli.commands.prompt import app as prompt_app
 
 # ---------------------------------------------------------------------------
 # ASCII banner (logo/ascii/ascii-art.txt)
@@ -72,6 +73,7 @@ app = typer.Typer(
 
 app.add_typer(provider_app, name="provider")
 app.add_typer(model_app, name="model")
+app.add_typer(prompt_app, name="prompt")
 
 
 @app.command("version")

@@ -83,6 +83,8 @@ async def startup_event():
         # OpenRouter extras
         "openrouter_http_referer": settings.openrouter_http_referer,
         "openrouter_title": settings.openrouter_title,
+        # System prompt (path resolved at startup; empty = disabled)
+        "ai_system_prompt_path": settings.ai_system_prompt_path,
     }
 
     # Initialise provider registry (hot-swappable AI client)
@@ -523,6 +525,49 @@ async def ai_delete_profile(name: str):
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Profile not found: {name!r}")
     return {"deleted": name}
+
+
+@app.get("/ai/system-prompt")
+async def ai_get_system_prompt():
+    """Return the currently active system prompt."""
+    registry = ProviderRegistry.get_instance()
+    prompt = registry.get_system_prompt()
+    return {
+        "system_prompt": prompt,
+        "length": len(prompt),
+        "active": bool(prompt),
+    }
+
+
+@app.post("/ai/system-prompt")
+async def ai_set_system_prompt(payload: Dict[str, Any]):
+    """
+    Set a new system prompt at runtime (affects all subsequent AI calls).
+
+    Body options (mutually exclusive, checked in order):
+      {"prompt": "You are Raven..."}           — raw text
+      {"file": "RAVEN_SYSTEM_PROMPT.md"}       — load from file path
+    """
+    registry = ProviderRegistry.get_instance()
+    if "file" in payload:
+        path = payload["file"]
+        try:
+            prompt = registry.load_system_prompt_from_file(path)
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+    elif "prompt" in payload:
+        prompt = payload["prompt"]
+        registry.set_system_prompt(prompt)
+    else:
+        raise HTTPException(status_code=400, detail="Provide 'prompt' (text) or 'file' (path)")
+    return {"set": True, "length": len(prompt)}
+
+
+@app.delete("/ai/system-prompt")
+async def ai_clear_system_prompt():
+    """Clear the system prompt (AI calls will have no injected context)."""
+    ProviderRegistry.get_instance().set_system_prompt("")
+    return {"cleared": True}
 
 
 @app.get("/ai/providers")

@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     lmstudio_temperature: float = 0.2
     lmstudio_max_tokens: int = 4096
 
+    # System prompt — injected as the first message on every AI call
+    # Path is resolved relative to CWD. Set to empty string to disable.
+    ai_system_prompt_path: str = "RAVEN_SYSTEM_PROMPT.md"
+
     # OpenRouter-specific options
     openrouter_http_referer: str = "https://raven.local"
     openrouter_title: str = "Project Raven"
