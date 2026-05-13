@@ -103,6 +103,25 @@ class Settings(BaseSettings):
     offensive_redteam_session_token: str = ""
 
     # -----------------------------------------------------------------
+    # Tinker — managed LoRA fine-tuning (Thinking Machines Lab)
+    # -----------------------------------------------------------------
+    tinker_api_key: str = ""
+    tinker_use_mock: bool = False
+    tinker_default_base_model: str = "meta-llama/Llama-3.1-70B-Instruct"
+    tinker_default_rank: int = 64
+    tinker_max_concurrent_jobs: int = 2
+    tinker_polling_interval_seconds: int = 60
+
+    # Continual learning loop — disabled by default
+    continual_learning_enabled: bool = False
+    continual_learning_min_examples: int = 100
+
+    # A/B testing defaults
+    abtest_default_traffic_pct: float = 0.05
+    abtest_min_samples: int = 500
+    abtest_promote_threshold_pct: float = 0.95
+
+    # -----------------------------------------------------------------
     # ML
     # -----------------------------------------------------------------
     model_path: str = "./models"
@@ -198,6 +217,11 @@ class Settings(BaseSettings):
         if self.approval_mode == "off":
             errors.append(
                 "APPROVAL_MODE=off (YOLO) is forbidden in prod — use 'manual' or 'smart'"
+            )
+        if self.continual_learning_enabled and not self.tinker_api_key and not self.tinker_use_mock:
+            errors.append(
+                "CONTINUAL_LEARNING_ENABLED=true requires TINKER_API_KEY "
+                "(or set TINKER_USE_MOCK=true for dry-run mode)"
             )
         if errors:
             raise ValueError(

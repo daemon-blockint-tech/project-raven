@@ -52,5 +52,9 @@ def create_client_from_config(config: Dict[str, Any]) -> BaseAIClient:
         from raven.ai.providers.anthropic_provider import AnthropicClient
         return AnthropicClient(cfg)
 
+    if provider == "tinker":
+        from raven.ai.providers.tinker_provider import TinkerClient
+        return TinkerClient(cfg)
+
     from raven.ai.providers.openai_compat import OpenAICompatClient
     return OpenAICompatClient(cfg)

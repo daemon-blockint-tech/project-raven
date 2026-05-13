@@ -127,6 +127,40 @@ REDTEAM_GODMODE_ATTEMPTS = Counter(
     ["outcome"],   # outcome: refused|partial|full
 )
 
+# ---------------------------------------------------------------------------
+# Training / Tinker
+# ---------------------------------------------------------------------------
+
+TRAINING_JOBS = Counter(
+    "raven_training_jobs_total",
+    "Training jobs submitted to Tinker.",
+    ["recipe", "outcome"],   # outcome: started|succeeded|failed|cancelled
+)
+
+TRAINING_DATASET_SIZE = Gauge(
+    "raven_training_dataset_size",
+    "Most recently built dataset size by source.",
+    ["source"],
+)
+
+MODEL_VERSIONS = Gauge(
+    "raven_model_versions_total",
+    "Number of registered model versions by status.",
+    ["status"],
+)
+
+ABTEST_WIN_RATE = Gauge(
+    "raven_abtest_win_rate",
+    "Candidate win rate (0–1) for an A/B test run.",
+    ["run_id"],
+)
+
+ABTEST_TRAFFIC = Gauge(
+    "raven_abtest_traffic_ratio",
+    "Configured candidate traffic fraction for an A/B test run.",
+    ["run_id"],
+)
+
 
 # ---------------------------------------------------------------------------
 # Middleware

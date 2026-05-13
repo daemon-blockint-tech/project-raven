@@ -108,6 +108,17 @@ SUPPORTED_PROVIDERS: Dict[str, ProviderInfo] = {
         description="Nous Research Portal (Hermes models)",
         example_models=["nous-hermes-2-mixtral-8x7b", "hermes-3-llama-3.1-405b"],
     ),
+    "tinker": ProviderInfo(
+        name="tinker",
+        default_base_url="",
+        needs_api_key=True,
+        description="Thinking Machines Lab Tinker — Raven-trained fine-tunes",
+        example_models=[
+            "meta-llama/Llama-3.1-8B-Instruct",
+            "meta-llama/Llama-3.1-70B-Instruct",
+            "Qwen/Qwen2.5-72B-Instruct",
+        ],
+    ),
 }
 
 

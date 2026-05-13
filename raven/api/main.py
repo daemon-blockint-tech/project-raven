@@ -52,6 +52,7 @@ from raven.observability import (
 from raven.observability.tracing import instrument_app
 from raven.api.routes_approval import router as approval_router
 from raven.api.routes_redteam import router as redteam_router
+from raven.api.routes_training import router as training_router
 from raven.redteam.middleware import JailbreakDetectionMiddleware
 
 # Configure structured logging early (JSON in prod/staging, console in dev)
@@ -68,10 +69,11 @@ app = FastAPI(
     version="0.2.0",
 )
 
-# Mount auth, approval, redteam routers
+# Mount routers
 app.include_router(auth_router)
 app.include_router(approval_router)
 app.include_router(redteam_router)
+app.include_router(training_router)
 
 # Observability middleware (order matters: metrics → audit → jailbreak → CORS)
 app.add_middleware(MetricsMiddleware)
