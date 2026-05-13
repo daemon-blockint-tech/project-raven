@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 8/98]
+\PYGZdl{} find /workspace/src\PYGZhy{}vul \PYGZhy{}path \PYGZdq{}*LibGfx*\PYGZdq{} \PYGZhy{}type d
+/workspace/src\PYGZhy{}vul/serenity/Userland/Demos/LibGfxDemo
+/workspace/src\PYGZhy{}vul/serenity/Userland/Demos/LibGfxScaleDemo
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/Filters
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/Font
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/Font/WOFF
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/Font/OpenType
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/Font/OpenType/Hinting
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/ICC
+[...]
+\end{MintedVerbatim}

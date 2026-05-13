@@ -1,0 +1,82 @@
+\section{Other related work}
+
+We discussed most of the closely related work on LLM-assisted cyber offense capabilities   in \secRef{sec:background}.
+Before we conclude, we briefly discuss other related work. 
+ 
+
+\para{LLM security benchmarks}
+As mentioned in \secRef{sec:background}, there are many benchmarks for evaluating LLMs in CTF challenges (e.g.,~\cite{shao2024nyu_ctf, intercode_ctf, cyberseceval3, cyberseceval3, anurin2024catastrophic, googleFramework}).  However, they are challenge problems and single host attacks.
+Other non-CTF benchmarks  evaluate  general security knowledge (e.g.,~\cite{tihanyi2024cybermetric}). 
+
+\para{Other research in LLMs for security}
+In addition, there is work to create LLM-based systems for other security tasks.
+For instance, there is work evaluating LLMs ability to find vulnerable code (e.g.,~\cite{cyberseceval3}), using LLMs to summarize defender security logs (e.g.,~\cite{microsoft_security_copilot}), and using   LLMs for anomaly detection (e.g.,~\cite{elhafsi2023semantic}).
+ Other work has shown how LLMs can be used for social engineering tasks like phishing~\cite{llm_phishing, heiding2024auto_phish}. These  are orthogonal to our focus on multi-host red teams. 
+
+\section{Conclusions}
+We identify a key gap in existing LLM-based offense capabilities: autonomously executing red teaming exercises in multi-host environments. 
+We showed that state-of-the-art LLM-assisted cyber offense systems  struggle in this setting and shed light on the key failure modes of existing solutions.  
+By raising the level of abstraction via decoupling of planning and execution and introducing domain-specific task agents, \sys  demonstrates the feasibility  of   LLM-assisted red teaming in complex multi-host settings. Across a majority of the  diverse  environments in \benchmark,  \sys can autonomously find vulnerable services,  execute exploits, gain access to networks, discover configurations and vulnerabilities to laterally move, exploit vulnerabilities to escalate privileges, and exfiltrate data.
+
+We believe \sys  and \benchmark represent  a significant advance in our understanding of    LLM-assisted  red teaming capabilities in realistic multi-host settings.  We believe that by   lowering the barrier for defenders to  run red teaming exercises quickly, cheaply, and often, we can better enable them to proactively protect their networks against future attacks (both human and AI-based).  We hope our work  spurs  further advances in the ``science of security''  in the  use of AI-assisted autonomous cyber defense and offense capabilities.
+
+\section*{Ethics considerations}
+\label{sec:ethics}
+
+In computer security, there is a history of developing dual-use technologies~\cite{silic2013dual, rad2015sword}.
+For example: fuzzing can find bugs for defenders to patch or attacker to exploit, malware research can help defenders detect malware or attackers evade malware detection, and adversarial ML techniques can help defenders train better models or help attackers trick existing models.
+In many cases, such dual-use technologies benefit defenders more than attackers~\cite{silic2013dual, rad2015sword}.
+
+We acknowledge that \sys follows this trend as a dual-use technology: defenders can use \sys to proactively test their networks to discover security gaps or real attackers can use \sys to attack networks.
+\sys poses similar risks as other tools in this space such as prior LLM-based attack systems~\cite{zhang2024cybench, pentestgpt, mayoral2025cai, wang2025cybergym} and non-LLM attack systems~\cite{caldera, cobalt, enoch2020harmer, merlin}.
+
+However, understanding the limits of AI-assisted autonomous attacks can benefit red teams as shown in this paper. 
+It will also help defenders guard against future AI-assisted attackers by helping them play on a level footing by proactively assessing vulnerabilities and security gaps in their networks. 
+Finally, we believe that understanding the limits and capabilities of LLM-assisted offense capabilities whether for red teaming  or attacks, is valuable to advance the science of AI-meets-security for key stakeholders across academia, industry, governments, and policymakers. 
+
+Next, we primarily discuss the ethical principle of beneficence with respect to several key stakeholders because it is the most relevant:
+\begin{itemize}
+    \item \textbf{LLM providers} LLM providers could both benefit and face harm from this research. 
+    LLM providers could benefit by profiting off of future \sys-like tools that use LLMs to find security gaps in networks.
+    This research could also harm the reputation of providers if bad actors utilize LLMs to maliciously hack networks using LLMs.
+    Furthermore, the research could impact the profits of providers if policymakers decide to regulate the usage of LLMs based on our findings.
+    \item \textbf{Companies} Similar to LLM providers, companies could both benefit and face harm from this research.
+    Companies already use non-LLM autonomous attack tools~\cite{cobalt, caldera} to find gaps in their security. Similarly, companies could use the results of this research for the same purpose.
+    However, similar to other autonomous attack tools, bad actors could use these tools to cause harm against companies such as a cyber attack. 
+    \item \textbf{Policymakers} There is great interest in regulating AI technology by government organizations and policymakers.
+    \sys and \benchmark can assist policymakers in measuring the red teaming capability of LLMs.
+    Many government agencies and frontier labs are already evaluating other cybersecurity capabilities of LLMs~\cite{anthropic_AISI, zhang2024cybench, o1systemcard} to help inform their policies and our research further sheds light on these capabilities.
+    \item \textbf{Security vendors} Security vendors could benefit from \sys helping them assess networks for security gaps. Their customers could benefit from dramatically lowered cost, time, and effort  needed to launch complex red teaming exercises. 
+    
+    \item \textbf{Society at large} As society becomes more dependent on technology, the security risks increase. Autonomous attack tools can both help prevent these security risks and lower the bar for bad actors to execute attacks.
+\end{itemize}
+
+
+\para{Decision} 
+We decided to proceed with this research because we believe the benefits of autonomous red teaming outweigh the potential harms.
+Our belief is consistent with similar prior systems~\cite{pentestgpt, zhang2024cybench, caldera, xu2024autoattacker, Hu2020AutoPentestDRL, metasploit, kouremetis2025occult, wang2025cybergym} and the analysis of that practice in computer security research~\cite{silic2013dual}.
+Furthermore, we also mitigated the risks to LLM providers by preemptively notifying the providers to add guardrails if they choose to do so.
+
+
+\para{Open Science}
+\label{app:open_science}
+In addition, reproducibility and transparency are key tenets to scientific research~\cite{national2019reproducibility}.
+Open source code both assists researchers to reproduce this work and accelerates scientific progress.
+As a result, similar to other prior offensive systems~\cite{pentestgpt, zhang2024cybench, caldera, metasploit, mayoral2025cai}, MHBench, our tools to reproduce prior work, and \sys will be open source and publicly available to the research community: \hyperlink{https://github.com/bsinger98/Incalmo}{https://github.com/bsinger98/Incalmo}.
+
+\section*{LLM usage considerations}
+
+\textit{Originality:} LLMs were used for editorial purposes in this manuscript, and all outputs were inspected by the authors to ensure accuracy and originality.
+
+\textit{Transparency:} We evaluated \sys with both open- and closed-source LLMs, but we only observed meaningful results with the closed-source models. 
+We acknowledge that closed-source LLMs may make some of the results harder to reproduce.
+However, we mitigate this limitation by open-sourcing MHBench, prompts, model numbers, and \sys's code.
+We also show in \secRef{sec:eval} that \sys performs well across a diverse range of LLMs.
+As open-source LLMs increase in capabilities, we envision these models could be used instead of closed-source LLMs.
+
+\textit{Responsibility:}
+We are unable to calculate exact carbon footprints for our experiments~\cite{jegham2025hungry}.
+Experiments cost at most \$15 of credits and in total we spent around \$3,000 of LLM credits across providers.
+We also took care to design and debug \sys on smaller LLMs before executing thorough evaluations to minimize the environmental impact.
+Furthermore, cyberattacks are extraordinarily costly (in terms of money, energy, human harm, etc) for society~\cite{equifax_ftc_settlment, colonial_pipeline_techtarget}.
+As a result, we conclude that the potential benefits of reducing the cost of red teaming networks to proactively find security gaps outweigh the environmental impact of the research.

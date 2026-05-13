@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 1/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace
+total 2214212
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root        723 May  6 10:26 README.md
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root        214 May  6 10:26 description.txt
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root       4450 May  6 10:26 error.txt
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 2267326222 May  6 10:26 repo\PYGZhy{}vul.tar.gz
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root        870 May  6 10:26 submit.sh
+\end{MintedVerbatim}

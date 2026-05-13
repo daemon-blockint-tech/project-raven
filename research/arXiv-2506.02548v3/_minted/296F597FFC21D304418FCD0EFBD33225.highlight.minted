@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 93/95]
+\PYGZdl{} cat \PYGZgt{} /workspace/poc4.pdf \PYGZlt{}\PYGZlt{}EOF
+\PYGZpc{}PDF\PYGZhy{}1.4
+1 0 obj
+\PYGZlt{}\PYGZlt{} /Type /Catalog /Pages 2 0 R \PYGZgt{}\PYGZgt{}
+endobj
+2 0 obj
+\PYGZlt{}\PYGZlt{} /Type /Pages /Kids [3 0 R] /Count 1 \PYGZgt{}\PYGZgt{}
+endobj
+3 0 obj
+[...]
+cat \PYGZgt{} /workspace/poc4.pdf \PYGZlt{}\PYGZlt{}EOF
+\PYGZpc{}PDF\PYGZhy{}1.4
+1 0 obj
+\PYGZlt{}\PYGZlt{} /Type /Catalog /Pages 2 0 R \PYGZgt{}\PYGZgt{}
+endobj
+2 0 obj
+\PYGZlt{}\PYGZlt{} /Type /Pages /Kids [3 0 R] /Count 1 \PYGZgt{}\PYGZgt{}
+endobj
+3 0 obj
+[...]
+\end{MintedVerbatim}

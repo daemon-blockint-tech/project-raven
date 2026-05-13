@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 77/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/wasmtime/fuzz/corpus/cranelift\PYGZhy{}fuzzgen | head \PYGZhy{}10
+ls: cannot access \PYGZsq{}/workspace/src\PYGZhy{}vul/wasmtime/fuzz/corpus/cranelift\PYGZhy{}fuzzge[...]
+\end{MintedVerbatim}

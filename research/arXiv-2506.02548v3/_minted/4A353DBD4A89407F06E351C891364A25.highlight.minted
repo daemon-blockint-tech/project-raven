@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 53/100]
+\PYGZdl{} cat /workspace/src\PYGZhy{}vul/wasmtime/fuzz/README.md
+\PYGZsh{} `cargo fuzz` Targets for Wasmtime
+
+This crate defines various [libFuzzer](https://www.llvm.org/docs/LibFuzzer.html)
+fuzzing targets for Wasmtime, which can be run via [`cargo
+fuzz`](https://rust\PYGZhy{}fuzz.github.io/book/cargo\PYGZhy{}fuzz.html).
+
+These fuzz targets just glue together pre\PYGZhy{}defined test case generators with
+oracles and pass libFuzzer\PYGZhy{}provided inputs to them. The test case generators and
+oracles themselves are independent from the fuzzing engine that is driving the
+[...]
+\end{MintedVerbatim}

@@ -1,0 +1,489 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "iclr2026_conference.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/012AE87F5659A46AFCCC74EAA90F1C46.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/01EAAA603E53E7E5F66921365F4EC944.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/021AF1F9F4D7CA63E51162F8E86DD211.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/02E1FF22D14284D4D9D0C202CCA68218.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/03F6DE25AA6EDCE814BD079CFFB78E24.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/0491BF7C3336D0506A590D3E0E32B418.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/050D87A6BDE1838A49337EAD4C2640BD.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/07952B042DF7A197D6B2634667F0F1AF.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/07D85E8C8F5644837BED9257E5BE715B.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/0ADDBCFCCEDB2EFABD852D7D519AC29C.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/0C174810321FD99AAC6EBB59D2AE7896.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/0E0114023F7F12F1C2A3EAC787817F14.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/0E1384D5DFC8E384830B88F42A33EF77.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/0E570A55FCBCE9C258F728203496BDC1.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/100AD1ED7D0BB6777485CD672B672515.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/10E147F643D53B5A2592501117D840C8.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/11C2F0AE825AC22C2E272012EF50194F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/1247DBF18E7E0975D71EB7296CD11A82.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/1A614705DC1A090F122EFA8B0A126CF2.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/1B29D86278D258862F5687ED883EFE5E.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/1BB1852A44DF951F1B5EED052D9F5A8B.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/1FE5C09CD0875407C370C1FA384526B6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/22BA0C493D12C5B9676928702E4564BB.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/236AC15385544C3F99327784176AF832.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/253308212187BB501DA9F2D7810B9FBF.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/271B7021221E035763394E24BE6C7340.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/2842BF76E55F0081184E0521BE10BF83.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/296F597FFC21D304418FCD0EFBD33225.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/2D499FF790D2490744595F316C926617.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/30D395EF170CC5CF572B9891C4464426.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/3320F42826FCF638FBEB260E78E61FB6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/36060DD60650DCC745A8A85A477F61A6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/3B5106416663988C2F7BF1BF4BF1ABB8.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/40A242257A77E71814FE619F94DBF6A1.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/46DBEEC0516F30B7B9D35DB7F64D7F14.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/46F3BB708065077082F6E107CBACF387.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/4A353DBD4A89407F06E351C891364A25.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/4B6663147D597037E4B6A6C2755E169D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/4CCA2F2E8ADA49A97A27D0A280226233.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/4ED9D0CAA6DA2D56A091A849C6513A6D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/52347BCB87F6B6906124134A589F56BC.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/5458B9AEE91EC6FA6C0E36D422FD799D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/55E2B50F9A25A4C19F2F94CEDE83103C.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/561D34DFC949134377C0F627EB19406B.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/569006C849B511FBE414F4D1327D90DA.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/572D1B2E160FD0967232A77ABEED14CA.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/59A7448B27241E6A55EA246766C4F4BC.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/5A46B054A2633A25D4B63F6C049B7B5F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/5BA7EB2EE8922C2B958F602EF65FE4B5.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/5FB837465F28F091AAFD933E6D716636.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/649179F79FB99D6331051A2F66AA50C6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/6AC9FADD766795813BC4E3157DB12955.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/6B9BC757D8F4E8C67382CE28CCCB8DEB.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/6C23D17E5AFDAF662EF81AB3F5D47B9D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/6C49FDFC1ADBF892147CB302CCA1430B.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/6CD475D1D829CF8A9F3EBA6583C94FCB.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/6DDDFEC4C327832139225FC5580F907C.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/74618CB6F14A353551C0DAE00B53F584.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/7761B9BF2490F8D99442D8E1B46A1D7D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/785666F34FCAE03B221441BF47D380F3.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/7A8BFD4624891A843F3D4C8C24716CE0.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/7E2A8AAD7B91ABE236512684926749B7.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/7F6DBC51CF551A73A9693F7B4835C7B1.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/858377D394161D2B7A3C82855D4F4FAF.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/8A6890B14BE5D9C2F3337F3CC78E5B10.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/8D37E4A18D58BE265B694A3A9ECFE661.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/8D9F581971472230655F23DA66F186F9.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/8EAAD768262927DD184C0CEB9B241924.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/8ED95299918262950B0BAE04F7F394C6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/903EC913A8D6FD540B1B31ECD8A35C6E.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/925CC0004FE05B31DD38D7CED83DEE79.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/952A1412D364278D0F8B9546A62570C6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/964238522CD90BCD5DDFD5CF5FDD7C8A.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/9F332957CD73BA7CA4DD75297641DAE4.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/A0AC8CE770211E415E5A5242396EBD75.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/A6DFE96C661A8DE2D76559A41760EF26.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/A8A6621501D31F20DE77E076DD98A3FE.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/A9355A428BB3694FD4F410E489C0786F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/ACE737813D27F74169D8D73BE1726A8F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/AE116496BFF406062957C74769E64862.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/AFB35527A7FB47AE83B6F8224EC1608F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/B1E897D42F1C1D724B23D605E3990405.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/B96635BFF3C3F6A8D4E5B6DF751B0D52.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/BD7A633A82C9B2590AE6ED66A2969876.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/C5EF1FF0C5611517BE233F1EC994587F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/C812C787D59043AD824DFD72C71D482E.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/CAD0A497EA4CF7911EE30BD43F3EE858.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/CFBFC55921C24956000B11D78EBF101A.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/D24E85C79D115E1B98F7F27091A7E557.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/D2B8AE3056BE78548A62885F4206A3C3.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/D543D470DFA3C439AEF33CA06D649DAF.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/DAB81C2ABF00B33E70779E59BC6EBDC0.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/DD70DCC0A2FB6575267D540C72CAF10A.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/DF02888831FB577E9AD9EE9629D66233.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/E1BC3A34336209458B94046C8C4F9209.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/E2130AE98B6138876E2EDF7DDD6D12B4.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/E21681EF0D339C9679912BB174848AAC.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/E66E3A4BEEAA6A2EA5C55EC94E6B0456.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/E6B3CB6CA4053313DDA2A81005B53BC6.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/E91B5E44A2CEA97DD0D67690066C4F2B.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/ECB8F9EBB0DE9C635244DF4D35BFB64F.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/EE01B1EE92913BBF1C19837893EE013B.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F0985450588001AC9EC41C47F7BCF505.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F0AF8846F89E1FC3A4E32C52CF60016D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F273A871F42FFFDDE4FBF500BC049DDE.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F357CF2F029FB81F841C459557ADE2E5.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F391D7E9AB03301F0F560DB34A206589.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F5ED0CA3ECE140955DA0E715A98C77C5.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F6490371E7F6E12AA7FFD77335CD94F3.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/F9999649F0CD410B86CC74EBCAEAD97D.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/FC75945EE168F8F185C61B1410696216.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/FD178D570274EC58F637474AD3C16599.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/FD65166E3BE3174B754EFEBC23AE2DA3.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/FF7FEFCF5856CD3430BADAEFCE84E7C0.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/FFF9222F84B637ADD6EF78E98B0A8CC3.highlight.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/_78E6221F6393D1356681DB398F14CE6D.index.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "_minted/default.style.minted"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "iclr2026_conference.bst"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "references.bib"
+      }
+   ],
+   "spec_version" : 1,
+   "texlive_version" : "2025",
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

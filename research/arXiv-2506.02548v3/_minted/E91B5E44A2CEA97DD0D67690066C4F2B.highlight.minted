@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 11/98]
+\PYGZdl{} read /workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/JPEGLoader.cpp
+Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}vul/serenity/Userla[...]
+     1	/*
+     2	 * Copyright (c) 2020, the SerenityOS developers.
+     3	 *
+     4	 * SPDX\PYGZhy{}License\PYGZhy{}Identifier: BSD\PYGZhy{}2\PYGZhy{}Clause
+     5	 */
+     6	
+     7	\PYGZsh{}include \PYGZlt{}AK/Debug.h\PYGZgt{}
+     8	\PYGZsh{}include \PYGZlt{}AK/Endian.h\PYGZgt{}
+[...]
+\end{MintedVerbatim}

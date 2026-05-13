@@ -1,0 +1,80 @@
+\documentclass[conference,compsoc]{IEEEtran}
+
+\usepackage{filecontents}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{array, booktabs, multirow}
+\usepackage{pifont}
+\usepackage{xspace}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{bbm}
+
+
+\usepackage{siunitx}
+\sisetup{
+  detect-mode,
+  tight-spacing = true,
+  group-digits = false,
+}
+
+\usepackage{enumitem}
+
+\begin{document}
+\input{macros}
+
+\title{\sys: An Autonomous LLM-assisted System for \\ Red Teaming Multi-Host Networks}
+
+
+\author{
+\IEEEauthorblockN{
+Brian Singer\IEEEauthorrefmark{1}, 
+Keane Lucas\IEEEauthorrefmark{2}, 
+Lakshmi Adiga\IEEEauthorrefmark{1},
+Meghna Jain\IEEEauthorrefmark{1},
+Lujo Bauer\IEEEauthorrefmark{1},
+Vyas Sekar\IEEEauthorrefmark{1},
+}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Carnegie Mellon University}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}Anthropic}
+}
+
+\maketitle
+
+
+\input{code_macros}
+
+
+
+\input{text/abstract}
+
+\input{text/introduction}
+
+\input{text/background/background}
+
+\input{text/background/why_llms_bad}
+
+\input{text/design/design_vyas}
+
+
+\input{text/design/case_study}
+
+\input{text/implementation}
+
+\input{text/evaluation/evaluation}
+
+\input{text/limitations}
+
+\input{text/conclusion}
+
+\bibliographystyle{abbrv}
+\bibliography{refs}
+
+\input{text/appendix}
+
+
+\end{document}

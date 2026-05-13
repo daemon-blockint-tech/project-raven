@@ -1,0 +1,54 @@
+\begin{table}[ht]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{26pt}
+\captionsetup{width=.6\linewidth}
+\caption{All crash types in \sysname and the corresponding numbers of benchmark instances. Most of these crashes are due to memory safety issues. Note that these crash types are reported by sanitizers and may not fully reflect the underlying root causes of the vulnerabilities.}
+\vspace{-2mm}
+\label{tab:crash_types}
+% \begin{minipage}[t]{.48\textwidth}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Crash Type} & \textbf{\# Instances} \\
+\midrule
+Heap-buffer-overflow READ            & 458 \\
+Use-of-uninitialized-value           & 287 \\
+Wild-address READ                    & 163 \\
+Heap-buffer-overflow WRITE           & 116 \\
+Heap-use-after-free READ             & 110 \\
+Stack-buffer-overflow READ           & 66  \\
+Stack-buffer-overflow WRITE          & 52  \\
+Index-out-of-bounds                  & 48  \\
+Global-buffer-overflow READ          & 43  \\
+Wild-address WRITE                   & 27  \\
+Heap-double-free                     & 23  \\
+Negative-size-param                  & 17  \\
+Bad-cast                              & 13  \\
+Bad-free                              & 10  \\
+% \bottomrule
+% \end{tabular}
+% \end{minipage}
+% \hfill
+% \begin{minipage}[t]{.48\textwidth}
+% \begin{tabular}{lr}
+% \toprule
+% \textbf{Crash Type} & \textbf{\# Inst.} \\
+% \midrule
+Use-after-poison READ                & 9   \\
+Stack-use-after-return READ          & 9   \\
+Heap-use-after-free WRITE            & 8   \\
+Null-dereference READ                & 8   \\
+Memcpy-param-overlap                 & 7   \\
+Stack-buffer-underflow READ          & 7   \\
+Global-buffer-overflow WRITE         & 5   \\
+Stack-use-after-scope READ           & 5   \\
+Container-overflow READ              & 4   \\
+Use-after-poison WRITE               & 4   \\
+Dynamic-stack-buffer-overflow WRITE  & 3   \\
+Incorrect-function-pointer-type      & 2   \\
+Container-overflow WRITE             & 2   \\
+Stack-buffer-underflow WRITE         & 1   \\
+\bottomrule
+\end{tabular}
+% \end{minipage}
+\end{table}

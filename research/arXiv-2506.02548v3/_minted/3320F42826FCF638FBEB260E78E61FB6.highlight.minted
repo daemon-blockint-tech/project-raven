@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 9/98]
+\PYGZdl{} find /workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx \PYGZhy{}name \PYGZdq{}*jpeg*\PYGZdq{}[...]
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/JPEGLoader.cpp
+/workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/JPEGLoader.h
+\end{MintedVerbatim}

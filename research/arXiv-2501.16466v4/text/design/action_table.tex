@@ -1,0 +1,25 @@
+\begin{table}
+  \caption{How \sys non-LLM task agents translate tasks}
+  \label{tab:action_translation}
+  \centering
+  \footnotesize         %
+  \setlength{\tabcolsep}{2pt}
+  \begin{tabularx}{\linewidth}{%
+      >{\raggedright\arraybackslash}p{0.33\linewidth} %
+      X}                                               %
+    \toprule
+    \textbf{High‑level tasks} & \textbf{\sys agent translation} \\
+    \midrule
+    \texttt{\footnotesize FindInformation}&
+      Searches common directories for key data and credentials. \\
+    \texttt{Scan} &
+      Runs \texttt{nmap}/\texttt{nikto} to find vulnerable services. \\
+    \texttt{LateralMove} &
+      Searches for and executes exploits from an internal library or Metasploit's library.\\
+    \texttt{EscalatePrivilege}&
+      Searches for and executes exploits from an internal library or Metasploit's library \\
+    \texttt{ExfiltrateData} &
+      Finds shortest path to attacker's host and then exfiltrates the data.\\
+    \bottomrule
+  \end{tabularx}
+\end{table}

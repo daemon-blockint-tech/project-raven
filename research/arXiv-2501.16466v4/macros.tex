@@ -1,0 +1,109 @@
+\newcommand{\etal}[0] {et al., }
+\newcommand{\eg}[0] {e.g., }
+\newcommand{\ie}[0] {i.e., }
+\newcommand{\tableRef}[1] {Table~\ref{#1}}
+\newcommand{\figRef}[1] {Fig.~\ref{#1}}
+\newcommand{\secRef}[1] {Sec.~\ref{#1}}
+\newcommand{\appRef}[1] {Appendix~\ref{#1}}
+\newcommand{\findingRef}[1] {Finding~\ref{#1}}
+
+
+\newcommand{\sys}[0] {Incalmo\xspace}
+\newcommand{\sysNoActions}[0] {Incalmo-WHT\xspace}
+\newcommand{\sysNoReasoning}[0] {Incalmo-WS\xspace}
+\newcommand{\benchmark}[0] {MHBench\xspace}
+
+\newcommand{\sotaSystem}[0] {ExpertPromptShell\xspace}
+
+\newcommand{\acquisition}{Success\xspace}
+\newcommand{\comprehensiveness}{TotalAcquisition\xspace}
+\newcommand{\reliability}{Reliability\xspace}
+
+
+\newcommand{\para}[1] {{\em #1.}}
+
+\newcommand{\parabf}[1] {\smallskip \noindent {\bf #1:}}
+\newcommand{\smallTitle}[1]{\noindent {\bf #1}}
+\newcommand{\vyas}[1]{{\color{red} {(vs: #1)}}}
+\newcommand{\lujo}[1]{{\color{blue} {(Lujo: #1)}}}
+\newcommand{\brian}[1]{{\color{magenta} {(Brian: #1)}}}
+
+\newcounter{finding}
+\makeatletter
+\newenvironment{finding}[2]%
+{
+    \refstepcounter{finding}%
+    \protected@edef\@currentlabel{#1}%
+    \noindent
+    {
+        \begin{tcolorbox}
+        {
+            \textbf{Finding #1}: #2
+        }
+        \end{tcolorbox}
+    }
+}
+\makeatother
+
+\newcounter{limitation}
+\makeatletter
+\newenvironment{limitation}[2]%
+{
+    \refstepcounter{limitation}%
+    \protected@edef\@currentlabel{Failure mode \thelimitation}
+    \noindent
+    {
+        \noindent
+        \begin{tcolorbox}
+        {
+            \textbf{#1 (Failure mode \thelimitation)}: #2
+        }
+        \end{tcolorbox}
+    }
+    {\vspace{.2mm}}
+}
+\makeatother
+
+\newcounter{challenge}
+\makeatletter
+\newenvironment{challenge}[1]%
+{
+    \refstepcounter{challenge}%
+    \protected@edef\@currentlabelname{#1}%
+    \vspace{0.2cm}
+    \noindent
+    {
+        \vspace{1mm}
+        \noindent
+        \begin{tcolorbox}
+        {
+            \textbf{Challenge \thechallenge}: #1
+        }
+        \end{tcolorbox}
+    }
+    {\vspace{.2mm}}
+}
+\makeatother
+
+
+\newlist{packeditemize}{itemize}{1}
+\setlist[packeditemize]{
+  label=$\bullet$,
+}
+
+\newcommand{\tightcaption}[1]{ \vspace{0em}\caption{#1}\vspace{0em}}
+
+\newcommand{\promptText}[1] {
+    \smallskip {\ttfamily \footnotesize #1} \smallskip
+}
+
+\newenvironment{myquote}%
+  {\list{}{\leftmargin=0.12in\rightmargin=0.12in}\item[]}%
+  {\endlist}
+
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+\node[shape=circle,text=white,fill=black,draw,inner sep=1pt] (char) {\bf #1};}}
+
+\newcommand*\taskcircle[1]{\tikz[baseline=(char.base)]{
+\node[shape=circle,text=white,fill=black,draw,inner sep=1pt] (char) {\bf #1};}}

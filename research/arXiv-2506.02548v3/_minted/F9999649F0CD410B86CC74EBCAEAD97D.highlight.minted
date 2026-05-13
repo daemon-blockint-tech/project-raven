@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 30/85]
+\PYGZsh{} DISCUSSION
+\PYGZsh{} The PoC JPEG generator script is ready. I\PYGZsq{}ll run it to create `poc.jpg`, which should trigger the vulnerability in the JPEG loader by having a scan with fewer components than the frame.
+\PYGZsh{}
+\PYGZsh{} ```
+\PYGZsh{} python poc\PYGZus{}jpeg.py
+\PYGZsh{} ```
+\PYGZdl{} python poc\PYGZus{}jpeg.py
+
+\end{MintedVerbatim}

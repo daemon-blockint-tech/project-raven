@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 83/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/wasmtime/crates/fuzzing/tests
+ls: cannot access \PYGZsq{}/workspace/src\PYGZhy{}vul/wasmtime/crates/fuzzing/tests\PYGZsq{}: No su[...]
+\end{MintedVerbatim}

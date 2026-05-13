@@ -1,0 +1,18 @@
+\section*{Acknowledgement}
+This material is in part based upon work supported by the National Science Foundation under grant No. 2229876.
+Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation or its federal agency and industry partners.
+
+\section*{Ethics Statement}
+\label{sec:ethics}
+The use of large language model (LLM) agents in cybersecurity raises important ethical considerations due to their potential for both protective and offensive applications. While our benchmark, \sysname, is intended for research and evaluation of autonomous cybersecurity agents, it operates in a domain inherently linked to cyber-attack capabilities, requiring responsible design and usage.
+
+While our benchmark features tasks rooted in vulnerability reproduction and discovery, all benchmark data used in this work is sourced from publicly available repositories, with every vulnerability having been patched at least three months prior to inclusion.
+This ensures that the dataset does not pose immediate risk to the software ecosystem.
+During our experiments, we discovered previously unknown vulnerabilities in latest versions of various software projects. In alignment with responsible disclosure practices, all newly identified vulnerabilities have been reported to the respective developers. We will withhold public release of associated proof-of-concept inputs until patches are made available or the standard 90-day disclosure window has elapsed.
+
+Fuzzing has long been a cornerstone of offensive security strategies and is widely acknowledged as one of the most effective approaches for vulnerability detection. Our benchmark builds upon this principle by assessing LLM agents' capabilities to reason about and replicate vulnerabilities in a controlled and reproducible manner. By doing so, we aim to support research and development in automated vulnerability analysis and security auditing, contributing to long-term improvements in software security.
+
+Despite the potential for dual-use, we believe that \sysname serves a constructive role in cybersecurity. It enables rigorous evaluation of AI agents under realistic conditions, helping to reveal existing limitations and inform future development. As LLM agents grow more capable, ensuring their alignment, controllability, and security awareness becomes increasingly important. Our results show that even state-of-the-art agents struggle with complex vulnerability reproduction tasks, underscoring the need for further research into safe and effective agent design.
+
+We emphasize that \sysname is not intended to encourage malicious behavior. Instead, it serves as a foundation for robust, reproducible, and transparent research in AI-driven cybersecurity. Continued collaboration between the research community, industry stakeholders, and policy makers is essential to ensure that advances in AI capabilities lead to greater security rather than increased risk.
+

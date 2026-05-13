@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 84/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/wasmtime/crates/fuzzing/wasm\PYGZhy{}spec\PYGZhy{}interpreter/te[...]
+total 20
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 122 Apr 30 03:27 add.wat
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 237 Apr 30 03:27 memory.wat
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 103 Apr 30 03:27 oob.wat
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 190 Apr 30 03:27 shr\PYGZus{}s.wat
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root  98 Apr 30 03:27 simd\PYGZus{}not.wat
+\end{MintedVerbatim}

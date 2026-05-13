@@ -1,0 +1,52 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+I will provide you the message of a commit that fixes a security vulnerability. Your task is to determine if the commit message is high\PYGZhy{}quality. By \PYGZdq{}high\PYGZhy{}quality\PYGZdq{}, we require that the message must (i) contains at least one full sentence that describes the vulnerability or the fix to the vulnerability or (ii) provides the location of the vulnerability. We consider a commit message as low\PYGZhy{}quality also if the commit fixes multiple issues. Only output YES or No. Do not output anything else.
+
+The input will be in the following format:
+MESSAGE: the commit message
+
+Below I give you a few examples and explanations:
+MESSAGE: Code modernization
+OUTPUT: NO. The message is too unspecific and does not mention vulnerabilities.
+
+MESSAGE: RawDecoder::decodeUncompressed(): sanitize bpp
+OUTPUT: YES. The message mentions a vulnerability fix and the location of the vulnerability (RawDecoder::decodeUncompressed()).
+
+MESSAGE: https://bugs.chromium.org/p/oss\PYGZhy{}fuzz/issues/detail?id=7436
+OUTPUT: NO. The message is only a link and contains no detailed information.
+
+MESSAGE: [network\PYGZhy{}data] add prefix length checks (\PYGZsh{}3498)
+OUTPUT: NO. The message neither describes the vulnerability nor provides the location.
+
+MESSAGE: codegen.c (mrb\PYGZus{}last\PYGZus{}insn): no previous instruction on top.
+OUTPUT: YES. The message describes the fix and the location of the vulnerability.
+
+MESSAGE: Merge pull request \PYGZsh{}6222 from JacobBarthelmeh/alerts. don\PYGZsq{}t try to send an alert to a disconnected peer
+OUTPUT: NO. The message does not describe any vulnerability. Instead, it looks more like a functionality change.
+
+MESSAGE: coolkey: Do not interpret empty answers as success. Thanks to oss\PYGZhy{}fuzz. https://bugs.chromium.org/p/oss\PYGZhy{}fuzz/issues/detail?id=18868
+OUTPUT: YES. The message mentions that the bug is found by oss\PYGZhy{}fuzz. Therefore, it is a security vulnerability. The message also mentions the rough location (coolkey) and the fix.
+
+MESSAGE: RMF: avoid double free. Fixes https://bugs.chromium.org/p/oss\PYGZhy{}fuzz/issues/detail?id=9138. Credit to OSS Fuzz. master only
+OUTPUT: NO. The message only confirms that the commit fixes a double free vulnerability. However, it does not contain any detailed information about the vulnerability\PYGZsq{}s description, cause, or location.
+
+MESSAGE: [kern] Sanitize 4 bytes, not 2
+OUTPUT: NO. The message is too short and does not provide sufficient information.
+
+MESSAGE: [aat] Fix two wrongs that made a right before!
+OUTPUT: NO. The commit seems to fix multiple issues.
+
+MESSAGE: Fix overflow introduced in ce0d453222ca51c056f4f442988710eb0b696365
+OUTOUT: NO. The message lacks self\PYGZhy{}contained details.
+
+MESSAGE: Limit the number of elements in a vector (found by oss\PYGZhy{}fuzz)
+OUTPUT: NO. The message is too unspecific.
+
+MESSAGE: Fix illegal memory access
+OUTPUT: NO. The message is too unspecific.
+
+MESSAGE: Avoid uninitialized memory
+OUTPUT: NO. The message is too unspecific.
+
+MESSAGE: Fixed a bug in keyword arguments in block parameters; fix \PYGZsh{}4810. This is caused by incomplete fix in \PYGZsh{}4746
+OUTPUT: NO. The message relies too much on cross references.
+\end{MintedVerbatim}

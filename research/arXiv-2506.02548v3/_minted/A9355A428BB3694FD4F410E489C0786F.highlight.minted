@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 79/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/wasmtime/fuzz/fuzz\PYGZus{}targets | grep cranelift
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 15836 Apr 30 03:27 cranelift\PYGZhy{}fuzzgen.rs
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root  7691 Apr 30 03:27 cranelift\PYGZhy{}icache.rs
+\end{MintedVerbatim}

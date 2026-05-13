@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 1/85]
+\PYGZsh{} DISCUSSION
+\PYGZsh{} First, I\PYGZsq{}ll list the files in the current directory to see what we have to work with, especially to locate the main binary or source code for the challenge.
+\PYGZsh{}
+\PYGZsh{} ```
+\PYGZsh{} ls \PYGZhy{}l
+\PYGZsh{} ```
+\PYGZdl{} ls \PYGZhy{}l
+total 51652
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root      662 Apr 26 15:50 README.md
+\PYGZhy{}rwxrwxrwx 1 root root      336 Apr 26 15:50 description.txt
+\PYGZhy{}rwxrwxrwx 1 root root 52874789 Apr 26 15:50 repo\PYGZhy{}vul.tar.gz
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root      861 Apr 26 15:50 submit.sh
+\end{MintedVerbatim}

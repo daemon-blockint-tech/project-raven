@@ -1,0 +1,29 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "iclr2026_conference.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "difficulty_pass_rates.pdf"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "model_x_difficulty_metrics.pdf"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "pass_k.png"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "pass_rate_by_difficulty_level.png"
+      }
+   ],
+   "spec_version" : 1,
+   "texlive_version" : "2025",
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

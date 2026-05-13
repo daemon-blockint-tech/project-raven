@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 17/98]
+\PYGZsh{} Now let me examine the build script to understand how to compile and test the vulnerable program:
+\PYGZdl{} read /workspace/src\PYGZhy{}vul/build.sh
+Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}vul/build.sh:
+     1	./BuildFuzzers.sh \PYGZhy{}\PYGZhy{}oss\PYGZhy{}fuzz
+     2
+\end{MintedVerbatim}

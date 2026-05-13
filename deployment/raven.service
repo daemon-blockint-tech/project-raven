@@ -1,0 +1,17 @@
+[Unit]
+Description=Project Raven API
+After=network-online.target lmstudio.service
+Wants=network-online.target
+Requires=lmstudio.service
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/project-raven
+EnvironmentFile=/home/YOUR_USERNAME/project-raven/.env
+ExecStart=/home/YOUR_USERNAME/project-raven/.venv/bin/uvicorn raven.api.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

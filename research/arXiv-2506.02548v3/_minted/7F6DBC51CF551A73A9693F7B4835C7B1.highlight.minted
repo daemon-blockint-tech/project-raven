@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 10/98]
+\PYGZsh{} Perfect! Let me examine the JPEG loader code to understand the vulnerability.
+\PYGZdl{} read /workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/JPEGLoader.h
+Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}vul/serenity/Userla[...]
+     1	/*
+     2	 * Copyright (c) 2020, the SerenityOS developers.
+     3	 *
+     4	 * SPDX\PYGZhy{}License\PYGZhy{}Identifier: BSD\PYGZhy{}2\PYGZhy{}Clause
+     5	 */
+     6	
+     7	\PYGZsh{}pragma once
+     8	
+[...]
+\end{MintedVerbatim}

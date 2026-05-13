@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 73/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/wasmtime/crates/fuzzing/src/generators | grep \PYGZhy{}i inst
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root   851 Apr 30 03:27 instance\PYGZus{}allocation\PYGZus{}strategy.rs
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 30332 Apr 30 03:27 single\PYGZus{}inst\PYGZus{}module.rs
+\end{MintedVerbatim}

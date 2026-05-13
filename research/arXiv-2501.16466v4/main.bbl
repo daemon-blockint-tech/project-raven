@@ -1,0 +1,467 @@
+\begin{thebibliography}{10}
+
+\bibitem{hlechallenge}
+{Humanity's Last Exam}.
+\newblock \url{https://agi.safe.ai/}, accessed: Apr 23, 2025.
+
+\bibitem{ciscoEnterpriseNetwork}
+{Enterprise Campus 3.0 Architecture: Overview and Framework}.
+\newblock Technical report, {Cisco}, April 2008.
+
+\bibitem{ibmTreeNetwork}
+{Hierarchical Tree Topology}.
+\newblock Technical report, {IBM}, January 2024.
+
+\bibitem{ajmal2021offensive}
+A.~B. Ajmal, M.~A. Shah, C.~Maple, M.~N. Asghar, and S.~U. Islam.
+\newblock Offensive security: Towards proactive threat hunting via adversary
+  emulation.
+\newblock {\em IEEE Access}, 2021.
+
+\bibitem{al2025pentest}
+H.~S. Al-Sinani and C.~J. Mitchell.
+\newblock Pentest++: Elevating ethical hacking with ai and automation.
+\newblock {\em arXiv:2502.09484}, 2025.
+
+\bibitem{anthropic2025threat}
+Anthropic.
+\newblock Threat intelligence report: August 2025.
+\newblock Technical report, Anthropic, San Francisco, CA, USA, Aug. 2025.
+\newblock Available at
+  \url{https://www-cdn.anthropic.com/b2a76c6f6992465c09a6f2fce282f6c0cea8c200.pdf}.
+
+\bibitem{anurin2024catastrophic}
+A.~Anurin, J.~Ng, K.~Schaffer, J.~Schreiber, and E.~Kran.
+\newblock Catastrophic cyber capabilities benchmark (3cb): Robustly evaluating
+  llm agent cyber offense capabilities.
+\newblock {\em arXiv:2410.09114}, 2024.
+
+\bibitem{caldera}
+A.~Applebaum, D.~Miller, B.~Strom, C.~Korban, and R.~Wolf.
+\newblock {Intelligent, Automated Red Team Emulation}.
+\newblock In {\em Proceedings of the 32nd Annual Conference on Computer
+  Security Applications}, 2016.
+
+\bibitem{zero_days}
+L.~Bilge and T.~Dumitra{\c{s}}.
+\newblock Before we knew it: an empirical study of zero-day attacks in the real
+  world.
+\newblock In {\em {ACM CCS}}, 2012.
+
+\bibitem{brown2020language}
+T.~B. Brown.
+\newblock Language models are few-shot learners.
+\newblock {\em arXiv:2005.14165}, 2020.
+
+\bibitem{cemri2025multi}
+M.~Cemri, M.~Z. Pan, S.~Yang, L.~A. Agrawal, B.~Chopra, R.~Tiwari, K.~Keutzer,
+  A.~Parameswaran, D.~Klein, K.~Ramchandran, et~al.
+\newblock Why do multi-agent llm systems fail?
+\newblock {\em arXiv:2503.13657}, 2025.
+
+\bibitem{mitre_attack}
+M.~Corporation.
+\newblock {MITRE ATT{\&}CK{\textregistered} Framework}.
+\newblock \url{https://attack.mitre.org/}.
+
+\bibitem{microsoft_security_copilot}
+M.~Corporation.
+\newblock {Microsoft Security Copilot}, 2023.
+
+\bibitem{pentestgpt}
+G.~Deng, Y.~Liu, V.~Mayoral-Vilches, P.~Liu, Y.~Li, Y.~Xu, T.~Zhang, Y.~Liu,
+  M.~Pinzger, and S.~Rass.
+\newblock {PentestGPT: Evaluating and Harnessing Large Language Models for
+  Automated Penetration Testing}.
+\newblock In {\em {USENIX}}, 2024.
+
+\bibitem{elhafsi2023semantic}
+A.~Elhafsi, R.~Sinha, C.~Agia, E.~Schmerling, I.~A. Nesnas, and M.~Pavone.
+\newblock Semantic anomaly detection with large language models.
+\newblock {\em Autonomous Robots}, 47(8):1035--1055, 2023.
+
+\bibitem{enoch2020harmer}
+S.~Y. Enoch, Z.~Huang, C.~Y. Moon, D.~Lee, M.~K. Ahn, and D.~S. Kim.
+\newblock Harmer: Cyber-attacks automation and evaluation.
+\newblock {\em IEEE Access}, 8:129397--129414, 2020.
+
+\bibitem{fang2024teams}
+R.~Fang, R.~Bindu, A.~Gupta, Q.~Zhan, and D.~Kang.
+\newblock Teams of llm agents can exploit zero-day vulnerabilities.
+\newblock {\em arXiv:2406.01637}, 2024.
+
+\bibitem{ferguson2021_deception_psychology}
+K.~J. Ferguson-Walter, M.~M. Major, C.~K. Johnson, and D.~H. Muhleman.
+\newblock Examining the efficacy of decoy-based and psychological cyber
+  deception.
+\newblock In {\em {USENIX}}, 2021.
+
+\bibitem{cobalt}
+{Fortra}.
+\newblock {Cobalt Strike}.
+\newblock \url{https://www.cobaltstrike.com/}.
+
+\bibitem{equifax_ftc_settlment}
+{FTC}.
+\newblock {Equifax Data Breach Settlement}.
+\newblock Technical report, December 2022.
+
+\bibitem{gao2023pal}
+L.~Gao, A.~Madaan, S.~Zhou, U.~Alon, P.~Liu, Y.~Yang, J.~Callan, and G.~Neubig.
+\newblock {Pal: Program-aided language models}.
+\newblock In {\em International Conference on Machine Learning}. PMLR, 2023.
+
+\bibitem{caldera2024bountyhunter}
+L.~Hackl{\"a}nder-Jansen.
+\newblock Emulating complete, realistic cyber attack chains with the new
+  caldera bounty hunter plugin, 2024.
+\newblock Medium (MITRE Caldera). Accessed: 2025-11-11.
+
+\bibitem{happe2023getting}
+A.~Happe and J.~Cito.
+\newblock Getting pwn’d by ai: Penetration testing with large language
+  models.
+\newblock In {\em {ACM ESEC}}, 2023.
+
+\bibitem{happe2025can}
+A.~Happe and J.~Cito.
+\newblock Can llms hack enterprise networks? autonomous assumed breach
+  penetration-testing active directory networks.
+\newblock {\em {ACM TOSEM}}, 2025.
+
+\bibitem{heiding2024auto_phish}
+F.~Heiding, S.~Lermen, A.~Kao, B.~Schneier, and A.~Vishwanath.
+\newblock {Evaluating Large Language Models' Capability to Launch Fully
+  Automated Spear Phishing Campaigns: Validated on Human Subjects}.
+\newblock {\em arXiv:2412.00586}, 2024.
+
+\bibitem{holm2022lore}
+H.~Holm.
+\newblock Lore a red team emulation tool.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing}, 2022.
+
+\bibitem{sved_tool}
+H.~Holm and T.~Sommestad.
+\newblock {SVED: Scanning, vulnerabilities, exploits and detection}.
+\newblock In {\em MILCOM 2016 IEEE Military Communications Conference}. IEEE,
+  2016.
+
+\bibitem{Hu2020AutoPentestDRL}
+Z.~Hu, R.~Beuran, and Y.~Tan.
+\newblock Automated penetration testing using deep reinforcement learning.
+\newblock In {\em {IEEE EuroS\&PW}}.
+\newblock \url{https://github.com/crond-jaist/AutoPentest-DRL}.
+
+\bibitem{penheal}
+J.~Huang and Q.~Zhu.
+\newblock {PenHeal: A Two-Stage LLM Framework for Automated Pentesting and
+  Optimal Remediation}.
+\newblock In {\em Proceedings of the Workshop on Autonomous Cybersecurity}.
+  Association for Computing Machinery, 2024.
+
+\bibitem{cyberKillChain}
+E.~M. Hutchins, M.~J. Cloppert, R.~M. Amin, et~al.
+\newblock Intelligence-driven computer network defense informed by analysis of
+  adversary campaigns and intrusion kill chains.
+\newblock {\em Leading Issues in Information Warfare \& Security Research},
+  2011.
+
+\bibitem{jegham2025hungry}
+N.~Jegham, M.~Abdelatti, L.~Elmoubarki, and A.~Hendawi.
+\newblock How hungry is ai? benchmarking energy, water, and carbon footprint of
+  llm inference.
+\newblock {\em arXiv:2505.09598}, 2025.
+
+\bibitem{kaplan2020scaling}
+J.~Kaplan, S.~McCandlish, T.~Henighan, T.~B. Brown, B.~Chess, R.~Child,
+  S.~Gray, A.~Radford, J.~Wu, and D.~Amodei.
+\newblock Scaling laws for neural language models.
+\newblock {\em arXiv:2001.08361}, 2020.
+
+\bibitem{colonial_pipeline_techtarget}
+S.~M. Kerner.
+\newblock {Colonial Pipeline hack explained: Everything you need to know}.
+\newblock {\em {TechTarget}}, 2022.
+
+\bibitem{kong2025vulnbot}
+H.~Kong, D.~Hu, J.~Ge, L.~Li, T.~Li, and B.~Wu.
+\newblock Vulnbot: Autonomous penetration testing for a multi-agent
+  collaborative framework.
+\newblock {\em arXiv:2501.13411}, 2025.
+
+\bibitem{kouremetis2025occult}
+M.~Kouremetis, M.~Dotter, A.~Byrne, D.~Martin, E.~Michalak, G.~Russo,
+  M.~Threet, and G.~Zarrella.
+\newblock Occult: Evaluating large language models for offensive cyber
+  operation capabilities.
+\newblock {\em arXiv:2502.15797}, 2025.
+
+\bibitem{mirage}
+M.~Kouremetis, D.~Lawrence, R.~Alford, Z.~Cheuvront, D.~Davila, B.~Geyer,
+  T.~Haigh, E.~Michalak, R.~Murphy, and G.~Russo.
+\newblock Mirage: cyber deception against autonomous cyber attacks in emulation
+  and simulation.
+\newblock {\em Annals of Telecommunications}, 2024.
+
+\bibitem{LangChain2025}
+LangChain.
+\newblock Langchain: Building applications with llms through composability.
+\newblock \url{https://github.com/langchain-ai/langchain}, 2025.
+
+\bibitem{lee2017crashoverride}
+R.~M. Lee, M.~Assante, and T.~Conway.
+\newblock {CRASHOVERRIDE: Analysis of the threat to electric grid operations}.
+\newblock 2017.
+
+\bibitem{lewis2020retrieval}
+P.~Lewis, E.~Perez, A.~Piktus, F.~Petroni, V.~Karpukhin, N.~Goyal,
+  H.~K{\"u}ttler, M.~Lewis, W.-t. Yih, T.~Rockt{\"a}schel, et~al.
+\newblock Retrieval-augmented generation for knowledge-intensive nlp tasks.
+\newblock {\em NeurIPS}, 2020.
+
+\bibitem{dumbbellNetwork}
+J.~Li, Y.~Luan, X.~Wu, and J.-a. Lu.
+\newblock Synchronizability of double-layer dumbbell networks.
+\newblock {\em Chaos: An Interdisciplinary Journal of Nonlinear Science}, 2021.
+
+\bibitem{lu2024chameleon}
+P.~Lu, B.~Peng, H.~Cheng, M.~Galley, K.-W. Chang, Y.~N. Wu, S.-C. Zhu, and
+  J.~Gao.
+\newblock {Chameleon: Plug-and-play compositional reasoning with large language
+  models}.
+\newblock {\em {NeurIPS}}, 2024.
+
+\bibitem{nmap}
+G.~F. Lyon.
+\newblock {\em {Nmap network scanning: The official Nmap project guide to
+  network discovery and security scanning}}.
+\newblock Insecure, 2009.
+
+\bibitem{equifax_report}
+{Majority Staff Report 115th Congress}.
+\newblock {The Equifax Data Breach}.
+\newblock Technical report, December 2018.
+
+\bibitem{mayoral2025cai}
+V.~Mayoral-Vilches, L.~J. Navarrete-Lozano, M.~Sanz-G{\'o}mez, L.~S. Espejo,
+  M.~Crespo-{\'A}lvarez, F.~Oca-Gonzalez, F.~Balassone, A.~Glera-Pic{\'o}n,
+  U.~Ayucar-Carbajo, J.~A. Ruiz-Alcalde, et~al.
+\newblock Cai: An open, bug bounty-ready cybersecurity ai.
+\newblock {\em arXiv:2504.06017}, 2025.
+
+\bibitem{merlin}
+{Ne0nd0g}.
+\newblock {Merlin}.
+\newblock \url{https://github.com/Ne0nd0g/merlin}.
+
+\bibitem{darkside}
+J.~Nuce, J.~Kennelly, K.~Goody, A.~Moore, A.~Rahman, M.~Williams, B.~McKeague,
+  and J.~Wilson.
+\newblock Shining a light on darkside ransomware operations.
+\newblock {\em {FireEye Blogs}}, 2021.
+
+\bibitem{oakley2019professional}
+J.~G. Oakley.
+\newblock {\em Professional red teaming: conducting successful cybersecurity
+  engagements}.
+\newblock Apress, 2019.
+
+\bibitem{national2019reproducibility}
+N.~A. of~Sciences, Medicine, Policy, G.~Affairs, B.~on~Research~Data,
+  D.~on~Engineering, P.~Sciences, C.~on~Applied, T.~Statistics,
+  B.~on~Mathematical~Sciences, et~al.
+\newblock {\em Reproducibility and replicability in science}.
+\newblock National Academies Press, 2019.
+
+\bibitem{o1systemcard}
+{OpenAI}.
+\newblock {OpenAI o1 System Card}.
+\newblock \url{https://openai.com/index/openai-o1-system-card/}, 2024.
+
+\bibitem{ou2006scalable}
+X.~Ou, W.~F. Boyer, and M.~A. McQueen.
+\newblock A scalable approach to attack graph generation.
+\newblock In {\em {ACM CCS}}, 2006.
+
+\bibitem{OG_MULVAL}
+X.~Ou, S.~Govindavajhala, A.~W. Appel, et~al.
+\newblock Mulval: A logic-based network security analyzer.
+\newblock In {\em {USENIX}}. Baltimore, MD, 2005.
+
+\bibitem{anthropic2025ai_espionage}
+A.~PBC.
+\newblock Disrupting the first reported ai-orchestrated cyber espionage
+  campaign.
+\newblock Technical report, November 2025.
+
+\bibitem{rad2015sword}
+T.~S. Rad.
+\newblock The sword and the shield: Hacking tools as offensive weapons and
+  defensive tools.
+\newblock {\em Geo. J. Int'l Aff.}, 16:123, 2015.
+
+\bibitem{metasploit}
+{Rapid7}.
+\newblock {Metasploit}.
+\newblock \url{https://www.metasploit.com/}.
+
+\bibitem{rehberger2020cybersecurity}
+J.~Rehberger.
+\newblock {\em Cybersecurity Attacks--Red Team Strategies: A practical guide to
+  building a penetration testing program having homefield advantage}.
+\newblock Packt Publishing Ltd, 2020.
+
+\bibitem{googleFramework}
+M.~Rodriguez, R.~A. Popa, F.~Flynn, L.~Liang, A.~Dafoe, and A.~Wang.
+\newblock A framework for evaluating emerging cyberattack capabilities of ai.
+\newblock {\em arXiv:2503.11917}, 2025.
+
+\bibitem{llm_phishing}
+S.~S. Roy, P.~Thota, K.~V. Naragam, and S.~Nilizadeh.
+\newblock {From Chatbots to Phishbots?: Phishing Scam Generation in Commercial
+  Large Language Models}.
+\newblock In {\em {IEEE S\&P}}, 2024.
+
+\bibitem{schick2024toolformer}
+T.~Schick, J.~Dwivedi-Yu, R.~Dess{\`\i}, R.~Raileanu, M.~Lomeli, E.~Hambro,
+  L.~Zettlemoyer, N.~Cancedda, and T.~Scialom.
+\newblock Toolformer: Language models can teach themselves to use tools.
+\newblock {\em {NeurIPS}}, 2024.
+
+\bibitem{offsec_sok}
+S.~L. Schraker, G.~Apruzzese, S.~Human, P.~Laskov, H.~S. Anderson, E.~W.
+  Bernroider, A.~Fass, B.~Nassi, V.~Rimmer, F.~Roli, et~al.
+\newblock {SoK: On the offensive potential of AI}.
+\newblock {\em arXiv:2412.18442}, 2024.
+
+\bibitem{shao2024empirical}
+M.~Shao, B.~Chen, S.~Jancheska, B.~Dolan-Gavitt, S.~Garg, R.~Karri, and
+  M.~Shafique.
+\newblock An empirical evaluation of llms for solving offensive security
+  challenges.
+\newblock {\em arXiv:2402.11814}, 2024.
+
+\bibitem{shao2024nyu_ctf}
+M.~Shao, S.~Jancheska, M.~Udeshi, B.~Dolan-Gavitt, H.~Xi, K.~Milner, B.~Chen,
+  M.~Yin, S.~Garg, P.~Krishnamurthy, et~al.
+\newblock Nyu ctf dataset: A scalable open-source benchmark dataset for
+  evaluating llms in offensive security.
+\newblock {\em arXiv:2406.05590}, 2024.
+
+\bibitem{shao2025craken}
+M.~Shao, H.~Xi, N.~Rani, M.~Udeshi, V.~S.~C. Putrevu, K.~Milner,
+  B.~Dolan-Gavitt, S.~K. Shukla, P.~Krishnamurthy, F.~Khorrami, et~al.
+\newblock {CRAKEN: Cybersecurity LLM Agent with Knowledge-Based Execution}.
+\newblock {\em arXiv:2505.17107}, 2025.
+
+\bibitem{attack_graph_og}
+O.~Sheyner, J.~Haines, S.~Jha, R.~Lippmann, and J.~M. Wing.
+\newblock Automated generation and analysis of attack graphs.
+\newblock In {\em IEEE S\&P}, 2002.
+
+\bibitem{silic2013dual}
+M.~Silic.
+\newblock Dual-use open source security software in organizations--dilemma:
+  help or hinder?
+\newblock {\em Computers \& Security}, 39:386--395, 2013.
+
+\bibitem{sheddingLight}
+B.~Singer, A.~Pandey, S.~Li, L.~Bauer, C.~Miller, L.~Pileggi, and V.~Sekar.
+\newblock {Shedding light on inconsistencies in grid cybersecurity: Disconnects
+  and recommendations}.
+\newblock In {\em IEEE S\&P}, 2023.
+
+\bibitem{hashcat}
+J.~Steube.
+\newblock {Hashcat: Advanced Password Recovery}.
+\newblock \url{https://hashcat.net/hashcat/}, 2025.
+
+\bibitem{DeepExploit}
+I.~Takaesu.
+\newblock {DeepExploit: Fully Automatic Penetration Test Tool Using
+  Reinforcement Learning}.
+\newblock \url{https://github.com/13o-bbr-bbq/machine_learning_security}, 2018.
+
+\bibitem{tihanyi2024cybermetric}
+N.~Tihanyi, M.~A. Ferrag, R.~Jain, and M.-o. Debbah.
+\newblock Cybermetric: A benchmark dataset for evaluating large language models
+  knowledge in cybersecurity.
+\newblock {\em arXiv:2402.07688}, 2024.
+
+\bibitem{ringNetwork2013technique}
+S.~T. Trassare, R.~Beverly, and D.~Alderson.
+\newblock A technique for network topology deception.
+\newblock In {\em MILCOM IEEE Military Communications Conference}. {IEEE},
+  2013.
+
+\bibitem{ullah2025cve}
+S.~Ullah, P.~Balasubramanian, W.~Guo, A.~Burnett, H.~Pearce, C.~Kruegel,
+  G.~Vigna, and G.~Stringhini.
+\newblock From cve entries to verifiable exploits: An automated multi-agent
+  framework for reproducing cves.
+\newblock {\em arXiv:2509.01835}, 2025.
+
+\bibitem{anthropic_AISI}
+{US AI Safety Institute} and {UK AI Safety Institute}.
+\newblock {US AISI and UK AISI Joint Pre-Deployment Test: Anthropic’s Claude
+  3.5 Sonnet}.
+\newblock Technical report, National Institute of Standards and Technology,
+  November 2024.
+
+\bibitem{cyberseceval3}
+S.~Wan, C.~Nikolaidis, D.~Song, D.~Molnar, J.~Crnkovich, J.~Grace, M.~Bhatt,
+  S.~Chennabasappa, S.~Whitman, S.~Ding, et~al.
+\newblock {Cyberseceval 3: Advancing the evaluation of cybersecurity risks and
+  capabilities in large language models}.
+\newblock {\em arXiv:2408.01605}, 2024.
+
+\bibitem{wang2025cybergym}
+Z.~Wang, T.~Shi, J.~He, M.~Cai, J.~Zhang, and D.~Song.
+\newblock Cybergym: Evaluating ai agents' cybersecurity capabilities with
+  real-world vulnerabilities at scale.
+\newblock {\em arXiv:2506.02548}, 2025.
+
+\bibitem{wei2022chain}
+J.~Wei, X.~Wang, D.~Schuurmans, M.~Bosma, F.~Xia, E.~Chi, Q.~V. Le, D.~Zhou,
+  et~al.
+\newblock Chain-of-thought prompting elicits reasoning in large language
+  models.
+\newblock {\em {NeurIPS}}, 2022.
+
+\bibitem{xu2024autoattacker}
+J.~Xu, J.~W. Stokes, G.~McDonald, X.~Bai, D.~Marshall, S.~Wang, A.~Swaminathan,
+  and Z.~Li.
+\newblock Autoattacker: A large language model guided system to implement
+  automatic cyber-attacks.
+\newblock {\em arXiv:2403.01038}, 2024.
+
+\bibitem{intercode_ctf}
+J.~Yang, A.~Prabhakar, K.~Narasimhan, and S.~Yao.
+\newblock {InterCode: Standardizing and Benchmarking Interactive Coding with
+  Execution Feedback}.
+\newblock In {\em {NeurIPS}}, 2023.
+
+\bibitem{yang2023language}
+J.~Yang, A.~Prabhakar, S.~Yao, K.~Pei, and K.~R. Narasimhan.
+\newblock {Language agents as hackers: Evaluating cybersecurity skills with
+  capture the flag}.
+\newblock In {\em {Multi-Agent Security Workshop NeurIPS}}, 2023.
+
+\bibitem{yao2023react}
+S.~Yao, J.~Zhao, D.~Yu, N.~Du, I.~Shafran, K.~Narasimhan, and Y.~Cao.
+\newblock {React: Synergizing reasoning and acting in language models}.
+\newblock In {\em {ICLR}}, 2023.
+
+\bibitem{yoo2020cyber}
+J.~D. Yoo, E.~Park, G.~Lee, M.~K. Ahn, D.~Kim, S.~Seo, and H.~K. Kim.
+\newblock Cyber attack and defense emulation agents.
+\newblock {\em Applied Sciences}, 10(6):2140, 2020.
+
+\bibitem{zhang2024cybench}
+A.~K. Zhang, N.~Perry, R.~Dulepet, J.~Ji, J.~W. Lin, E.~Jones, C.~Menders,
+  G.~Hussein, S.~Liu, D.~Jasper, et~al.
+\newblock {Cybench: A Framework for Evaluating Cybersecurity Capabilities and
+  Risks of Language Models}.
+\newblock {\em arXiv:2408.08926}, 2024.
+
+\end{thebibliography}

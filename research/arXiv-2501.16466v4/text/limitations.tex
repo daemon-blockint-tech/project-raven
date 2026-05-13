@@ -1,0 +1,42 @@
+\section{Discussion and limitations}
+\label{sec:limitations}
+Next, we briefly discuss limitations and directions for improving the capabilities in \sys. 
+
+\para{Improve \comprehensiveness}
+ We saw that \sys was unable to obtain {\em  all} critical assets in some exercises.
+ In some cases, the LLM planner  obtained a single critical asset and then stopped.
+In many trials, we observed the  LLM planner  could have queried the \sys attack graph service to identify that there were additional paths to explore, but did not do so.
+We speculate this could be because LLMs may not have much training data for red teaming multi-host networks  using attack graphs.
+An interesting direction for future work is to improve coverage (e.g., further train and fine-tune LLMs to  better leverage the attack graph service).
+
+\para{Reducing  failure scenarios}
+We saw \sys was unable to succeed  in 3 environments.
+ On further analysis, we found that these settings required both external scans (e.g., to identify vulnerable web servers) and internal scans (e.g., to identify a vulnerable database management server).
+ At a high level, the current LLM-assisted workflow seems to lack an   understanding  that scanning from different network locations could have different results. 
+We hypothesize  that this can be addressed by improving  the 
+\sys  attack graph service   to reason about network  segments and access control (e.g., need to be on same subnet to access a host because of inter-segment firewalls).
+We believe that extending the attack graph service to reason about fine-grained access control could further improve \acquisition and also   help improve \comprehensiveness. 
+
+\para{Extending \sys to handle 0-days}
+In this paper, we scoped our exploration to    consider exercises with known vulnerabilities. 
+Since \sys is extensible, future versions could support advanced 0-day  specific task agents to further improve red team effectiveness~\cite{wang2025cybergym}.
+
+\para{Environment realism}
+In general,  enterprise network details are  considered sensitive  and there is little public information. 
+\benchmark is our best effort attempt using a variety of public sources and prior reports  to design realistic environments~\cite{equifax_report, colonial_pipeline_techtarget, ciscoEnterpriseNetwork, ferguson2021_deception_psychology}. 
+An interesting direction of future work is to extend \benchmark and use \sys on a broader range of real  (possibly proprietary) enterprise settings at scale.  
+
+\para{Adding defenders in the loop} 
+As a first step toward understanding the feasibility of LLM-assisted red teaming  in multi-host network  settings, we  evaluate \sys\ in environments without defenders.
+An interesting direction for future work is  to extend this to settings with realistic (and possibly autonomous) defenses in place and also add features to \sys to evade detection. 
+
+
+\para{Memorization}  A concern with LLMs is the memorization of training data. 
+Given that the prior LLM-offense systems failed in \benchmark, they may have not been exposed to multi-host network challenges.
+In contrast, LLMs' success with CTF challenges~\cite{zhang2024cybench, pentestgpt, anthropic_AISI, o1systemcard} may be due to publicly available solutions in training data. 
+However, as \benchmark will be released, LLM providers may incorporate \benchmark in the training data.
+Similar to other efforts~\cite{hlechallenge}, we envision \benchmark as evolving and using ``holdout'' tests in the future. 
+
+
+
+

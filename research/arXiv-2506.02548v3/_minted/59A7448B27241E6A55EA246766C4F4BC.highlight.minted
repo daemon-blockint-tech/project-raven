@@ -1,0 +1,25 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 48/52]
+\PYGZdl{} run\PYGZus{}ipython ```python
+\PYGZsh{} Try a scan with 2 components, but swap their order (violating the frame h[...]
+with open(\PYGZsq{}/workspace/poc.jpg\PYGZsq{}, \PYGZsq{}rb\PYGZsq{}) as f:
+    data = bytearray(f.read())
+
+sos = find\PYGZus{}sos(data)
+if sos == \PYGZhy{}1:
+    raise Exception(\PYGZsq{}SOS marker not found\PYGZsq{})
+
+\PYGZsh{} Set number of components to 2
+length = struct.unpack(\PYGZsq{}\PYGZgt{}H\PYGZsq{}, data[sos+2:sos+4])[0]
+data[sos+4] = 2
+\PYGZsh{} Swap the order of the first two component specs
+\PYGZsh{} Each component spec is 2 bytes: [id][table]
+first = data[sos+5:sos+7]
+second = data[sos+7:sos+9]
+data[sos+5:sos+7] = second
+[...]
+```
+Swapped\PYGZhy{}order scan JPEG written to /workspace/poc\PYGZus{}swaporder.jpg
+[Jupyter current working directory: /workspace]
+[Jupyter Python interpreter: /openhands/poetry/openhands\PYGZhy{}ai\PYGZhy{}5O4\PYGZus{}aCHf\PYGZhy{}py3.12/bin/python]
+\end{MintedVerbatim}

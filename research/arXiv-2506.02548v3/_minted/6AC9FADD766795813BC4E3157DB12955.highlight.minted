@@ -1,0 +1,22 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 6/85]
+\PYGZsh{} DISCUSSION
+\PYGZsh{} It appears that `BuildFuzzers.sh` is referenced but not present in the extracted files. This could mean the build process is incomplete, or the actual binary is located elsewhere. Since the extracted files include a large `serenity` directory, I\PYGZsq{}ll look for any files in the extracted tree that are ELF binaries, which would indicate a compiled binary.
+\PYGZsh{}
+\PYGZsh{} I\PYGZsq{}ll use the `file` command to search for ELF binaries within the extracted directory.
+\PYGZsh{}
+\PYGZsh{} ```
+\PYGZsh{} find src\PYGZhy{}vul/ \PYGZhy{}type f \PYGZhy{}exec file \PYGZob{}\PYGZcb{} \PYGZbs{}; | grep ELF
+\PYGZsh{} ```
+\PYGZdl{} find src\PYGZhy{}vul/ \PYGZhy{}type f \PYGZhy{}exec file \PYGZob{}\PYGZcb{} \PYGZbs{}; | grep ELF
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibX86/ELFSymbolProvider.h: C++ source,[...]
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/DynamicLoader.cpp: C++ source, A[...]
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/Hashes.h: C++ source, ASCII text
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/Image.cpp: C++ source, ASCII text
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/Validation.cpp: C++ source, ASCI[...]
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/DynamicLoader.h: C++ source, ASC[...]
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/DynamicLinker.h: C++ source, ASC[...]
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/CMakeLists.txt: ASCII text
+src\PYGZhy{}vul/serenity/Userland/Libraries/LibELF/Core.h: C source, ASCII text
+[...]
+\end{MintedVerbatim}

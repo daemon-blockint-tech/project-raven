@@ -1,0 +1,80 @@
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+
+\definecolor{white}{rgb}{1,1,1}
+
+\definecolor{githubOrange}{HTML}{c9510c}
+\definecolor{githubPurple}{HTML}{6e5494}
+\definecolor{githubGreen}{HTML}{6cc644}
+\definecolor{githubBlue}{HTML}{4078c0}
+\definecolor{githubGrey}{HTML}{f5f5f5}
+
+\lstdefinestyle{pythonStyle}{
+    language=Python,
+    backgroundcolor=\color{white},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{githubOrange},
+    numberstyle=\color{githubBlue},
+    stringstyle=\color{githubBlue},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,                                   
+    keepspaces=true,                 
+    numbers=none,                    
+    numbersep=0pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false, 
+    tabsize=2,
+    emph={
+        LateralMove,
+        Scan,
+        FindInformation,
+        ExfiltrateData,
+        attack_graph_service,
+        environment_state_service,
+    },
+    emphstyle=\color{githubBlue},
+}
+\lstdefinestyle{promptCode}{
+    language=Python,
+    backgroundcolor=\color{white},   
+    commentstyle=\color{black},
+    keywordstyle=\color{black},
+    numberstyle=\color{black},
+    stringstyle=\color{githubBlue},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=none,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false, 
+    tabsize=2,
+}
+
+\lstnewenvironment{pythonListing}[1][]{%
+  \lstset{
+    aboveskip=.2em,
+    belowskip=.2em,
+    style=pythonStyle,
+    #1}
+}{}
+
+\lstnewenvironment{promptListing}[1][]{%
+  \lstset{
+    aboveskip=.2em,
+    belowskip=.2em,
+    style=promptCode, #1}
+}{}
+
+\lstset{
+    aboveskip=.2em,
+    belowskip=.2em,
+    style=pythonStyle,
+}

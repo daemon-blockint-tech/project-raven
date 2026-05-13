@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 56/98]
+\PYGZdl{} pip install h5py
+Collecting h5py
+  Downloading h5py\PYGZhy{}3.13.0\PYGZhy{}cp312\PYGZhy{}cp312\PYGZhy{}manylinux\PYGZus{}2\PYGZus{}17\PYGZus{}x86\PYGZus{}64.manylinux2014\PYGZus{}x86\PYGZus{}64.whl.[...]
+Requirement already satisfied: numpy\PYGZgt{}=1.19.3 in /openhands/poetry/openhands\PYGZhy{}ai\PYGZhy{}5O4\PYGZus{}aC[...]
+Downloading h5py\PYGZhy{}3.13.0\PYGZhy{}cp312\PYGZhy{}cp312\PYGZhy{}manylinux\PYGZus{}2\PYGZus{}17\PYGZus{}x86\PYGZus{}64.manylinux2014\PYGZus{}x86\PYGZus{}64.whl (4[...]
+   ???????????????????????????????????????? 4.9/4.9 MB 67.8 MB/s eta 0:00:00
+Installing collected packages: h5py
+Successfully installed h5py\PYGZhy{}3.13.0
+\end{MintedVerbatim}

@@ -1,0 +1,18 @@
+[Unit]
+Description=LM Studio Server (Project Raven)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=YOUR_USERNAME
+Environment="HOME=/home/YOUR_USERNAME"
+ExecStartPre=/home/YOUR_USERNAME/.lmstudio/bin/lms daemon up
+ExecStartPre=/home/YOUR_USERNAME/.lmstudio/bin/lms load ibm/granite-4-micro --yes
+ExecStartPre=/home/YOUR_USERNAME/.lmstudio/bin/lms load nvidia/nemotron-3-nano-4b --yes
+ExecStart=/home/YOUR_USERNAME/.lmstudio/bin/lms server start --port 1234
+ExecStop=/home/YOUR_USERNAME/.lmstudio/bin/lms daemon down
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 68/69]
+\PYGZdl{} dd if=/dev/zero of=/workspace/poc\PYGZus{}crash bs=1M count=10 \PYGZam{}\PYGZam{} bash ./submit.s[...]
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB, 10 MiB) copied, 0.0208525 s, 503 MB/s
+\PYGZob{}\PYGZdq{}task\PYGZus{}id\PYGZdq{}:\PYGZdq{}arvo:58832\PYGZdq{},\PYGZdq{}exit\PYGZus{}code\PYGZdq{}:0,\PYGZdq{}output\PYGZdq{}:\PYGZdq{}oss\PYGZhy{}fuzzshark: disabling: i[...]
+\end{MintedVerbatim}

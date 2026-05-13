@@ -1,0 +1,27 @@
+\section{Conclusion and Future Work}
+\label{sec:conclusion_limitations}
+
+
+We introduce \sysname, a realistic and large-scale benchmark designed for evaluating the cybersecurity capabilities of AI agents.
+\sysname comprises 1,507 high-quality, diverse instances across 188 open-source projects, creating a ladder of difficulty useful for tracking current and future agent progress.
+We extensively evaluate 4 agent frameworks and 11 LLMs on \sysname.
+Our findings show that \sysname poses a significant challenge for current AI agents, with the top-performing combination of agent and model achieving only a 22.0\% success rate.
+We also demonstrate that \sysname extends to creating direct, real-world security impact via uncovering incomplete security patches and identifying 34 new, zero-day vulnerabilities.
+We believe \sysname will help deepen the understanding of AI agents' cybersecurity abilities and contribute to the broader AI safety landscape.
+
+\paragraph{Future Work on Benchmark Development}
+Currently, \sysname primarily focuses on vulnerabilities in C/C++ projects, specifically those related to memory safety issues. This is due to its reliance on sanitizers for detection.
+\rbtl{A key area for future development is expanding beyond these boundaries to encompass other vulnerability types, such as logic flaws and cryptographic weaknesses, across different platforms including web and mobile applications, while supporting a broader range of programming languages.}
+Additionally, \sysname's current focus on Proof of Concept (PoC) generation provides a strong foundation for benchmarking through vulnerability reproduction and demonstrates real-world security impact.
+Future work should extend \sysname's capabilities to support other critical security tasks, including both defensive measures like patching and offensive ones like exploitation.
+\rbtl{
+Incorporating patch evaluation requires addressing the challenge of assessing whether patches preserve original functionality without introducing new vulnerabilities.
+This involves standardizing heterogeneous test systems across projects, applying reliable vulnerability detection, and generating new test cases.
+Similarly, developing exploitation evaluation requires fine-grained oracles and detection mechanisms to more precisely characterize exploitation capabilities.
+}
+
+
+\paragraph{Future Work on Agent Development}
+
+As demonstrated in \cref{sec:eval}, current agents primarily succeed on tasks with short ground truth PoCs and fewer reasoning steps, while exhibiting complementary capabilities and distinct behavioral patterns.
+These findings suggest several promising directions: strengthening LLMs' long-context reasoning capabilities, designing ensemble frameworks that combine agents' complementary strengths, developing specialized security tools, and optimizing tool usage by adopting the most effective operational patterns identified in our analysis.

@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 5/85]
+\PYGZsh{} DISCUSSION
+\PYGZsh{} The `build.sh` script simply calls `./BuildFuzzers.sh \PYGZhy{}\PYGZhy{}oss\PYGZhy{}fuzz`. To understand what this will do, I\PYGZsq{}ll check the contents of `BuildFuzzers.sh` in the same directory. This will help determine if it builds a binary relevant to the challenge.
+\PYGZsh{}
+\PYGZsh{} ```
+\PYGZsh{} open src\PYGZhy{}vul/BuildFuzzers.sh
+\PYGZsh{} ```
+\PYGZdl{} open src\PYGZhy{}vul/BuildFuzzers.sh
+File src\PYGZhy{}vul/BuildFuzzers.sh not found
+\end{MintedVerbatim}

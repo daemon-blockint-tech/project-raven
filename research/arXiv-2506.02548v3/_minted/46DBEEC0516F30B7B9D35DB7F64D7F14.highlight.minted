@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 31/98]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/matio/autogen.sh
+\PYGZhy{}rwxr\PYGZhy{}xr\PYGZhy{}x 1 root root 204 May  3  2024 /workspace/src\PYGZhy{}vul/matio/autogen.sh
+\end{MintedVerbatim}

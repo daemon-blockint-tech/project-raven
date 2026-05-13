@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 55/100]
+\PYGZdl{} grep \PYGZhy{}i 128 /workspace/src\PYGZhy{}vul/wasmtime/crates/fuzzing/src/generators/sin[...]
+NanType::F32x4 | NanType::F64x2 =\PYGZgt{} vec![(1, ValType::V128)],
+                    let nan = CANON\PYGZus{}32BIT\PYGZus{}NAN as i128;
+                    Instruction::V128Const(nan | (nan \PYGZlt{}\PYGZlt{} 32) | (nan \PYGZlt{}\PYGZlt{} 64) [...]
+                    let nan = CANON\PYGZus{}64BIT\PYGZus{}NAN as i128;
+                    Instruction::V128Const(nan | (nan \PYGZlt{}\PYGZlt{} 64))
+                NanType::F32x4 | NanType::F64x2 =\PYGZgt{} \PYGZam{}Instruction::V128Bitselect,
+    (@one v128) =\PYGZgt{} \PYGZob{}
+        ValType::V128
+    // V128Const
+[...]
+\end{MintedVerbatim}

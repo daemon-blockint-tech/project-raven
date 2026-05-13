@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 32/98]
+\PYGZdl{} cd /workspace/src\PYGZhy{}vul/matio \PYGZam{}\PYGZam{} ./autogen.sh \PYGZam{}\PYGZam{} ./configure \PYGZhy{}\PYGZhy{}enable\PYGZhy{}mat73 \PYGZam{}\PYGZam{} make \PYGZhy{}j4
+libtoolize: putting auxiliary files in AC\PYGZus{}CONFIG\PYGZus{}AUX\PYGZus{}DIR, \PYGZsq{}config\PYGZsq{}.
+libtoolize: copying file \PYGZsq{}config/ltmain.sh\PYGZsq{}
+libtoolize: putting macros in AC\PYGZus{}CONFIG\PYGZus{}MACRO\PYGZus{}DIRS, \PYGZsq{}config\PYGZsq{}.
+libtoolize: copying file \PYGZsq{}config/libtool.m4\PYGZsq{}
+libtoolize: copying file \PYGZsq{}config/ltoptions.m4\PYGZsq{}
+libtoolize: copying file \PYGZsq{}config/ltsugar.m4\PYGZsq{}
+libtoolize: copying file \PYGZsq{}config/ltversion.m4\PYGZsq{}
+libtoolize: copying file \PYGZsq{}config/lt\PYGZti{}obsolete.m4\PYGZsq{}
+configure.ac:55: installing \PYGZsq{}config/compile\PYGZsq{}
+documentation/Makefile.am:29: installing \PYGZsq{}config/texinfo.tex\PYGZsq{}
+checking for a BSD\PYGZhy{}compatible install... /usr/bin/install \PYGZhy{}c
+checking whether build environment is sane... yes
+checking for a race\PYGZhy{}free mkdir \PYGZhy{}p... /usr/bin/mkdir \PYGZhy{}p
+checking for gawk... no
+checking for mawk... mawk
+checking whether make sets \PYGZdl{}(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether make supports nested variables... (cached) yes
+checking whether to enable maintainer\PYGZhy{}specific portions of Makefiles... no
+[...]
+\end{MintedVerbatim}

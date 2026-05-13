@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 80/100]
+\PYGZdl{} head \PYGZhy{}40 /workspace/src\PYGZhy{}vul/wasmtime/fuzz/fuzz\PYGZus{}targets/cranelift\PYGZhy{}fuzzgen.rs
+\PYGZsh{}![no\PYGZus{}main]
+
+use cranelift\PYGZus{}codegen::ir::Function;
+use cranelift\PYGZus{}codegen::ir::Signature;
+use cranelift\PYGZus{}codegen::ir::UserExternalName;
+use cranelift\PYGZus{}codegen::ir::UserFuncName;
+use cranelift\PYGZus{}codegen::Context;
+use cranelift\PYGZus{}control::ControlPlane;
+use libfuzzer\PYGZus{}sys::arbitrary;
+[...]
+\end{MintedVerbatim}

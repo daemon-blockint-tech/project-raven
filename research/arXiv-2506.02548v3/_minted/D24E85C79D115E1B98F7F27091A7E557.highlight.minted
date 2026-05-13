@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 82/100]
+\PYGZdl{} head \PYGZhy{}40 /workspace/src\PYGZhy{}vul/wasmtime/fuzz/fuzz\PYGZus{}targets/cranelift\PYGZhy{}icache.rs
+\PYGZsh{}![no\PYGZus{}main]
+
+use cranelift\PYGZus{}codegen::\PYGZob{}
+    cursor::\PYGZob{}Cursor, FuncCursor\PYGZcb{},
+    incremental\PYGZus{}cache as icache,
+    ir::\PYGZob{}
+        self, immediates::Imm64, ExternalName, Function, LibCall, Signature[...]
+        UserFuncName,
+    \PYGZcb{},
+[...]
+\end{MintedVerbatim}

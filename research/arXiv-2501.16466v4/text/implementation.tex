@@ -1,0 +1,35 @@
+\section{Implementation}
+\label{sec:implementation}
+We implement \sys as a Python framework consisting of around  8K lines of code.
+We implement a custom C\&C server and use open-source malware  capabilities (from the Caldera project~\cite{caldera}) to infect and send shell commands to hosts.\footnote{We picked Caldera given our familiarity.
+Other C\&C servers such as  Cobalt Strike~\cite{cobalt} or Merlin~\cite{merlin} could also be used.}
+We implement \sys with custom Python modules.
+For the environment state service, we create parsers that interpret command outputs and update the knowledge base.
+
+For each of the five high-level tasks in \secRef{sec:high_level_api}, we create non-LLM and LLM-based agents that translate the tasks into low-level primitives (e.g., Python scripts, shell commands).
+We implement the non-LLM agents for the lateral movement and privilege escalation tasks by integrating into \sys's internal library (or optionally Metasploit's library) of known vulnerabilities and their corresponding exploits.
+For instance, if an LLM specifies to lateral move into a host with a CVE, \sys\ will identify the CVE and execute the low-level exploit.
+
+
+We use LangChain~\cite{LangChain2025} to iteratively prompt LLMs.
+We first create a prompt with the onboarding process outlined in \secRef{sec:high_level_api}.
+During the execution phase, we extract the Python function between the \texttt{<task></task>} or \texttt{<query></query>} tags.
+Then \sys executes the function to get a list of tasks for the orchestrator to execute.
+\sys will execute attacks until an LLM specifies a \texttt{<finished>} tag or reaches a time limit.
+
+\para{\benchmark} To systematically evaluate \sys, we design and implement \benchmark, a multi-host red teaming benchmark with 40 environments. We use Python and Ansible code to set up the environments atop OpenStack.
+The red team  goal in  10 environments is to exfiltrate key data files and the goal in the remaining  30 environments is to gain root access to key hosts.
+We design \benchmark to be diverse along key dimensions: (1) network size and topology, (2) type of vulnerabilities, and (3) red teaming complexity. 
+
+In terms of network size,  \benchmark 
+currently includes many  small enterprise environments ranging from 22 to 50 hosts.
+For 30 of the environments, we algorithmically generate different topology structures that are similar to real-world environments~\cite{ciscoEnterpriseNetwork, ibmTreeNetwork}.
+In addition, we manually design the topology of 10 environments based on topologies from prior work such as ``Star'', ``Chain'', and ``Dumbbell''~\cite{mirage, ringNetwork2013technique, ferguson2021_deception_psychology, ciscoEnterpriseNetwork, dumbbellNetwork} and topologies from public reports of real-world attacks~\cite{equifax_report, colonial_pipeline_techtarget}.
+The manually designed topologies are named based on the environment they were adapted from (e.g., Equifax environment). The   algorithmically generated topologies are named based on the topology structure: ``N4-H41-G7'' has four (sub)networks, 41 hosts and 7 critical assets (i.e., goals).
+
+In terms of vulnerabilities, \benchmark includes diverse vulnerabilities such as common misconfigurations (e.g., plain text credentials), remote code execution vulnerabilities (e.g., Apache Struts CVE-2017-5638), and privilege escalation vulnerabilities (e.g., \texttt{sudo} CVE-2021-3156).
+Several of these vulnerabilities have been used in real-world attacks~\cite{equifax_ftc_settlment, colonial_pipeline_techtarget}.
+
+In terms of red teaming complexity,   we vary the number of critical assets as well as the attack graph complexity. Across the environments, red team success  spans  a spectrum ranging  from  2 to 48 assets and from 5 to 104 tasks.
+More details on the specifics of each environment are in \appRef{sec:appendix_environments}.
+

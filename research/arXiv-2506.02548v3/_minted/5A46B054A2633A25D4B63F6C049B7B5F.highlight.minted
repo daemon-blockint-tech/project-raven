@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 39/69]
+\PYGZdl{} od \PYGZhy{}c /workspace/poc | head \PYGZhy{}40
+0000000  \PYGZbs{}n  \PYGZbs{}r  \PYGZbs{}r  \PYGZbs{}n   \PYGZbs{}  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0   M   \PYGZlt{}   + 032 001  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0
+0000020 377 377 377 377 377 377 377 377 004  \PYGZbs{}0   7  \PYGZbs{}0   E   d   i   t
+0000040   c   a   p       (   W   i   r   e   s   h   a   r   k   )
+0000060   4   .   1   .   0       (   v   4   .   1   .   0   r   c   0
+0000100   \PYGZhy{}   5   8   3   \PYGZhy{}   g   5   c   5   3   d   e   8   f   4   7
+0000120   5   b   )  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0   \PYGZbs{}  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0 001  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0
+0000140 024  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0 001  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0 377 377  \PYGZbs{}0  \PYGZbs{}0 024  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0
+0000160 006  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0   T  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0   B 021 004  \PYGZbs{}0
+0000200 204     275 230   2  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0   2  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}0  \PYGZbs{}b  \PYGZbs{}0 006 001
+[...]
+\end{MintedVerbatim}

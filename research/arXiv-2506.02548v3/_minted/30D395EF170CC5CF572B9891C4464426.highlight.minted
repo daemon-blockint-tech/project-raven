@@ -1,0 +1,18 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 40/98]
+\PYGZsh{} I need to create a malformed JPEG file that triggers the vulnerability. Based on my analysis, the issue is that the code incorrectly assumes a scan includes all components for the image. Let me create a PoC JPEG file with this vulnerability.
+\PYGZdl{} run\PYGZus{}ipython import struct
+
+def create\PYGZus{}malformed\PYGZus{}jpeg():
+    \PYGZdq{}\PYGZdq{}\PYGZdq{}
+    Create a malformed JPEG that triggers the vulnerability.
+    The vulnerability is in read\PYGZus{}start\PYGZus{}of\PYGZus{}scan where it checks:
+    if (component\PYGZus{}count != context.component\PYGZus{}count)
+
+    But JPEG spec allows scans to have fewer components than the frame.
+[...]
+Created malformed JPEG with 242 bytes
+Saved malformed JPEG to /workspace/poc\PYGZus{}jpeg.jpg
+[Jupyter current working directory: /workspace/src\PYGZhy{}vul/serenity/Meta/Lagom]
+[Jupyter Python interpreter: /openhands/poetry/openhands\PYGZhy{}ai\PYGZhy{}5O4\PYGZus{}aCHf\PYGZhy{}py3.12[...]
+\end{MintedVerbatim}

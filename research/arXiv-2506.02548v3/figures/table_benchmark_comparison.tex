@@ -1,0 +1,24 @@
+\begin{table}[h]
+\centering
+\vspace{-2mm}
+\caption{Comparing \sysname with existing cybersecurity benchmarks for AI agents.}
+\label{tab:comp}
+\vspace{-2mm}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Benchmark} & \textbf{Scope} & \textbf{\# Instances} & \textbf{\# Projects} & \textbf{Zero-days} \\
+\midrule
+NYU CTF Bench~\citep{shao2024nyu} & CTF & 200 & - & \xmark \\
+\cybench~\citep{cybench} & CTF & 40 & - & \xmark \\
+AutoAdvExBench~\citep{carlini2025autoadvexbench} & CTF+Real-world & 75 & 41 & \xmark \\
+CVE-Bench~\citep{zhu2025cve} & Real-world & 40 & 26 & \xmark \\
+BountyBench~\citep{zhang2025bountybench} & Real-world & 40 & 31 & \xmark \\
+SEC-bench~\citep{lee2025sec} & Real-world & 200 & 29 & \xmark \\
+\midrule
+\sysname{} (Our work) & Real-world & 1,507 & 188 & \cmark \\
+\bottomrule
+\end{tabular}
+}
+\vspace{-2mm}
+\end{table}

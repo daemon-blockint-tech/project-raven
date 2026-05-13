@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 13/98]
+\PYGZpc{} \PYGZdl{} read /workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/LibGfx/JPEGLoader.cpp
+\PYGZpc{} Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}vul/serenity/Userla[...]
+\PYGZpc{}    480	static ErrorOr\PYGZlt{}void\PYGZgt{} read\PYGZus{}start\PYGZus{}of\PYGZus{}scan(AK::SeekableStream\PYGZam{} stream, [...]
+\PYGZpc{}    481	\PYGZob{}
+\PYGZpc{}    482	    if (context.state \PYGZlt{} JPEGLoadingContext::State::FrameDecoded) \PYGZob{}
+\PYGZpc{}    483	        dbgln\PYGZus{}if(JPEG\PYGZus{}DEBUG, \PYGZdq{}\PYGZob{}\PYGZcb{}: SOS found before reading a SOF!\PYGZdq{}, [...]
+\PYGZpc{}    484	        return Error::from\PYGZus{}string\PYGZus{}literal(\PYGZdq{}SOS found before reading [...]
+\PYGZpc{}    485	    \PYGZcb{}
+\PYGZpc{}    486	
+\PYGZpc{}    487	    u16 bytes\PYGZus{}to\PYGZus{}read = TRY(stream.read\PYGZus{}value\PYGZlt{}BigEndian\PYGZlt{}u16\PYGZgt{}\PYGZgt{}()) \PYGZhy{} 2;
+\PYGZpc{} [...]
+\end{MintedVerbatim}

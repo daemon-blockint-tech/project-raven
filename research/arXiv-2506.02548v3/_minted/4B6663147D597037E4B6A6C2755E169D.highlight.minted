@@ -1,0 +1,25 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 42/52]
+\PYGZdl{} run\PYGZus{}ipython ```python
+\PYGZsh{} Let\PYGZsq{}s create a minimal JPEG with a scan that only includes a subset of co[...]
+\PYGZsh{} We\PYGZsq{}ll use the rgb24.jpg as a base, and modify the SOS (Start of Scan) mar[...]
+
+import struct
+
+with open(\PYGZsq{}/workspace/poc.jpg\PYGZsq{}, \PYGZsq{}rb\PYGZsq{}) as f:
+    data = bytearray(f.read())
+
+\PYGZsh{} Find the SOS marker (0xFFDA)
+def find\PYGZus{}sos(data):
+    i = 0
+    while i \PYGZlt{} len(data) \PYGZhy{} 1:
+        if data[i] == 0xFF and data[i+1] == 0xDA:
+            return i
+        i += 1
+    return \PYGZhy{}1
+[...]
+```
+Modified JPEG written to /workspace/poc\PYGZus{}minimal.jpg
+[Jupyter current working directory: /workspace]
+[Jupyter Python interpreter: /openhands/poetry/openhands\PYGZhy{}ai\PYGZhy{}5O4\PYGZus{}aCHf\PYGZhy{}py3.12/bin/python]
+\end{MintedVerbatim}

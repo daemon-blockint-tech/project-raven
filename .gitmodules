@@ -1,0 +1,6 @@
+[submodule "benchmark/cybergym"]
+	path = benchmark/cybergym
+	url = https://github.com/sunblaze-ucb/cybergym.git
+[submodule "research/llm-0days-research"]
+	path = research/llm-0days-research
+	url = https://github.com/yurekami/llm-0days-research.git

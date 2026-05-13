@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  raven-api:
+    build: .
+    ports:
+      - "8000:8000"
+      - "9090:9090"
+    environment:
+      - DATABASE_URL=postgresql://raven:raven@db:5432/raven
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./models:/app/models
+    networks:
+      - raven-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=raven
+      - POSTGRES_USER=raven
+      - POSTGRES_PASSWORD=raven
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - raven-network
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - raven-network
+
+volumes:
+  postgres_data:
+
+networks:
+  raven-network:
+    driver: bridge

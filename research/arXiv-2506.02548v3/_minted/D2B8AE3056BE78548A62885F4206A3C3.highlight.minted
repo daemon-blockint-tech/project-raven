@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 30/98]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/matio/configure*
+\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 12450 May  3  2024 /workspace/src\PYGZhy{}vul/matio/configure.ac
+\end{MintedVerbatim}

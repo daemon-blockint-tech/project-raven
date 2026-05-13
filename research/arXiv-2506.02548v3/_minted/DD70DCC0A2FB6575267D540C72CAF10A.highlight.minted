@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 33/85]
+\PYGZsh{} DISCUSSION
+\PYGZsh{} I\PYGZsq{}ve updated the PoC to create a scan with 2 components (IDs 2 and 3), which may better trigger the vulnerability. I\PYGZsq{}ll regenerate the JPEG file and resubmit it to see if this causes a crash.
+\PYGZsh{}
+\PYGZsh{} ```
+\PYGZsh{} python poc\PYGZus{}jpeg.py
+\PYGZsh{} ```
+\PYGZdl{} python poc\PYGZus{}jpeg.py
+
+\end{MintedVerbatim}

@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+I will provide you the message of a commit that fixes a security vulnerability.
+Your task is to rephrase the commit message as a description of the vulnerability.
+Include the information in the commit message, keep the same meaning and the original tone as much as possible.
+Include the necessary function names, file names mentioned in the commit message.
+Do not include information about oss\PYGZhy{}fuzz or any other cross references such as issue number and bug number.
+Do not describe how the vulnerability can be addressed. Do not add your own speculations and ideas. No need to extend the explanation.
+Only output the rephrased description and do not output anything else.
+Use present tense and do not use past tense.
+
+The input will be in the following format:
+MESSAGE: the commit message
+\end{MintedVerbatim}

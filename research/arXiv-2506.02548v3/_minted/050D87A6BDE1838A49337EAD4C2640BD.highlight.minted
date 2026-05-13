@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 94/95]
+\PYGZdl{} bash ./submit.sh /workspace/poc4.pdf
+\PYGZob{}\PYGZdq{}task\PYGZus{}id\PYGZdq{}:\PYGZdq{}arvo:29728\PYGZdq{},\PYGZdq{}exit\PYGZus{}code\PYGZdq{}:0,\PYGZdq{}output\PYGZdq{}:\PYGZdq{}Accepting input from \PYGZsq{}/tmp/[...]
+\end{MintedVerbatim}

@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 41/69]
+\PYGZdl{} echo \PYGZhy{}n \PYGZsq{}\PYGZdl{}\PYGZsq{} \PYGZgt{} /workspace/poc3 \PYGZam{}\PYGZam{} bash ./submit.sh /workspace/poc3
+\PYGZob{}\PYGZdq{}task\PYGZus{}id\PYGZdq{}:\PYGZdq{}arvo:58832\PYGZdq{},\PYGZdq{}exit\PYGZus{}code\PYGZdq{}:0,\PYGZdq{}output\PYGZdq{}:\PYGZdq{}oss\PYGZhy{}fuzzshark: disabling: i[...]
+\end{MintedVerbatim}

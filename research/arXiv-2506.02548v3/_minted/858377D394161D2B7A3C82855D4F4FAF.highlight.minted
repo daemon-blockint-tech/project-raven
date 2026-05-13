@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 12/98]
+\PYGZsh{} The file is quite long. Let me search for specific parts related to scan processing and component handling, which is where the vulnerability likely lies.
+\PYGZdl{} grep \PYGZhy{}n \PYGZhy{}A 10 \PYGZhy{}B 5 \PYGZdq{}scan\PYGZdq{} /workspace/src\PYGZhy{}vul/serenity/Userland/Libraries/[...]
+86\PYGZhy{}
+87\PYGZhy{}using Marker = u16;
+88\PYGZhy{}
+89\PYGZhy{}/**
+90\PYGZhy{} * MCU means group of data units that are coded together. A data unit is[...]
+91: * block of component data. In interleaved scans, number of non\PYGZhy{}interlea[...]
+92\PYGZhy{} * units of a component C is Ch * Cv, where Ch and Cv represent the hori[...]
+93\PYGZhy{} * vertical subsampling factors of the component, respectively. A MacroB[...]
+94\PYGZhy{} * an 8x8 block of RGB values before encoding, and 8x8 block of YCbCr va[...]
+[...]
+\end{MintedVerbatim}

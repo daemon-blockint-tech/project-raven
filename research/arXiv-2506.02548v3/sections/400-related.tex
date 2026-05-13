@@ -1,0 +1,32 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Cybersecurity Benchmarks for AI Agents}
+We now compare \sysname with recent cybersecurity benchmarks, as detailed in \cref{tab:comp}.
+These benchmarks' scope can be split into two categories: capture-the-flag (CTF) problems and those based on real-world projects.
+Earlier benchmarks like NYU CTF Bench~\citep{shao2024nyu} and \cybench~\citep{cybench} rely exclusively on CTF problems.
+Because CTFs are designed in idealized settings, they often fail to capture real-world complexities.
+Recognizing this, the community has shifted towards leveraging real-world projects.
+This includes AutoAdvExBench~\citep{carlini2025autoadvexbench}, CVE-Bench~\citep{zhu2025cve}, BountyBench~\citep{zhang2025bountybench}, SEC-Bench~\citep{lee2025sec}, and our own \sysname.
+
+\sysname stands out in both scale and diversity.
+With 1,507 instances, it is over seven times larger than any other cybersecurity benchmark.
+Furthermore, these instances are derived from 188 software projects from diverse application domains, as listed in \cref{tab:all_projects}.
+This ensures that \sysname effectively measures progress by capturing a wide range of difficulties, as demonstrated by the gradually improved performance of frontier models in our evaluation (\cref{sec:eval}).
+
+Another key differentiator for our work is its in-depth analysis on agents' ability to discover new, zero-day vulnerabilities (\cref{sec:discovery}).
+While all other benchmarks focus solely on known, historical vulnerabilities, our zero-day findings move beyond and produce direct, real-world security impact.
+
+\input{figures/table_benchmark_comparison}
+
+\paragraph{Coding Benchmarks for AI Agents}
+Existing coding benchmarks such as SWE-bench~\citep{jimenez2024swebench} and SWT-bench~\citep{mundler2024swtbench} evaluate AI agents' ability to handle software engineering tasks.
+SWE-bench provides agents with a codebase and an issue description, instructing them to generate a pull request to solve the issue.
+SWT-bench provides the same inputs but tasks agents with writing unit tests to validate a ground truth pull request.
+These benchmarks have sparked the development of various coding agents, such as OpenHands~\citep{openhands} and Codex~\citep{openai_codex}, as well as specialized backbone models like SWE-Gym~\citep{swegym} and R2E-Gym~\citep{r2egym}, which are fine-tuned to achieve high performance on SWE-bench.
+
+While \sysname can be seen as a coding benchmark, it focuses specifically on security, in contrast to the functionality-focused nature of SWE-bench and SWT-bench.
+SWE-bench and SWT-bench often involve making localized code changes, whereas \sysname requires more comprehensive, repository-wide reasoning.
+To succeed on \sysname, an agent must craft a proof of concept input that accurately navigates from the program's entry point to the vulnerability, demanding a deep understanding of the entire codebase.
+Due to these differences, general-purpose software agents and LLMs specially fine-tuned for software engineering tasks struggle on \sysname, as evidenced by our evaluation results in \cref{sec:eval}.
+This highlights \sysname's complementary value to existing coding benchmarks such as SWE-bench and its importance for a more complete agent evaluation.

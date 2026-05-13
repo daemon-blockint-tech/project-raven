@@ -1,0 +1,59 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2026_conference,times}
+
+\input{math_commands.tex}
+
+\input{extra_commands.tex}
+
+
+\title{\sysname: Evaluating AI Agents' Real-World Cybersecurity Capabilities at Scale}
+
+\author{Zhun Wang\thanks{Indicates equal contribution.}%
+,\quad
+Tianneng Shi\footnotemark[1]%
+,\quad
+Jingxuan He%
+,\quad
+Matthew Cai%
+,\quad
+Jialin Zhang%
+,\quad
+Dawn Song%
+\\
+UC Berkeley\quad \texttt{\{\href{mailto:zhun.wang@berkeley.edu}{zhun.wang}, \href{mailto:stneng@berkeley.edu}{stneng}\}@berkeley.edu}
+}
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+\input{sections/000-abstract}
+\end{abstract}
+
+\input{sections/100-intro}
+\input{sections/400-related}
+\input{sections/200-dataset}
+\input{sections/300-eval}
+\input{sections/500-conclusion}
+
+\clearpage
+\input{sections/501-ethics}
+\input{sections/502-reproducibility}
+% \input{sections/503-llm_usage} should in appendix
+
+\bibliography{references.bib}
+\bibliographystyle{iclr2026_conference}
+
+\appendix
+\input{sections/appendix.tex}
+
+
+\end{document}

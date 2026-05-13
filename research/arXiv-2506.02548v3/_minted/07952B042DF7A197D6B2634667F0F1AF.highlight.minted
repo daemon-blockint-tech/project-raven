@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 81/100]
+\PYGZdl{} grep \PYGZhy{}i atomic /workspace/src\PYGZhy{}vul/wasmtime/fuzz/fuzz\PYGZus{}targets/cranelift\PYGZhy{}fu[...]
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+    pub valid\PYGZus{}inputs: AtomicU64,
+    pub invalid\PYGZus{}inputs: AtomicU64,
+    pub total\PYGZus{}runs: AtomicU64,
+    pub run\PYGZus{}result\PYGZus{}success: AtomicU64,
+    pub run\PYGZus{}result\PYGZus{}timeout: AtomicU64,
+    pub run\PYGZus{}result\PYGZus{}trap: HashMap\PYGZlt{}CraneliftTrap, AtomicU64\PYGZgt{},
+        // Pre\PYGZhy{}Register all trap codes since we can\PYGZsq{}t modify this hashmap a[...]
+[...]
+\end{MintedVerbatim}

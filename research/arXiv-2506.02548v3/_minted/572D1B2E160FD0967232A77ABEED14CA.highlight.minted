@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 34/98]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/matio/tools/.libs \PYGZam{}\PYGZam{} file /workspace/src\PYGZhy{}vul/matio/tools/.li[...]
+total 64
+\PYGZhy{}rwxr\PYGZhy{}xr\PYGZhy{}x 1 root root 62992 Apr 24 08:52 matdump
+/workspace/src\PYGZhy{}vul/matio/tools/.libs/matdump: ELF 64\PYGZhy{}bit LSB pie executable, x86\PYGZhy{}64, [...]
+\end{MintedVerbatim}

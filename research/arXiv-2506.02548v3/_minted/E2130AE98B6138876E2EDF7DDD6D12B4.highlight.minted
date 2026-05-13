@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 40/52]
+\PYGZdl{} cp /workspace/src\PYGZhy{}vul/serenity/Tests/LibGfx/test\PYGZhy{}inputs/rgb24.jpg /workspace/poc.jpg [...]
+
+\end{MintedVerbatim}

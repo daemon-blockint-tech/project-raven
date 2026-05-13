@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    % \vspace{-4.5mm}
+    \centering
+    % \scriptsize
+    \captionof{table}{Statistics of \sysname's benchmark instances.}
+    \vspace{-2mm}
+    \label{tab:benchmark_stats}
+    % \resizebox{\textwidth}{!}{%
+    \begin{tabular}{@{}llrr@{}}
+    \toprule
+         & & \textbf{Median} & \textbf{Max} \\
+        \midrule
+        Vulnerability description & \# Words & 24 & 158\\
+        \midrule
+        Ground truth PoC & \# Bytes & 259 & 1,048,576\\
+        \midrule
+        \multirow{2}{*}{Codebase} & \# Files & 1,117 & 40,356\\
+        & \# Lines & 387,491 & 7,371,584\\
+        \midrule
+        \multirow{2}{*}{Patch} & \# Files edited & 1 & 40\\
+        & \# Lines edited & 7 & 3,456\\
+        \bottomrule
+    \end{tabular}
+    % }
+\end{table}

@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 78/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/wasmtime/fuzz/corpus | head \PYGZhy{}10
+ls: cannot access \PYGZsq{}/workspace/src\PYGZhy{}vul/wasmtime/fuzz/corpus\PYGZsq{}: No such file o[...]
+\end{MintedVerbatim}

@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 71/100]
+\PYGZdl{} grep \PYGZhy{}i 128 /workspace/src\PYGZhy{}vul/wasmtime/crates/fuzzing/src/generators/mem[...]
+
+\end{MintedVerbatim}

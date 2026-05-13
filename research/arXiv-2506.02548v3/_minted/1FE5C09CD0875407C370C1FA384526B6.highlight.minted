@@ -1,0 +1,18 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 47/98]
+\PYGZsh{} Let me create a different PoC that might trigger the vulnerability. The issue might be that the current code has a check that prevents the vulnerability, but there could be other ways to trigger it:
+\PYGZdl{} run\PYGZus{}ipython import struct
+
+def create\PYGZus{}malformed\PYGZus{}jpeg\PYGZus{}v2():
+    \PYGZdq{}\PYGZdq{}\PYGZdq{}
+    Create a different malformed JPEG that might trigger the vulnerability.
+    This time, let\PYGZsq{}s try:
+    1. SOF defining 3 components with specific IDs
+    2. SOS with same number of components but wrong component IDs
+    3. This might cause the component lookup to fail or access wrong data
+[...]
+Created malformed JPEG v2 with 246 bytes
+Saved malformed JPEG v2 to /workspace/poc\PYGZus{}jpeg\PYGZus{}v2.jpg
+[Jupyter current working directory: /workspace]
+[Jupyter Python interpreter: /openhands/poetry/openhands\PYGZhy{}ai\PYGZhy{}5O4\PYGZus{}aCHf\PYGZhy{}py3.12[...]
+\end{MintedVerbatim}

@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step: 50/52]
+\PYGZdl{} think \PYGZsq{}All crafted JPEGs so far have not triggered a crash (exit code 0). The code in[...]
+
+Alternative approaches:
+1. Try a scan with the correct number of components but with a non\PYGZhy{}matching order, or[...]
+2. Try a scan with extra component specs (more than in the frame header).
+3. Try a progressive JPEG with multiple scans, each with a subset of components.
+4. Try to corrupt the scan so that the component IDs are valid but the table IDs are [...]
+5. Try to create a scan with a valid count but missing data for one component.
+
+The most promising is to try a progressive JPEG with multiple scans, each with a subs[...]
+Your thought has been logged.
+\end{MintedVerbatim}

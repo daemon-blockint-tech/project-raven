@@ -1,0 +1,132 @@
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsmath}
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{graphicx}
+\usepackage{xspace}
+\usepackage{wrapfig}
+\usepackage[capitalise,noabbrev]{cleveref}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{xurl}
+\usepackage{caption}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\usepackage{minted}
+\usepackage{tcolorbox}
+% \usepackage{soul}
+% \usepackage{ulem}
+\usepackage{makecell}
+\usepackage{textcomp}
+
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+\definecolor{successpurple}{HTML}{8A80C9}
+
+\hypersetup{
+    colorlinks=true, % Enables coloring of links
+    linkcolor={green!80!black},
+    citecolor={red!70!black},
+    urlcolor={blue!70!black}
+}
+
+% tcolorbox configurations
+\tcbuselibrary{breakable,skins,hooks}
+
+\setlist[itemize]{topsep=0pt, leftmargin=*}
+
+% Custom settings for nice looking boxes
+\tcbset{
+    enhanced,
+    boxrule=0.5mm,
+    colback=white,
+    colframe=black!80!white,
+    colbacktitle=black!80!white,
+    fonttitle=\bfseries\small\color{white},
+    breakable,
+    width=\textwidth,
+    boxrule=0.5mm,
+    fontupper=\scriptsize,
+    arc=2mm
+}
+
+\makeatletter
+\renewcommand{\paragraph}{%
+  \@startsection{paragraph}{4}%
+  {\z@}{0ex}{-1em}%
+  {\normalfont\normalsize\bfseries}%
+}
+% template:
+% \def\paragraph{\@startsection{paragraph}{4}{\z@}{1.5ex plus
+% 0.5ex minus .2ex}{-1em}{\normalsize\bf}}
+\makeatother
+
+\newcommand{\sysname}{CyberGym\xspace}
+
+\newcommand{\ossfuzz}{OSS-Fuzz\xspace}
+
+%% Agents
+\newcommand{\openhands}{OpenHands\xspace}
+\newcommand{\codex}{Codex\xspace}
+\newcommand{\enigma}{EnIGMA\xspace}
+\newcommand{\cybench}{Cybench\xspace}
+\newcommand{\swebench}{SWE-Bench\xspace}
+
+%% Models
+\newcommand{\gptiv}{GPT-4.1\xspace}
+\newcommand{\gptv}{GPT-5\xspace}
+\newcommand{\claudeiii}{Claude-3.7-Sonnet\xspace}
+\newcommand{\claudeiv}{Claude-Sonnet-4\xspace}
+
+\newcommand{\trigger}{\texttt{T}}
+\newcommand{\notrigger}{\texttt{N}}
+\newcommand{\any}{\texttt{\_}}
+\newcommand{\repcrash}{\trigger$\,\to\,$\notrigger\xspace}
+\newcommand{\newcrash}{\any$\,\to\,$\trigger\xspace}
+
+
+
+\newif\ifchecklist
+\checklistfalse
+
+\raggedbottom
+
+\AddToHook{cmd/appendix/before}{%
+    \crefalias{section}{appendix}%
+    \crefalias{subsection}{appendix}
+}
+
+\def\@bsphack{%
+  \relax
+  \ifhmode
+    \@savsk\lastskip
+    \@savsf\spacefactor
+  \fi}
+\def\@esphack{%
+  \relax
+  \ifhmode
+    \spacefactor\@savsf
+    \ifdim\@savsk>\z@
+      \ignorespaces
+    \fi
+  \fi}
+
+\definecolor{rbtlclr}{HTML}{2b6eff}
+\makeatletter
+\newcommand{\rbst}[1]{%
+  \@bsphack
+  \@esphack
+}
+% \makeatother
+\newcommand{\rbtl}[1]{#1}
+\newcommand{\rbtlframe}[1]{#1}
+\newcommand{\ztest}{$Z$-test\xspace}

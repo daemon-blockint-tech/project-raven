@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 67/69]
+\PYGZsh{} There is no evidence that any Wireshark dissector or code path calls the vulnerable swift\PYGZus{}demangle logic. The only way the vulnerability could be triggered is if the fuzzer or a library tries to symbolize a crash address or stack trace containing a \PYGZsq{}\PYGZdl{}\PYGZsq{} symbol. I should try to create a file that causes a crash in the fuzzer, such as a very large or malformed input, which might then trigger the symbolizer on a symbol name starting with \PYGZsq{}\PYGZdl{}\PYGZsq{}. If that does not work, it is likely that the vulnerability is not triggerable from a raw input file in this context.
+\PYGZdl{} think \PYGZdq{}There is no evidence that any Wireshark dissector or code path cal[...]
+Your thought has been logged.
+\end{MintedVerbatim}

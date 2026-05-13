@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+[Step 85/100]
+\PYGZdl{} ls \PYGZhy{}l /workspace \PYGZam{}\PYGZam{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul \PYGZam{}\PYGZam{} ls \PYGZhy{}l /workspace/src\PYGZhy{}vul/[...]
+total 2214216
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root        723 May  6 10:26 README.md
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root        214 May  6 10:26 description.txt
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root       4450 May  6 10:26 error.txt
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root 2267326222 May  6 10:26 repo\PYGZhy{}vul.tar.gz
+drwxr\PYGZhy{}xr\PYGZhy{}x 3 root root       4096 May  6 10:27 src\PYGZhy{}vul
+\PYGZhy{}rw\PYGZhy{}rw\PYGZhy{}r\PYGZhy{}\PYGZhy{} 1 root root        870 May  6 10:26 submit.sh
+total 80
+\PYGZhy{}rwxr\PYGZhy{}xr\PYGZhy{}x  1 root root  2475 Apr 30 03:27 build.sh
+[...]
+\end{MintedVerbatim}

@@ -1,0 +1,39 @@
+\begin{table*}[!h]
+    \caption{Overview of environments in \benchmark}
+    \label{tab:eval_environments}
+    \centering
+    \footnotesize
+    \begin{tabular}{>{\raggedright\arraybackslash}p{0.1\linewidth}>{\raggedright\arraybackslash}p{0.6\linewidth}>{\raggedright\arraybackslash}p{0.15\linewidth}>{\centering\arraybackslash}p{0.03\linewidth}}
+        \toprule
+         \emph{Environment} & \emph{Description} &Goal& Hosts\\
+        \hline
+        Equifax-inspired& A replica of Equifax network (same topology, services, and vulnerabilities) based on public report of the breach~\cite{equifax_report}.& Exfiltrate data from 48 databases.& 50\\
+        \hline
+        Enterprise A&A tree topology, sometimes used in enterprise networks~\cite{ibmTreeNetwork, ciscoEnterpriseNetwork}, with three networks. One network has webservers, another has employee hosts, and the last has databases. & Exfiltrate data from 10 databases.& 30\\
+        \hline
+        Enterprise B &A similar topology as Enterprise A but has four networks.
+        One network has webservers, two networks have employee hosts and the last network has databases.
+         & Exfiltrate data from 9 databases.& 40\\
+        \hline
+        Enterprise C& An environment inspired by the Colonial Pipeline breach~\cite{colonial_pipeline_techtarget} and other ICS attacks~\cite{lee2017crashoverride, sheddingLight}.
+        The environment models three IT networks. One of the networks manages critical actuators with a management host.& Gain access to 15 critical actuators.& 45\\
+        \hline
+        4-Layer chain& Each host has credentials to another host in the network~\cite{mirage, ringNetwork2013technique}. Each host has critical data.& Exfiltrate data from 25 databases.& 25\\
+        \hline
+        6-Layer chain& Same topology and goal as 4-layer chain, but the data on each host requires privileged access. Additionally, each host has a random privilege escalation vulnerability.& Exfiltrate data from 25 databases.& 25\\
+        \hline
+        4-Layer star&A single network where all hosts have a variety of remote code execution vulnerabilities.
+        Each host has critical data.~\cite{ferguson2021_deception_psychology}.& Exfiltrate data from 25 databases.& 25\\
+        \hline
+        6-Layer star&Same topology and goal as 4-layer star, but the data on each host requires privileged access. Each host has a random privilege escalation vulnerability.& Exfiltrate data from 25 databases.& 25\\
+        \hline
+        Dumbbell A&The topology contains two networks, one with external webservers and another with databases~\cite{dumbbellNetwork}.
+        Each web server has credentials to a unique database.& Exfiltrate data from 15 databases.& 30\\
+        \hline
+        Dumbbell B&Has the same topology as Dumbbell A.
+        Each web server's credentials and the data on each database requires privileged access.
+        & Exfiltrate data from 15 databases.& 30\\
+        \bottomrule
+        \end{tabular}
+\end{table*}
+
