@@ -82,6 +82,27 @@ class Settings(BaseSettings):
     rate_limit_auth_per_minute: int = 5  # login/refresh stricter
 
     # -----------------------------------------------------------------
+    # Approval gate / YOLO (Hermes Agent-inspired)
+    # -----------------------------------------------------------------
+    approval_mode: Literal["manual", "smart", "off"] = "manual"
+    approval_timeout_seconds: int = 60
+    yolo_env_override: bool = False  # honour RAVEN_YOLO_MODE env var if true
+
+    # -----------------------------------------------------------------
+    # Jailbreak defence (always on — defensive)
+    # -----------------------------------------------------------------
+    jailbreak_detect_enabled: bool = True
+    jailbreak_block_threshold: float = 0.8
+    jailbreak_log_normalized: bool = True
+
+    # -----------------------------------------------------------------
+    # Offensive red-team (operator opt-in only)
+    # Default OFF. Even when enabled, every call requires the session token.
+    # -----------------------------------------------------------------
+    offensive_redteam_enabled: bool = False
+    offensive_redteam_session_token: str = ""
+
+    # -----------------------------------------------------------------
     # ML
     # -----------------------------------------------------------------
     model_path: str = "./models"
@@ -169,6 +190,15 @@ class Settings(BaseSettings):
             errors.append("CORS_ORIGINS must be explicitly configured in prod")
         if self.bootstrap_admin_password and len(self.bootstrap_admin_password) < 12:
             errors.append("BOOTSTRAP_ADMIN_PASSWORD must be >=12 chars or empty")
+        if self.offensive_redteam_enabled and not self.offensive_redteam_session_token:
+            errors.append(
+                "OFFENSIVE_REDTEAM_SESSION_TOKEN must be set when "
+                "OFFENSIVE_REDTEAM_ENABLED=true"
+            )
+        if self.approval_mode == "off":
+            errors.append(
+                "APPROVAL_MODE=off (YOLO) is forbidden in prod — use 'manual' or 'smart'"
+            )
         if errors:
             raise ValueError(
                 "Production safety check failed:\n  - " + "\n  - ".join(errors)

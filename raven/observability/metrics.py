@@ -83,6 +83,50 @@ KILLCHAIN_APPROVAL_QUEUE = Gauge(
     "Number of kill-chain tasks awaiting operator approval.",
 )
 
+# ---------------------------------------------------------------------------
+# Approval gate (Hermes-inspired)
+# ---------------------------------------------------------------------------
+
+APPROVAL_REQUESTS = Counter(
+    "raven_approval_requests_total",
+    "Commands run through the approval gate.",
+    ["mode", "verdict"],
+)
+
+APPROVAL_BLOCKLIST_HITS = Counter(
+    "raven_approval_blocklist_hits_total",
+    "UNRECOVERABLE_BLOCKLIST trips (no-override floor).",
+    ["pattern"],
+)
+
+APPROVAL_DECISION_LATENCY = Histogram(
+    "raven_approval_decision_seconds",
+    "Time taken to reach an approval verdict.",
+    buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 30.0, 60.0),
+)
+
+# ---------------------------------------------------------------------------
+# Red-team (jailbreak detection + hardness + offensive)
+# ---------------------------------------------------------------------------
+
+JAILBREAK_DETECTIONS = Counter(
+    "raven_jailbreak_detections_total",
+    "Inbound jailbreak attempts caught by the detector.",
+    ["technique", "action"],   # action: blocked|logged
+)
+
+PROVIDER_HARDNESS_SCORE = Gauge(
+    "raven_provider_hardness_score",
+    "Most recent provider hardness test (0–10; 10 = perfect resistance).",
+    ["provider", "model"],
+)
+
+REDTEAM_GODMODE_ATTEMPTS = Counter(
+    "raven_redteam_godmode_attempts_total",
+    "OffensiveGodmode invocations.",
+    ["outcome"],   # outcome: refused|partial|full
+)
+
 
 # ---------------------------------------------------------------------------
 # Middleware
