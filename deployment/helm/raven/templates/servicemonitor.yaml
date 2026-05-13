@@ -1,0 +1,17 @@
+{{- if .Values.observability.prometheusServiceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "raven.fullname" . }}
+  labels:
+    {{- include "raven.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "raven.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.observability.prometheusServiceMonitor.interval }}
+      scheme: http
+{{- end }}

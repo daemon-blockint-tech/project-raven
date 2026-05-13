@@ -1,33 +1,96 @@
-"""Configuration management for Project Raven"""
+"""Configuration management for Project Raven."""
 
-from pydantic_settings import BaseSettings
-from typing import Optional
+from __future__ import annotations
+
 import os
+from typing import List, Literal, Optional
+
+from pydantic import AliasChoices, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_DEFAULT_SECRET = "dev-secret-key-change-in-production"
 
 
 class Settings(BaseSettings):
-    """Application settings"""
-    
-    # API Configuration
+    """Application settings.
+
+    Loaded from environment variables (uppercase) or `.env` file.
+    Refuses to start in `prod` environment when critical defaults are unchanged.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    # -----------------------------------------------------------------
+    # Deployment context
+    # -----------------------------------------------------------------
+    environment: Literal["dev", "staging", "prod"] = Field(
+        default="dev",
+        validation_alias=AliasChoices("RAVEN_ENVIRONMENT", "ENVIRONMENT", "environment"),
+    )
+
+    # -----------------------------------------------------------------
+    # API
+    # -----------------------------------------------------------------
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     debug: bool = False
-    
-    # Database
+
+    # -----------------------------------------------------------------
+    # Database / cache
+    # -----------------------------------------------------------------
     database_url: str = "postgresql://user:password@localhost/raven"
     redis_url: str = "redis://localhost:6379/0"
-    
-    # Security
-    secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+
+    # -----------------------------------------------------------------
+    # Security & JWT
+    # -----------------------------------------------------------------
+    secret_key: str = os.getenv("SECRET_KEY", _DEFAULT_SECRET)
     jwt_algorithm: str = "HS256"
-    jwt_expiration: int = 3600
-    
-    # ML Configuration
+    jwt_access_ttl_minutes: int = 15
+    jwt_refresh_ttl_days: int = 7
+    jwt_issuer: str = "raven"
+    jwt_audience: str = "raven-api"
+
+    # Bootstrap admin (only used on first start if no users exist)
+    bootstrap_admin_username: str = "admin"
+    bootstrap_admin_password: str = ""  # empty → no auto-create
+
+    # -----------------------------------------------------------------
+    # CORS — explicit allowlist (no wildcard in prod)
+    # -----------------------------------------------------------------
+    cors_origins: List[str] = ["http://localhost:3000"]
+
+    # -----------------------------------------------------------------
+    # Scan jails (closes F2: filesystem disclosure)
+    # -----------------------------------------------------------------
+    scan_root: str = "/var/lib/raven/repos"  # /hunt/code, /hunt/variant must stay under this
+
+    # -----------------------------------------------------------------
+    # AI provider allowlist (closes F1: base_url override exfiltration)
+    # -----------------------------------------------------------------
+    ai_allowed_base_urls: List[str] = []  # empty → only built-in provider defaults allowed
+
+    # -----------------------------------------------------------------
+    # Rate limiting
+    # -----------------------------------------------------------------
+    rate_limit_per_minute: int = 60
+    rate_limit_auth_per_minute: int = 5  # login/refresh stricter
+
+    # -----------------------------------------------------------------
+    # ML
+    # -----------------------------------------------------------------
     model_path: str = "./models"
     anomaly_threshold: float = 0.95
     zero_day_confidence: float = 0.85
 
+    # -----------------------------------------------------------------
     # Shodan
+    # -----------------------------------------------------------------
     shodan_api_key: str = ""
     shodan_max_results: int = 100
 
@@ -69,10 +132,49 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     log_file: str = "./logs/raven.log"
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+
+    # -----------------------------------------------------------------
+    # Validators / safety guards
+    # -----------------------------------------------------------------
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_cors(cls, v):
+        # Accept comma-separated env var: CORS_ORIGINS="https://a.com,https://b.com"
+        if isinstance(v, str):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
+
+    @field_validator("ai_allowed_base_urls", mode="before")
+    @classmethod
+    def _split_allowed_urls(cls, v):
+        if isinstance(v, str):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
+
+    @model_validator(mode="after")
+    def _enforce_prod_safety(self) -> "Settings":
+        """Refuse to start in prod with insecure defaults."""
+        if self.environment != "prod":
+            return self
+
+        errors: list[str] = []
+        if self.secret_key == _DEFAULT_SECRET or len(self.secret_key) < 32:
+            errors.append("SECRET_KEY must be set to a strong random value (>=32 chars) in prod")
+        if self.debug:
+            errors.append("DEBUG must be False in prod")
+        if "*" in self.cors_origins:
+            errors.append("CORS_ORIGINS must not contain '*' in prod")
+        if self.cors_origins == ["http://localhost:3000"]:
+            errors.append("CORS_ORIGINS must be explicitly configured in prod")
+        if self.bootstrap_admin_password and len(self.bootstrap_admin_password) < 12:
+            errors.append("BOOTSTRAP_ADMIN_PASSWORD must be >=12 chars or empty")
+        if errors:
+            raise ValueError(
+                "Production safety check failed:\n  - " + "\n  - ".join(errors)
+            )
+        return self
 
 
 settings = Settings()
+

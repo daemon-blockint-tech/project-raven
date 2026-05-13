@@ -1,0 +1,193 @@
+# =============================================================================
+# Project Raven — Helm chart default values
+# =============================================================================
+
+image:
+  repository: ghcr.io/daemon-blockint-tech/project-raven
+  tag: ""            # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Number of API replicas. HPA below overrides this if enabled.
+replicaCount: 3
+
+# -----------------------------------------------------------------------------
+# Service & ingress
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 8000
+  metricsPort: 9090
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "4m"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+  hosts:
+    - host: raven.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: raven-tls
+      hosts:
+        - raven.example.com
+
+# -----------------------------------------------------------------------------
+# Resources & scaling
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+topologySpread:
+  enabled: true
+  maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+
+# -----------------------------------------------------------------------------
+# Pod security & service account
+# -----------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: ""           # auto-generated when empty
+  annotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  capabilities:
+    drop:
+      - ALL
+
+# -----------------------------------------------------------------------------
+# Probes (match endpoints exposed in raven/api/main.py)
+# -----------------------------------------------------------------------------
+probes:
+  startup:
+    httpGet:
+      path: /health/startup
+      port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 24      # 24 * 5s = 120s warm-up window for ML models
+  liveness:
+    httpGet:
+      path: /health
+      port: 8000
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /health/ready
+      port: 8000
+    periodSeconds: 10
+    failureThreshold: 3
+
+# -----------------------------------------------------------------------------
+# Application configuration (mapped to env via the ConfigMap)
+# -----------------------------------------------------------------------------
+config:
+  environment: prod
+  debug: false
+  logLevel: INFO
+  jwtAlgorithm: HS256
+  jwtAccessTtlMinutes: 15
+  jwtRefreshTtlDays: 7
+  jwtIssuer: raven
+  jwtAudience: raven-api
+  corsOrigins:
+    - https://raven.example.com
+  scanRoot: /var/lib/raven/repos
+  aiAllowedBaseUrls: []   # defaults to built-in provider URLs only
+  rateLimitPerMinute: 60
+  rateLimitAuthPerMinute: 5
+  aiProvider: lmstudio
+  aiModel: ""
+  aiTimeout: 120
+  aiSystemPromptPath: /app/RAVEN_SYSTEM_PROMPT.md
+
+# -----------------------------------------------------------------------------
+# Secrets (provide via External Secrets Operator / Sealed Secrets in prod)
+# -----------------------------------------------------------------------------
+secrets:
+  # If `existingSecret` is set, the Deployment mounts that Secret directly.
+  # Otherwise the chart renders a Secret from these literal values (dev only!).
+  existingSecret: ""
+  secretKey: ""              # must be >=32 chars in prod (validated at boot)
+  bootstrapAdminPassword: "" # >=12 chars; empty disables auto-create
+  aiApiKey: ""
+  shodanApiKey: ""
+  databaseUrl: ""
+  redisUrl: ""
+
+# -----------------------------------------------------------------------------
+# Observability
+# -----------------------------------------------------------------------------
+observability:
+  otelEndpoint: ""          # e.g. "http://tempo.observability:4317"
+  prometheusServiceMonitor:
+    enabled: true
+    interval: 30s
+
+# -----------------------------------------------------------------------------
+# NetworkPolicy
+# -----------------------------------------------------------------------------
+networkPolicy:
+  enabled: true
+  # Allow inbound traffic only from these namespaces
+  ingressFromNamespaces:
+    - ingress-nginx
+    - monitoring
+  # Egress allowlist — limit to the AI providers + DB/Redis the chart needs
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443           # cloud AI providers (HTTPS)
+    - ports:
+        - protocol: TCP
+          port: 5432          # postgres
+        - protocol: TCP
+          port: 6379          # redis
+
+# -----------------------------------------------------------------------------
+# Node selection
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+tolerations: []
+affinity: {}

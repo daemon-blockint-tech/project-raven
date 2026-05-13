@@ -1,26 +1,78 @@
-FROM python:3.11-slim
+# =============================================================================
+# Project Raven — production container
+# Multi-stage build: builder (compile deps) → runtime (slim, non-root)
+# =============================================================================
 
-WORKDIR /app
+# -----------------------------------------------------------------------------
+# Stage 1: builder
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS builder
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    nmap \
-    metasploit-framework \
-    ssh \
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /build
+
+# Build deps for native wheels (paramiko, cryptography, scientific libs)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        libffi-dev \
+        libssl-dev \
+        gcc \
+        g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY raven/ ./raven/
+# -----------------------------------------------------------------------------
+# Stage 2: runtime
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS runtime
 
-# Create logs directory
-RUN mkdir -p logs
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH=/home/raven/.local/bin:$PATH \
+    RAVEN_ENVIRONMENT=prod
 
-# Expose ports
+# Runtime-only system deps (no metasploit/empire in the API pod — those run in
+# dedicated tool-runner pods per the production plan).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        nmap \
+        openssh-client \
+        curl \
+        ca-certificates \
+        tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 10001 raven \
+    && useradd  --system --uid 10001 --gid raven --create-home --shell /usr/sbin/nologin raven
+
+# Copy Python deps from builder
+COPY --from=builder /root/.local /home/raven/.local
+RUN chown -R raven:raven /home/raven/.local
+
+WORKDIR /app
+COPY --chown=raven:raven raven/ ./raven/
+COPY --chown=raven:raven RAVEN_SYSTEM_PROMPT.md ./
+COPY --chown=raven:raven pyproject.toml ./
+
+# Writable runtime dirs only — root FS stays read-only via K8s securityContext
+RUN mkdir -p /var/log/raven /var/lib/raven /tmp/raven \
+    && chown -R raven:raven /var/log/raven /var/lib/raven /tmp/raven
+
+USER raven:raven
+
 EXPOSE 8000 9090
 
-# Run the application
-CMD ["uvicorn", "raven.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8000/health || exit 1
+
+# tini handles PID 1 / zombie reaping
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["uvicorn", "raven.api.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--proxy-headers", \
+     "--forwarded-allow-ips=*"]

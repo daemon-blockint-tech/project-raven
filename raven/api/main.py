@@ -33,22 +33,57 @@ from raven.config import settings
 from raven.ai import AIMessage, BaseAIClient, ProviderRegistry, SUPPORTED_PROVIDERS
 from raven.ai.model_orchestrator import ModelOrchestrator, ModelRole
 from raven.integrations.shodan_client import ShodanClient
+from raven.auth.dependencies import (
+    current_user,
+    require_admin,
+    require_operator,
+    require_viewer,
+)
+from raven.auth.models import Role, User
+from raven.auth.routes import router as auth_router
+from raven.audit.middleware import AuditLogMiddleware
+from raven.audit.store import audit_store
+from raven.observability import (
+    MetricsMiddleware,
+    configure_logging,
+    configure_tracing,
+    get_logger,
+)
+from raven.observability.tracing import instrument_app
+
+# Configure structured logging early (JSON in prod/staging, console in dev)
+configure_logging(
+    level=settings.log_level,
+    json=settings.environment != "dev",
+)
+log = get_logger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
     title="Project Raven API",
     description="Autonomous Defense System with ML/AI for Zero-Day Threat Detection",
-    version="0.1.0"
+    version="0.2.0",
 )
 
-# CORS middleware
+# Mount auth router
+app.include_router(auth_router)
+
+# Observability middleware (order matters: metrics → audit → CORS)
+app.add_middleware(MetricsMiddleware)
+app.add_middleware(AuditLogMiddleware, skip_paths=("/health", "/metrics", "/dashboard"))
+
+# CORS — explicit allowlist from settings (no wildcard; refuse '*' in prod via settings)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
+
+# Tracing (OTel auto-instrument FastAPI + requests when OTEL endpoint set)
+if configure_tracing("raven-api"):
+    instrument_app(app)
 
 # Global components (in production, use dependency injection)
 components = {}
@@ -189,9 +224,52 @@ async def root():
     }
 
 
+@app.get("/health/ready")
+async def health_ready():
+    """Readiness probe — true once dependencies are reachable.
+
+    Used by K8s readinessProbe to route traffic only when the pod can
+    actually serve requests (DB, Redis, AI provider).
+    """
+    checks = {}
+
+    # AI provider
+    ai = components.get("ai")
+    if ai is not None:
+        try:
+            checks["ai"] = bool(ai.is_available())
+        except Exception:
+            checks["ai"] = False
+    else:
+        checks["ai"] = False
+
+    ready = all(checks.values())
+    status_code = 200 if ready else 503
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=status_code,
+        content={"ready": ready, "checks": checks},
+    )
+
+
+@app.get("/health/startup")
+async def health_startup():
+    """Startup probe — true once startup_event completed.
+
+    Allows long ML model warm-up without killing the pod. K8s uses this
+    via startupProbe with a 60s window.
+    """
+    started = bool(components.get("threat_detector") is not None)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=200 if started else 503,
+        content={"started": started},
+    )
+
+
 @app.get("/health")
 async def health():
-    """Health check"""
+    """Liveness probe — process is alive."""
     return {
         "status": "healthy",
         "timestamp": time.time(),
@@ -205,8 +283,32 @@ async def health():
     }
 
 
+def _jail_scan_path(raw: str) -> str:
+    """Verify a user-supplied repo path stays under settings.scan_root.
+
+    Closes F2 (filesystem disclosure via /hunt/code and /hunt/variant).
+    Raises 403 if traversal is attempted; 400 if scan_root not configured.
+    """
+    from pathlib import Path as _Path
+    if not settings.scan_root:
+        raise HTTPException(status_code=400, detail="scan_root is not configured")
+    root = _Path(settings.scan_root).resolve()
+    target = _Path(raw).resolve(strict=False)
+    try:
+        target.relative_to(root)
+    except ValueError:
+        raise HTTPException(
+            status_code=403,
+            detail=f"repo_path must stay under scan_root ({root})",
+        )
+    return str(target)
+
+
 @app.post("/analyze")
-async def analyze_event(event_data: Dict[str, Any]):
+async def analyze_event(
+    event_data: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """Analyze an event for threats"""
     start_time = time.time()
     
@@ -249,7 +351,10 @@ async def analyze_event(event_data: Dict[str, Any]):
 
 
 @app.post("/hunt")
-async def start_threat_hunt(indicators: Dict[str, Any]):
+async def start_threat_hunt(
+    indicators: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """Start a threat hunting session"""
     session = components["threat_hunter"].start_hunt(indicators)
     
@@ -278,17 +383,20 @@ async def start_threat_hunt(indicators: Dict[str, Any]):
 
 
 @app.post("/hunt/variant")
-async def variant_hunt(payload: Dict[str, Any]):
+async def variant_hunt(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Variant analysis: find incomplete patches, deep-precondition paths,
     algorithm assumption violations, and dangerous patterns.
-    Based on Claude Opus 4.6 / Anthropic Feb-2026 techniques.
-    Body: {"repo_path": "/path/to/repo"}
+    Body: {"repo_path": "/path/to/repo"} (must be under settings.scan_root)
     """
     from raven.ml.variant_analyzer import VariantAnalyzer
     repo_path = payload.get("repo_path")
     if not repo_path:
         raise HTTPException(status_code=400, detail="repo_path is required")
+    repo_path = _jail_scan_path(repo_path)
 
     analyzer = VariantAnalyzer({"variant_confidence_threshold": 0.5})
     findings = analyzer.analyze_repository(repo_path)
@@ -307,16 +415,18 @@ async def variant_hunt(payload: Dict[str, Any]):
 
 
 @app.post("/hunt/code")
-async def code_hunt(payload: Dict[str, Any]):
+async def code_hunt(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Defensively scan a repository for exploitable taint flows.
-    Uses the same input-to-output tracing technique documented in adversarial AI reports.
-    Covers LFI, AFO, RCE, XSS, SQLI, SSRF, IDOR vulnerability classes.
-    Body: {"repo_path": "/path/to/repo"}
+    Body: {"repo_path": "/path/to/repo"} (must be under settings.scan_root)
     """
     repo_path = payload.get("repo_path")
     if not repo_path:
         raise HTTPException(status_code=400, detail="repo_path is required")
+    repo_path = _jail_scan_path(repo_path)
 
     result = components["threat_hunter"].code_hunt(repo_path)
 
@@ -333,7 +443,11 @@ async def code_hunt(payload: Dict[str, Any]):
 
 
 @app.post("/mitigate")
-async def execute_mitigation(threat_id: str, threat_type: str):
+async def execute_mitigation(
+    threat_id: str,
+    threat_type: str,
+    user: User = Depends(require_operator),
+):
     """Execute automated mitigation for a threat"""
     # Create response plan
     plan = components["response_orchestrator"].create_response_plan(
@@ -359,7 +473,15 @@ async def execute_mitigation(threat_id: str, threat_type: str):
 
 @app.get("/metrics")
 async def get_metrics():
-    """Get system metrics"""
+    """Prometheus metrics exposition (text/plain; openmetrics-compatible)."""
+    from fastapi.responses import Response as _Response
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+    return _Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/metrics/summary")
+async def get_metrics_summary():
+    """Human-readable metrics summary (legacy endpoint, still used by dashboard)."""
     return components["metrics"].get_summary()
 
 
@@ -374,7 +496,10 @@ async def get_alerts():
 # ------------------------------------------------------------------
 
 @app.post("/hunt/killchain")
-async def run_kill_chain(payload: Dict[str, Any]):
+async def run_kill_chain(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Run an autonomous kill-chain exercise.
     Body: {"objective": str, "target_network": str}
@@ -391,7 +516,7 @@ async def run_kill_chain(payload: Dict[str, Any]):
 
 
 @app.post("/hunt/killchain/approve")
-async def approve_kill_chain_task():
+async def approve_kill_chain_task(user: User = Depends(require_admin)):
     """Approve the task that is pending human review and execute it."""
     planner: KillChainPlanner = components["kill_chain_planner"]
     if planner.pending_approval is None:
@@ -401,7 +526,7 @@ async def approve_kill_chain_task():
 
 
 @app.post("/hunt/killchain/reject")
-async def reject_kill_chain_task():
+async def reject_kill_chain_task(user: User = Depends(require_admin)):
     """Reject and discard the task that is pending human review."""
     planner: KillChainPlanner = components["kill_chain_planner"]
     if planner.pending_approval is None:
@@ -411,7 +536,10 @@ async def reject_kill_chain_task():
 
 
 @app.post("/investigate/target")
-async def set_investigation_target(payload: Dict[str, Any]):
+async def set_investigation_target(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Set the SSH host used for automated investigations.
     Body: {"host": "192.168.1.10"}
@@ -436,26 +564,49 @@ async def ai_provider_status():
 
 
 @app.post("/ai/provider")
-async def ai_provider_switch(payload: Dict[str, Any]):
+async def ai_provider_switch(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
-    Hot-swap the AI provider at runtime.
+    Hot-swap the AI provider at runtime. **Admin role required.**
 
     Body (all optional except provider):
         {"provider": "openrouter", "api_key": "sk-or-...",
          "model": "nous-hermes-2-mixtral-8x7b", "base_url": ""}
 
     Supports 'provider:model' shorthand in the model field.
+
+    Security: `base_url` is validated against an allowlist composed of the
+    built-in provider defaults plus `settings.ai_allowed_base_urls`.
+    This closes F1 (credential exfil via base_url override).
     """
     provider = payload.get("provider", "").strip()
     if not provider:
         raise HTTPException(status_code=400, detail="provider is required")
+
+    base_url = (payload.get("base_url", "") or "").strip()
+    if base_url:
+        allowed = set(settings.ai_allowed_base_urls)
+        for info in SUPPORTED_PROVIDERS.values():
+            if info.default_base_url:
+                allowed.add(info.default_base_url.rstrip("/"))
+        if base_url.rstrip("/") not in allowed:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"base_url not in allowlist. Configure AI_ALLOWED_BASE_URLS "
+                    f"or use a built-in provider default."
+                ),
+            )
+
     try:
         registry = ProviderRegistry.get_instance()
         client = registry.switch(
             provider=provider,
             model=payload.get("model", ""),
             api_key=payload.get("api_key", ""),
-            base_url=payload.get("base_url", ""),
+            base_url=base_url,
         )
         components["ai"] = client
         if "model_orchestrator" in components:
@@ -466,7 +617,10 @@ async def ai_provider_switch(payload: Dict[str, Any]):
 
 
 @app.post("/ai/model")
-async def ai_model_switch(payload: Dict[str, Any]):
+async def ai_model_switch(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
     Change only the model (keeps current provider and API key).
 
@@ -498,16 +652,37 @@ async def ai_list_profiles():
     return {"profiles": ProviderRegistry.get_instance().list_profiles()}
 
 
+# Profile name validator (closes F5: path traversal in profile names)
+_PROFILE_NAME_RE = __import__("re").compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+def _validate_profile_name(name: str) -> str:
+    if not _PROFILE_NAME_RE.match(name):
+        raise HTTPException(
+            status_code=400,
+            detail="Profile name must match ^[A-Za-z0-9_-]{1,64}$",
+        )
+    return name
+
+
 @app.post("/ai/provider/profiles/{name}")
-async def ai_save_profile(name: str):
-    """Save the current provider configuration as a named profile."""
+async def ai_save_profile(
+    name: str,
+    user: User = Depends(require_admin),
+):
+    """Save the current provider configuration as a named profile. Admin-only."""
+    name = _validate_profile_name(name)
     path = ProviderRegistry.get_instance().save_profile(name)
     return {"saved": name, "path": str(path)}
 
 
 @app.put("/ai/provider/profiles/{name}")
-async def ai_load_profile(name: str):
-    """Load a saved profile and hot-swap the active client."""
+async def ai_load_profile(
+    name: str,
+    user: User = Depends(require_admin),
+):
+    """Load a saved profile and hot-swap the active client. Admin-only."""
+    name = _validate_profile_name(name)
     try:
         client = ProviderRegistry.get_instance().load_profile(name)
     except FileNotFoundError as e:
@@ -519,8 +694,12 @@ async def ai_load_profile(name: str):
 
 
 @app.delete("/ai/provider/profiles/{name}")
-async def ai_delete_profile(name: str):
-    """Delete a saved profile."""
+async def ai_delete_profile(
+    name: str,
+    user: User = Depends(require_admin),
+):
+    """Delete a saved profile. Admin-only."""
+    name = _validate_profile_name(name)
     deleted = ProviderRegistry.get_instance().delete_profile(name)
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Profile not found: {name!r}")
@@ -540,7 +719,10 @@ async def ai_get_system_prompt():
 
 
 @app.post("/ai/system-prompt")
-async def ai_set_system_prompt(payload: Dict[str, Any]):
+async def ai_set_system_prompt(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
     Set a new system prompt at runtime (affects all subsequent AI calls).
 
@@ -578,8 +760,8 @@ async def ai_set_system_prompt(payload: Dict[str, Any]):
 
 
 @app.delete("/ai/system-prompt")
-async def ai_clear_system_prompt():
-    """Clear the system prompt (AI calls will have no injected context)."""
+async def ai_clear_system_prompt(user: User = Depends(require_admin)):
+    """Clear the system prompt (AI calls will have no injected context). Admin-only."""
     ProviderRegistry.get_instance().set_system_prompt("")
     return {"cleared": True}
 
@@ -628,7 +810,10 @@ async def ai_status():
 
 
 @app.post("/ai/analyze")
-async def ai_analyze_code(payload: Dict[str, Any]):
+async def ai_analyze_code(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Send code to the local LLM for security analysis.
     Body: {"code": "...", "context": "optional hint"}
@@ -655,7 +840,10 @@ async def ai_analyze_code(payload: Dict[str, Any]):
 
 
 @app.post("/ai/hypothesis")
-async def ai_generate_hypothesis(payload: Dict[str, Any]):
+async def ai_generate_hypothesis(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Generate a threat hunting hypothesis from indicators using the local LLM.
     Body: {"indicators": {...}}
@@ -677,7 +865,10 @@ async def ai_generate_hypothesis(payload: Dict[str, Any]):
 
 
 @app.post("/ai/models/load")
-async def ai_load_model(payload: Dict[str, Any]):
+async def ai_load_model(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
     Load a model in LM Studio via POST /api/v1/models/load.
     Body: {"model": "ibm/granite-4-micro", "context_length": 8192}
@@ -696,7 +887,10 @@ async def ai_load_model(payload: Dict[str, Any]):
 
 
 @app.post("/ai/models/unload")
-async def ai_unload_model(payload: Dict[str, Any]):
+async def ai_unload_model(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
     Unload a model in LM Studio via POST /api/v1/models/unload.
     Body: {"model": "ibm/granite-4-micro"}
@@ -715,7 +909,10 @@ async def ai_unload_model(payload: Dict[str, Any]):
 
 
 @app.post("/ai/validate")
-async def ai_validate_vulnerability(payload: Dict[str, Any]):
+async def ai_validate_vulnerability(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Ask the local LLM to validate a potential vulnerability finding.
     Body: {"vuln_data": {...}}
@@ -775,7 +972,10 @@ async def shodan_host(ip: str, history: bool = False):
 
 
 @app.post("/shodan/search")
-async def shodan_search(payload: Dict[str, Any]):
+async def shodan_search(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Generic Shodan search.
     Body: {"query": "apache port:80", "max_results": 20, "facets": ["country", "org"]}
@@ -810,7 +1010,10 @@ async def shodan_cve_exposure(cve_id: str):
 
 
 @app.post("/shodan/enrich")
-async def shodan_enrich_ip(payload: Dict[str, Any]):
+async def shodan_enrich_ip(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Enrich a threat indicator IP with Shodan context (ports, vulns, honeyscore).
     Body: {"ip": "1.2.3.4"}
@@ -838,7 +1041,10 @@ async def shodan_domain(domain: str):
 
 
 @app.post("/shodan/exploits")
-async def shodan_exploits(payload: Dict[str, Any]):
+async def shodan_exploits(
+    payload: Dict[str, Any],
+    user: User = Depends(require_operator),
+):
     """
     Search Shodan Exploits database.
     Body: {"query": "CVE-2021-44228 log4j"}
@@ -888,7 +1094,10 @@ async def shodan_search_tokens(query: str):
 
 
 @app.post("/shodan/scan")
-async def shodan_request_scan(payload: Dict[str, Any]):
+async def shodan_request_scan(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
     Request Shodan to crawl a list of IPs / CIDR netblocks (1 IP = 1 scan credit, paid plan required).
     Body: {"ips": ["1.2.3.4", "10.0.0.0/24"]}
@@ -930,7 +1139,10 @@ async def shodan_list_scans():
 
 
 @app.post("/shodan/alerts")
-async def shodan_create_alert(payload: Dict[str, Any]):
+async def shodan_create_alert(
+    payload: Dict[str, Any],
+    user: User = Depends(require_admin),
+):
     """
     Create a network alert to monitor IPs/CIDRs for new Shodan discoveries.
     Body: {"name": "My Infra", "ips": ["1.2.3.4", "10.0.0.0/24"], "expires": 0}
@@ -961,7 +1173,10 @@ async def shodan_list_alerts():
 
 
 @app.delete("/shodan/alerts/{alert_id}")
-async def shodan_delete_alert(alert_id: str):
+async def shodan_delete_alert(
+    alert_id: str,
+    user: User = Depends(require_admin),
+):
     """Delete a network alert."""
     shodan = _require_shodan()
     try:
@@ -982,7 +1197,11 @@ async def shodan_alert_triggers():
 
 
 @app.put("/shodan/alerts/{alert_id}/trigger/{trigger}")
-async def shodan_enable_trigger(alert_id: str, trigger: str):
+async def shodan_enable_trigger(
+    alert_id: str,
+    trigger: str,
+    user: User = Depends(require_admin),
+):
     """
     Enable a trigger on a network alert.
     trigger: comma-separated names e.g. malware,open_database
@@ -993,3 +1212,26 @@ async def shodan_enable_trigger(alert_id: str, trigger: str):
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
     return {"success": success}
+
+
+# ------------------------------------------------------------------
+# Audit log retrieval
+# ------------------------------------------------------------------
+
+@app.get("/audit/log")
+async def get_audit_log(
+    limit: int = 100,
+    actor: Optional[str] = None,
+    user: User = Depends(require_admin),
+):
+    """Return the most recent audit entries. Admin-only.
+
+    Query params:
+        limit: maximum entries to return (1..1000, default 100)
+        actor: optional filter by username
+    """
+    limit = max(1, min(int(limit), 1000))
+    return {
+        "total": audit_store().count(),
+        "entries": audit_store().tail(n=limit, actor=actor),
+    }

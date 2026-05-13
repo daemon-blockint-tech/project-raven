@@ -1,0 +1,20 @@
+apiVersion: v2
+name: raven
+description: |
+  Project Raven — Autonomous Defense System with ML/AI for zero-day threat
+  detection, runtime-switchable multi-provider AI, and human-in-the-loop
+  kill-chain planning.
+type: application
+version: 0.2.0
+appVersion: "0.2.0"
+keywords:
+  - security
+  - threat-hunting
+  - ml
+  - ai
+  - cybersecurity
+home: https://github.com/daemon-blockint-tech/project-raven
+maintainers:
+  - name: Project Raven Maintainers
+sources:
+  - https://github.com/daemon-blockint-tech/project-raven

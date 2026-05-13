@@ -1,43 +1,94 @@
-version: '3.8'
+version: "3.8"
+
+# =============================================================================
+# Local development compose — mirrors the production K8s topology.
+# For real deployments use the Helm chart at deployment/helm/raven.
+# =============================================================================
 
 services:
   raven-api:
-    build: .
+    build:
+      context: .
+      target: runtime
     ports:
       - "8000:8000"
       - "9090:9090"
     environment:
-      - DATABASE_URL=postgresql://raven:raven@db:5432/raven
-      - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=dev-secret-key
+      RAVEN_ENVIRONMENT: dev
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://raven:${POSTGRES_PASSWORD:?set in .env}@db:5432/raven}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:?set a 32+ char value in .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      AI_PROVIDER: ${AI_PROVIDER:-lmstudio}
+      AI_API_KEY: ${AI_API_KEY:-}
+      SHODAN_API_KEY: ${SHODAN_API_KEY:-}
+      SCAN_ROOT: /var/lib/raven/repos
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./logs:/app/logs
-      - ./models:/app/models
+      - raven_logs:/var/log/raven
+      - raven_data:/var/lib/raven
+    read_only: true
+    tmpfs:
+      - /tmp/raven:size=256m
+    user: "10001:10001"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
     networks:
-      - raven-network
+      - raven-net
 
   db:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=raven
-      - POSTGRES_USER=raven
-      - POSTGRES_PASSWORD=raven
+      POSTGRES_DB: raven
+      POSTGRES_USER: raven
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "raven"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     networks:
-      - raven-network
+      - raven-net
 
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     networks:
-      - raven-network
+      - raven-net
 
 volumes:
   postgres_data:
+  raven_logs:
+  raven_data:
 
 networks:
-  raven-network:
+  raven-net:
     driver: bridge

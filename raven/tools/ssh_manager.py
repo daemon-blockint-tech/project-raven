@@ -1,6 +1,7 @@
 """SSH manager for secure remote command execution"""
 
 from typing import List, Dict, Any, Optional
+import os
 import paramiko
 from dataclasses import dataclass
 import time
@@ -18,30 +19,73 @@ class SSHResult:
 
 
 class SSHManager:
-    """Manage SSH connections and command execution"""
-    
+    """Manage SSH connections and command execution.
+
+    Host key policy: ``RejectPolicy`` + operator-provisioned ``known_hosts``.
+    AutoAddPolicy was removed to close MITM finding F6 — any new host must be
+    pre-trusted by adding its fingerprint to the known_hosts file at
+    ``config['ssh_known_hosts']`` (defaults to ``~/.ssh/known_hosts``).
+    """
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.timeout = config.get("ssh_timeout", 30)
+        self.known_hosts_path = config.get(
+            "ssh_known_hosts",
+            os.path.expanduser("~/.ssh/known_hosts"),
+        )
         self.connections: Dict[str, paramiko.SSHClient] = {}
-        
+
+    def _build_client(self) -> paramiko.SSHClient:
+        """Build a client with strict host-key checking."""
+        client = paramiko.SSHClient()
+        # Load system-wide known hosts if present
+        try:
+            client.load_system_host_keys()
+        except IOError:
+            pass
+        # Load operator-supplied known_hosts (must already contain the target
+        # fingerprint, otherwise the connect() call raises BadHostKeyException
+        # or SSHException — never AutoAdd in production).
+        if self.known_hosts_path and os.path.isfile(self.known_hosts_path):
+            try:
+                client.load_host_keys(self.known_hosts_path)
+            except IOError:
+                pass
+        client.set_missing_host_key_policy(paramiko.RejectPolicy())
+        return client
+
     def connect(self, host: str, username: str, password: Optional[str] = None,
                 key_path: Optional[str] = None, port: int = 22) -> bool:
-        """Establish SSH connection to a host"""
+        """Establish SSH connection to a host.
+
+        Returns False (and logs) on host-key mismatch — does NOT silently trust
+        unknown hosts. Operators must pre-provision known_hosts entries.
+        """
         try:
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
+            client = self._build_client()
+
             if key_path:
-                client.connect(host, port=port, username=username, 
-                             key_filename=key_path, timeout=self.timeout)
+                client.connect(host, port=port, username=username,
+                               key_filename=key_path, timeout=self.timeout,
+                               allow_agent=False, look_for_keys=False)
             else:
                 client.connect(host, port=port, username=username,
-                             password=password, timeout=self.timeout)
-            
+                               password=password, timeout=self.timeout,
+                               allow_agent=False, look_for_keys=False)
+
             self.connections[host] = client
             return True
-            
+
+        except paramiko.BadHostKeyException as e:
+            print(f"SSH host key mismatch for {host}: {e}. "
+                  f"Refusing connection (possible MITM). "
+                  f"Update {self.known_hosts_path} if the change is intentional.")
+            return False
+        except paramiko.SSHException as e:
+            # Includes "Server '<host>' not found in known_hosts"
+            print(f"SSH connection rejected for {host}: {e}")
+            return False
         except Exception as e:
             print(f"SSH connection failed to {host}: {e}")
             return False

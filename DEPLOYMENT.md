@@ -1,5 +1,107 @@
 # Deployment Guide
 
+## Production deployment (Kubernetes)
+
+Project Raven 0.2+ is designed for Kubernetes via the bundled Helm chart at
+`deployment/helm/raven`.
+
+### Prerequisites
+
+| Component | Notes |
+|---|---|
+| Kubernetes 1.27+ | EKS / GKE / AKS / k3s all supported |
+| Helm 3.14+ | `brew install helm` |
+| cert-manager | TLS termination at the ingress |
+| Prometheus Operator | For `ServiceMonitor` (optional) |
+| External Secrets Operator | Pulls API keys from AWS Secrets Manager / Vault |
+| ingress-nginx | Or any other IngressClass |
+
+### Bootstrap secrets
+
+Generate a strong `SECRET_KEY` and bootstrap admin password:
+
+```bash
+openssl rand -hex 32   # SECRET_KEY (>=32 chars required in prod)
+openssl rand -base64 24   # BOOTSTRAP_ADMIN_PASSWORD (>=12 chars)
+```
+
+Then create the K8s Secret (or use ESO to sync from your secrets backend):
+
+```bash
+kubectl create namespace raven
+
+kubectl -n raven create secret generic raven \
+    --from-literal=SECRET_KEY="<32+ char value>" \
+    --from-literal=BOOTSTRAP_ADMIN_PASSWORD="<12+ char value>" \
+    --from-literal=AI_API_KEY="<provider key, optional>" \
+    --from-literal=SHODAN_API_KEY="<shodan key, optional>" \
+    --from-literal=DATABASE_URL="postgresql://raven:...@db:5432/raven" \
+    --from-literal=REDIS_URL="redis://redis:6379/0"
+```
+
+### Install
+
+```bash
+helm install raven deployment/helm/raven \
+  --namespace raven \
+  --set secrets.existingSecret=raven \
+  --set ingress.hosts[0].host=raven.your-domain.com \
+  --set config.corsOrigins[0]=https://raven.your-domain.com
+```
+
+The chart applies:
+- 3 replicas + HPA (3–12 on CPU/mem)
+- PodDisruptionBudget `minAvailable: 2`
+- NetworkPolicy: ingress only from `ingress-nginx` + `monitoring`, egress allowlisted to AI providers
+- Non-root container (uid 10001), read-only rootfs, `drop ALL` capabilities, seccomp `RuntimeDefault`
+- Probes: startup (`/health/startup`), liveness (`/health`), readiness (`/health/ready`)
+- ServiceMonitor for Prometheus
+
+### First login
+
+The bootstrap admin is created on first startup if `BOOTSTRAP_ADMIN_PASSWORD`
+is set. Log in via:
+
+```bash
+curl -X POST https://raven.your-domain.com/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"admin","password":"<bootstrap password>"}'
+```
+
+The response contains `access_token` (15 min) and `refresh_token` (7 days).
+Treat both as secrets.
+
+### Upgrade
+
+```bash
+helm upgrade raven deployment/helm/raven --reuse-values
+```
+
+`maxUnavailable: 0, maxSurge: 1` means upgrades roll one pod at a time with
+zero downtime.
+
+### Rollback
+
+```bash
+helm rollback raven      # one revision back
+helm history raven       # list revisions
+```
+
+## Local development
+
+For local development, use the bundled `docker-compose.yml`:
+
+```bash
+cp .env.example .env
+# Generate SECRET_KEY and POSTGRES_PASSWORD in .env
+docker compose up -d
+```
+
+The compose file mirrors the production K8s security topology:
+non-root user, read-only rootfs, dropped capabilities, healthchecks.
+
+---
+
 ## Prerequisites
 
 - Python 3.11+
