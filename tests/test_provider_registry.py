@@ -1,14 +1,10 @@
 """Tests for ProviderRegistry — runtime switching and named profiles."""
 
 import json
-import os
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from raven.ai.registry import ProviderRegistry, ProviderConfig, _PROFILES_DIR
+from raven.ai.registry import ProviderRegistry, ProviderConfig
 from raven.ai.providers.lmstudio import LMStudioClient
 from raven.ai.providers.openai_compat import OpenAICompatClient
 
@@ -30,6 +26,7 @@ def registry() -> ProviderRegistry:
 def tmp_profiles(tmp_path, monkeypatch):
     """Redirect profile storage to a temp directory."""
     import raven.ai.registry as reg_module
+
     monkeypatch.setattr(reg_module, "_PROFILES_DIR", tmp_path)
     return tmp_path
 
@@ -37,6 +34,7 @@ def tmp_profiles(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # Singleton
 # ---------------------------------------------------------------------------
+
 
 class TestSingleton:
     def test_same_instance(self):
@@ -48,6 +46,7 @@ class TestSingleton:
 # ---------------------------------------------------------------------------
 # Provider switching
 # ---------------------------------------------------------------------------
+
 
 class TestSwitch:
     def test_switch_to_openai(self, registry):
@@ -91,6 +90,7 @@ class TestSwitch:
 # initialise_from_config
 # ---------------------------------------------------------------------------
 
+
 class TestInitialise:
     def test_from_full_config(self, registry):
         config = {
@@ -120,6 +120,7 @@ class TestInitialise:
 # ---------------------------------------------------------------------------
 # Profiles
 # ---------------------------------------------------------------------------
+
 
 class TestProfiles:
     def test_save_and_load(self, registry, tmp_profiles):
@@ -177,6 +178,7 @@ class TestProfiles:
 # ProviderConfig serialisation
 # ---------------------------------------------------------------------------
 
+
 class TestProviderConfig:
     def test_to_client_config(self):
         cfg = ProviderConfig(provider="openrouter", model="test-model", api_key="key")
@@ -186,7 +188,9 @@ class TestProviderConfig:
         assert cc["ai_api_key"] == "key"
 
     def test_from_dict_roundtrip(self):
-        original = ProviderConfig(provider="anthropic", model="claude-3-5-sonnet", api_key="sk-ant")
+        original = ProviderConfig(
+            provider="anthropic", model="claude-3-5-sonnet", api_key="sk-ant"
+        )
         data = {
             "provider": original.provider,
             "model": original.model,

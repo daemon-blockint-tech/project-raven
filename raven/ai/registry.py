@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 import stat
 import threading
@@ -31,6 +30,7 @@ _PROFILES_DIR = Path.home() / ".raven" / "profiles"
 @dataclass
 class ProviderConfig:
     """Serialisable snapshot of the active provider configuration."""
+
     provider: str = "lmstudio"
     model: str = ""
     api_key: str = ""
@@ -43,14 +43,14 @@ class ProviderConfig:
 
     def to_client_config(self) -> Dict[str, Any]:
         return {
-            "ai_provider":       self.provider,
-            "ai_model":          self.model,
-            "ai_api_key":        self.api_key,
-            "ai_base_url":       self.base_url,
-            "ai_temperature":    self.temperature,
-            "ai_max_tokens":     self.max_tokens,
-            "ai_timeout":        self.timeout,
-            "ai_system_prompt":  self.system_prompt,
+            "ai_provider": self.provider,
+            "ai_model": self.model,
+            "ai_api_key": self.api_key,
+            "ai_base_url": self.base_url,
+            "ai_temperature": self.temperature,
+            "ai_max_tokens": self.max_tokens,
+            "ai_timeout": self.timeout,
+            "ai_system_prompt": self.system_prompt,
             **self.extra,
         }
 
@@ -119,8 +119,12 @@ class ProviderRegistry:
                 model=model or self._config.model,
                 api_key=api_key or self._config.api_key,
                 base_url=base_url or self._config.base_url,
-                temperature=temperature if temperature is not None else self._config.temperature,
-                max_tokens=max_tokens if max_tokens is not None else self._config.max_tokens,
+                temperature=temperature
+                if temperature is not None
+                else self._config.temperature,
+                max_tokens=max_tokens
+                if max_tokens is not None
+                else self._config.max_tokens,
                 timeout=timeout if timeout is not None else self._config.timeout,
                 extra=extra or self._config.extra,
             )
@@ -138,7 +142,9 @@ class ProviderRegistry:
         """Return the current client, creating it lazily if needed."""
         with self._rw_lock:
             if self._client is None:
-                self._client = create_client_from_config(self._config.to_client_config())
+                self._client = create_client_from_config(
+                    self._config.to_client_config()
+                )
             return self._client
 
     def initialise_from_config(self, config: Dict[str, Any]) -> BaseAIClient:
@@ -149,9 +155,17 @@ class ProviderRegistry:
                 model=config.get("ai_model", config.get("lmstudio_model", "")),
                 api_key=config.get("ai_api_key", config.get("lmstudio_api_key", "")),
                 base_url=config.get("ai_base_url", config.get("lmstudio_base_url", "")),
-                temperature=float(config.get("ai_temperature", config.get("lmstudio_temperature", 0.2))),
-                max_tokens=int(config.get("ai_max_tokens", config.get("lmstudio_max_tokens", 4096))),
-                timeout=int(config.get("ai_timeout", config.get("lmstudio_timeout", 120))),
+                temperature=float(
+                    config.get(
+                        "ai_temperature", config.get("lmstudio_temperature", 0.2)
+                    )
+                ),
+                max_tokens=int(
+                    config.get("ai_max_tokens", config.get("lmstudio_max_tokens", 4096))
+                ),
+                timeout=int(
+                    config.get("ai_timeout", config.get("lmstudio_timeout", 120))
+                ),
             )
             # Auto-load system prompt from file if configured
             prompt_path = config.get("ai_system_prompt_path", "RAVEN_SYSTEM_PROMPT.md")
@@ -247,13 +261,13 @@ class ProviderRegistry:
         info = SUPPORTED_PROVIDERS.get(cfg.provider)
         prompt = cfg.system_prompt
         return {
-            "provider":           cfg.provider,
-            "model":              cfg.model or "(auto)",
-            "base_url":           cfg.base_url or (info.default_base_url if info else ""),
-            "has_api_key":        bool(cfg.api_key),
-            "description":        info.description if info else "",
-            "profiles":           self.list_profiles(),
-            "available":          self._client.is_available() if self._client else False,
-            "system_prompt_set":  bool(prompt),
-            "system_prompt_len":  len(prompt),
+            "provider": cfg.provider,
+            "model": cfg.model or "(auto)",
+            "base_url": cfg.base_url or (info.default_base_url if info else ""),
+            "has_api_key": bool(cfg.api_key),
+            "description": info.description if info else "",
+            "profiles": self.list_profiles(),
+            "available": self._client.is_available() if self._client else False,
+            "system_prompt_set": bool(prompt),
+            "system_prompt_len": len(prompt),
         }

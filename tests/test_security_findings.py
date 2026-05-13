@@ -16,11 +16,13 @@ import pytest
 # F1 — base_url allowlist
 # ---------------------------------------------------------------------------
 
+
 class TestF1BaseUrlAllowlist:
     """`/ai/provider` must reject base_url values outside the allowlist."""
 
     def test_built_in_provider_urls_in_allowlist(self):
         from raven.ai.base import SUPPORTED_PROVIDERS
+
         for info in SUPPORTED_PROVIDERS.values():
             if info.default_base_url:
                 # Sanity: every built-in default is a well-formed http(s) URL
@@ -30,6 +32,7 @@ class TestF1BaseUrlAllowlist:
         pytest.importorskip("paramiko")
         from fastapi.testclient import TestClient
         from raven.api.main import app
+
         # Should reject before any auth check evaluates the body? No — auth runs
         # first. Without a valid token we get 401, not 403. That still proves
         # the endpoint isn't world-mutable. We assert 401.
@@ -45,11 +48,13 @@ class TestF1BaseUrlAllowlist:
 # F2 — repo_path scan jail
 # ---------------------------------------------------------------------------
 
+
 class TestF2ScanJail:
     @staticmethod
     def _jail(raw: str, root: str) -> bool:
         """Replicate the exact logic from raven/api/main.py:_jail_scan_path."""
         from pathlib import Path
+
         try:
             root_p = Path(root).resolve()
             target = Path(raw).resolve(strict=False)
@@ -74,11 +79,13 @@ class TestF2ScanJail:
 # F3 — persistent prompt injection now gated by admin role (F4 enabling)
 # ---------------------------------------------------------------------------
 
+
 class TestF3PromptInjectionRequiresAuth:
     def test_endpoint_requires_auth(self):
         pytest.importorskip("paramiko")
         from fastapi.testclient import TestClient
         from raven.api.main import app
+
         client = TestClient(app)
         resp = client.post("/ai/system-prompt", json={"prompt": "malicious"})
         assert resp.status_code == 401
@@ -88,33 +95,38 @@ class TestF3PromptInjectionRequiresAuth:
 # F4 — all /ai/* mutations require auth
 # ---------------------------------------------------------------------------
 
+
 class TestF4AuthRequired:
-    @pytest.mark.parametrize("method,path,body", [
-        ("post",   "/ai/provider", {"provider": "openai"}),
-        ("post",   "/ai/model", {"model": "gpt-4o"}),
-        ("post",   "/ai/system-prompt", {"prompt": "x"}),
-        ("delete", "/ai/system-prompt", None),
-        ("post",   "/ai/provider/profiles/test", None),
-        ("put",    "/ai/provider/profiles/test", None),
-        ("delete", "/ai/provider/profiles/test", None),
-        ("post",   "/ai/models/load", {"model": "x"}),
-        ("post",   "/ai/models/unload", {"model": "x"}),
-        ("post",   "/ai/analyze", {"code": "x"}),
-        ("post",   "/ai/hypothesis", {"indicators": {}}),
-        ("post",   "/ai/validate", {"vuln_data": {}}),
-        ("post",   "/hunt", {}),
-        ("post",   "/hunt/variant", {"repo_path": "/"}),
-        ("post",   "/hunt/code", {"repo_path": "/"}),
-        ("post",   "/hunt/killchain", {"objective": "x", "target_network": "y"}),
-        ("post",   "/hunt/killchain/approve", None),
-        ("post",   "/hunt/killchain/reject", None),
-        ("post",   "/investigate/target", {"host": "1.2.3.4"}),
-        ("post",   "/mitigate", None),
-    ])
+    @pytest.mark.parametrize(
+        "method,path,body",
+        [
+            ("post", "/ai/provider", {"provider": "openai"}),
+            ("post", "/ai/model", {"model": "gpt-4o"}),
+            ("post", "/ai/system-prompt", {"prompt": "x"}),
+            ("delete", "/ai/system-prompt", None),
+            ("post", "/ai/provider/profiles/test", None),
+            ("put", "/ai/provider/profiles/test", None),
+            ("delete", "/ai/provider/profiles/test", None),
+            ("post", "/ai/models/load", {"model": "x"}),
+            ("post", "/ai/models/unload", {"model": "x"}),
+            ("post", "/ai/analyze", {"code": "x"}),
+            ("post", "/ai/hypothesis", {"indicators": {}}),
+            ("post", "/ai/validate", {"vuln_data": {}}),
+            ("post", "/hunt", {}),
+            ("post", "/hunt/variant", {"repo_path": "/"}),
+            ("post", "/hunt/code", {"repo_path": "/"}),
+            ("post", "/hunt/killchain", {"objective": "x", "target_network": "y"}),
+            ("post", "/hunt/killchain/approve", None),
+            ("post", "/hunt/killchain/reject", None),
+            ("post", "/investigate/target", {"host": "1.2.3.4"}),
+            ("post", "/mitigate", None),
+        ],
+    )
     def test_endpoint_returns_401_without_token(self, method, path, body):
         pytest.importorskip("paramiko")
         from fastapi.testclient import TestClient
         from raven.api.main import app
+
         client = TestClient(app)
         fn = getattr(client, method)
         resp = fn(path, json=body) if body is not None else fn(path)
@@ -127,6 +139,7 @@ class TestF4AuthRequired:
 # ---------------------------------------------------------------------------
 # F5 — profile name regex
 # ---------------------------------------------------------------------------
+
 
 class TestF5ProfileNameRegex:
     PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -143,6 +156,7 @@ class TestF5ProfileNameRegex:
 # ---------------------------------------------------------------------------
 # F6 — SSHManager uses RejectPolicy
 # ---------------------------------------------------------------------------
+
 
 class TestF6SSHPolicy:
     def test_ssh_manager_uses_reject_policy(self):

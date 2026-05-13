@@ -7,7 +7,7 @@ Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}
      3	 *
      4	 * SPDX\PYGZhy{}License\PYGZhy{}Identifier: BSD\PYGZhy{}2\PYGZhy{}Clause
      5	 */
-     6	
+     6
      7	\PYGZsh{}include \PYGZlt{}AK/Debug.h\PYGZgt{}
      8	\PYGZsh{}include \PYGZlt{}AK/Endian.h\PYGZgt{}
 [...]

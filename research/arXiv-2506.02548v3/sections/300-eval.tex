@@ -2,7 +2,7 @@
 \label{sec:eval}
 We present a comprehensive evaluation of state-of-the-art agents and LLMs on \sysname{}.
 Overall, the results show that \sysname presents a significant challenge for current agents and models.
-It also provides a clear ladder of difficulties (e.g., \cref{fig:success_rate_vs_gt_poc_len}), differentiating agents' and models' cybersecurity skills, which will be useful for progress tracking. 
+It also provides a clear ladder of difficulties (e.g., \cref{fig:success_rate_vs_gt_poc_len}), differentiating agents' and models' cybersecurity skills, which will be useful for progress tracking.
 
 \rbtl{Evaluating state-of-the-art agents and LLMs in non-thinking mode on full \sysname{} requires approximately \$3,000 in API credits.
 To enable more lightweight and budget-friendly evaluations, we also provide a randomly selected subset of 300 instances ($\sim$20\% of the entire benchmark).}
@@ -13,7 +13,7 @@ Unless explicitly specified, we use difficulty level 1 (our primary reproduction
 \paragraph{Backbone LLMs Differ Significantly in Reproduction Success Rate}
 We select eleven state-of-the-art LLMs from three categories: (i) General-purpose closed-source LLMs: \gptiv{}~\citep{openai_gpt4.1}, \gptv{}~\citep{openai_gpt5}, o4-mini~\citep{openai_o3_o4mini}, \claudeiii{}~\citep{claude37sonnet}, \claudeiv{}~\citep{claudesonnet4}, and Gemini-2.5-Flash~\citep{gemini25flash}; (ii) General-purpose open-weight LLMs: Qwen3-235B-A22B~\citep{qwen3} and DeepSeek-V3~\citep{deepseekv3}; (iii) Specialized LLMs optimized for \openhands~\citep{openhands} to solve \swebench{}~\citep{jimenez2024swebench}: SWE-Gym-32B~\citep{swegym}, R2E-Gym-32B~\citep{r2egym}, and OpenHands-LM-32B~\citep{openhands_lm32b}.
 In this experiment, we disable the thinking mode to reduce cost in this experiment, except for o4-mini, which does not support disabling thinking, and \gptv{}, for which minimal reasoning effort is used.
-We adopt \openhands{} as the agent scaffold~\citep{openhands} of these LLMs 
+We adopt \openhands{} as the agent scaffold~\citep{openhands} of these LLMs
 \rbtl{with a maximum of 100 iterations per task.}
 
 Overall, \claudeiv achieves the best result with a success rate of 17.9\%, followed by \claudeiii and \gptiv.
@@ -90,12 +90,12 @@ For all evaluated models, the $p$-values exceed 0.1, indicating no statistically
 \rbtlframe{%
 \begin{tabular}{lrrrr}
     \toprule
-    \textbf{Model} & 
-    % \textbf{Pre-cutoff success rate} & 
-    % \textbf{Post-cutoff success rate} & 
+    \textbf{Model} &
+    % \textbf{Pre-cutoff success rate} &
+    % \textbf{Post-cutoff success rate} &
     \makecell[r]{\textbf{Pre-cutoff (\%)}} &
     \makecell[r]{\textbf{Post-cutoff (\%)}} &
-    \makecell[r]{\textbf{Fisher-exact}\\\textbf{$p$-value}} & 
+    \makecell[r]{\textbf{Fisher-exact}\\\textbf{$p$-value}} &
     \makecell[r]{\textbf{\ztest}\\\textbf{$p$-value}} \\
     \midrule
     \claudeiii & 11.9 (169/1419) & 12.5 (11/88) & 0.87 & 0.87 \\
@@ -137,7 +137,7 @@ This demonstrates promising capability for uncovering new vulnerabilities, motiv
 Executables in \sysname accept various input formats, including text and binary files.
 A longer ground truth PoC typically implies that the target executable has more complex input parsing logic.
 This increased complexity makes it more difficult for an agent to generate inputs that accurately trigger the vulnerability conditions.
-In \cref{fig:success_rate_vs_gt_poc_len}, we present the performance of \openhands with \gptiv and \claudeiv partitioned by the lengths of ground truth PoCs. 
+In \cref{fig:success_rate_vs_gt_poc_len}, we present the performance of \openhands with \gptiv and \claudeiv partitioned by the lengths of ground truth PoCs.
 Tasks in the \([0, 10)\) range represent a relatively small input exploration space, where the agent achieves the highest success rate.
 \begin{wrapfigure}[11]{r}{.35\textwidth}
     \centering

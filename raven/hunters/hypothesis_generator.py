@@ -10,6 +10,7 @@ import uuid
 @dataclass
 class ThreatHypothesis:
     """Threat hunting hypothesis"""
+
     hypothesis_id: str
     title: str
     description: str
@@ -50,7 +51,14 @@ _KEYWORD_SIGNATURES = {
         ],
     },
     "persistence": {
-        "keywords": ["registry", "startup", "scheduled", "cron", "service", "persistence"],
+        "keywords": [
+            "registry",
+            "startup",
+            "scheduled",
+            "cron",
+            "service",
+            "persistence",
+        ],
         "title": "Potential Persistence Mechanism",
         "description": "Indicators suggest attacker establishing persistence",
         "confidence": 0.55,
@@ -95,7 +103,9 @@ class HypothesisGenerator:
     # Public API
     # ------------------------------------------------------------------
 
-    def generate_from_indicators(self, indicators: Dict[str, Any]) -> List[ThreatHypothesis]:
+    def generate_from_indicators(
+        self, indicators: Dict[str, Any]
+    ) -> List[ThreatHypothesis]:
         """Generate hypotheses from security indicators.
 
         Tries LLM-based generation first; falls back to keyword matching on
@@ -172,8 +182,10 @@ class HypothesisGenerator:
         user = json.dumps(indicators, default=str)
 
         response = self.llm.chat(
-            [AIMessage(role="system", content=system),
-             AIMessage(role="user", content=user)],
+            [
+                AIMessage(role="system", content=system),
+                AIMessage(role="user", content=user),
+            ],
             temperature=0.1,
         )
 
@@ -184,39 +196,45 @@ class HypothesisGenerator:
 
         hypotheses = []
         for item in parsed:
-            hypotheses.append(ThreatHypothesis(
-                hypothesis_id=str(uuid.uuid4()),
-                title=item["title"],
-                description=item["description"],
-                confidence=float(item.get("confidence", 0.5)),
-                priority=item.get("priority", "medium"),
-                attack_vector=item.get("attack_vector", "unknown"),
-                indicators=list(indicators.keys()),
-                investigation_steps=item.get("investigation_steps", []),
-                created_at=time.time(),
-                status="pending",
-            ))
+            hypotheses.append(
+                ThreatHypothesis(
+                    hypothesis_id=str(uuid.uuid4()),
+                    title=item["title"],
+                    description=item["description"],
+                    confidence=float(item.get("confidence", 0.5)),
+                    priority=item.get("priority", "medium"),
+                    attack_vector=item.get("attack_vector", "unknown"),
+                    indicators=list(indicators.keys()),
+                    investigation_steps=item.get("investigation_steps", []),
+                    created_at=time.time(),
+                    status="pending",
+                )
+            )
         return hypotheses
 
     # ------------------------------------------------------------------
     # Keyword fallback
     # ------------------------------------------------------------------
 
-    def _generate_via_keywords(self, indicators: Dict[str, Any]) -> List[ThreatHypothesis]:
+    def _generate_via_keywords(
+        self, indicators: Dict[str, Any]
+    ) -> List[ThreatHypothesis]:
         indicator_str = str(indicators).lower()
         hypotheses = []
         for vector, sig in _KEYWORD_SIGNATURES.items():
             if any(kw in indicator_str for kw in sig["keywords"]):
-                hypotheses.append(ThreatHypothesis(
-                    hypothesis_id=str(uuid.uuid4()),
-                    title=sig["title"],
-                    description=sig["description"],
-                    confidence=sig["confidence"],
-                    priority=sig["priority"],
-                    attack_vector=vector,
-                    indicators=list(indicators.keys()),
-                    investigation_steps=list(sig["investigation_steps"]),
-                    created_at=time.time(),
-                    status="pending",
-                ))
+                hypotheses.append(
+                    ThreatHypothesis(
+                        hypothesis_id=str(uuid.uuid4()),
+                        title=sig["title"],
+                        description=sig["description"],
+                        confidence=sig["confidence"],
+                        priority=sig["priority"],
+                        attack_vector=vector,
+                        indicators=list(indicators.keys()),
+                        investigation_steps=list(sig["investigation_steps"]),
+                        created_at=time.time(),
+                        status="pending",
+                    )
+                )
         return hypotheses

@@ -8,7 +8,7 @@
 \PYGZpc{}    483	        dbgln\PYGZus{}if(JPEG\PYGZus{}DEBUG, \PYGZdq{}\PYGZob{}\PYGZcb{}: SOS found before reading a SOF!\PYGZdq{}, [...]
 \PYGZpc{}    484	        return Error::from\PYGZus{}string\PYGZus{}literal(\PYGZdq{}SOS found before reading [...]
 \PYGZpc{}    485	    \PYGZcb{}
-\PYGZpc{}    486	
+\PYGZpc{}    486
 \PYGZpc{}    487	    u16 bytes\PYGZus{}to\PYGZus{}read = TRY(stream.read\PYGZus{}value\PYGZlt{}BigEndian\PYGZlt{}u16\PYGZgt{}\PYGZgt{}()) \PYGZhy{} 2;
 \PYGZpc{} [...]
 \end{MintedVerbatim}

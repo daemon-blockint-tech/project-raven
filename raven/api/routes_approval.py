@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from raven.approval.gate import approval_gate
@@ -56,8 +56,12 @@ async def approve_decision(
     request_id: str,
     user: User = Depends(require_operator),
 ):
-    decision = approval_gate().resolve(request_id, approve=True, decided_by=user.username)
-    APPROVAL_REQUESTS.labels(mode=decision.mode.value, verdict=decision.verdict.value).inc()
+    decision = approval_gate().resolve(
+        request_id, approve=True, decided_by=user.username
+    )
+    APPROVAL_REQUESTS.labels(
+        mode=decision.mode.value, verdict=decision.verdict.value
+    ).inc()
     return decision
 
 
@@ -66,8 +70,12 @@ async def deny_decision(
     request_id: str,
     user: User = Depends(require_operator),
 ):
-    decision = approval_gate().resolve(request_id, approve=False, decided_by=user.username)
-    APPROVAL_REQUESTS.labels(mode=decision.mode.value, verdict=decision.verdict.value).inc()
+    decision = approval_gate().resolve(
+        request_id, approve=False, decided_by=user.username
+    )
+    APPROVAL_REQUESTS.labels(
+        mode=decision.mode.value, verdict=decision.verdict.value
+    ).inc()
     return decision
 
 

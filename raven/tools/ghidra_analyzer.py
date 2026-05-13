@@ -39,7 +39,11 @@ import time
 
 _SKILL_SCRIPTS_DIR = os.path.join(
     os.path.expanduser("~"),
-    ".agents", "skills", "ghidra-headless", "scripts", "ghidra_scripts",
+    ".agents",
+    "skills",
+    "ghidra-headless",
+    "scripts",
+    "ghidra_scripts",
 )
 
 # Common Ghidra installation paths (macOS brew, Linux, Windows)
@@ -58,28 +62,57 @@ _GHIDRA_SEARCH_PATHS = [
 # Suspicious API patterns worth flagging during triage
 # ---------------------------------------------------------------------------
 
-_RISKY_CALLS: frozenset = frozenset({
-    # Buffer overflow / memory unsafety
-    "strcpy", "strcat", "sprintf", "gets", "scanf", "vsprintf",
-    # Command / code execution
-    "system", "exec", "execve", "execvp", "popen", "ShellExecute",
-    "WinExec", "CreateProcessA", "CreateProcessW",
-    # Heap management (use-after-free / double-free risk)
-    "malloc", "free", "realloc", "calloc",
-    # Process injection (Windows)
-    "CreateRemoteThread", "VirtualAlloc", "VirtualAllocEx",
-    "WriteProcessMemory", "NtCreateThreadEx",
-    # Network
-    "WSAStartup", "connect", "send", "recv", "socket",
-    "URLDownloadToFile", "InternetOpen",
-    # Persistence
-    "CreateFile", "WriteFile", "RegSetValue", "RegCreateKey",
-})
+_RISKY_CALLS: frozenset = frozenset(
+    {
+        # Buffer overflow / memory unsafety
+        "strcpy",
+        "strcat",
+        "sprintf",
+        "gets",
+        "scanf",
+        "vsprintf",
+        # Command / code execution
+        "system",
+        "exec",
+        "execve",
+        "execvp",
+        "popen",
+        "ShellExecute",
+        "WinExec",
+        "CreateProcessA",
+        "CreateProcessW",
+        # Heap management (use-after-free / double-free risk)
+        "malloc",
+        "free",
+        "realloc",
+        "calloc",
+        # Process injection (Windows)
+        "CreateRemoteThread",
+        "VirtualAlloc",
+        "VirtualAllocEx",
+        "WriteProcessMemory",
+        "NtCreateThreadEx",
+        # Network
+        "WSAStartup",
+        "connect",
+        "send",
+        "recv",
+        "socket",
+        "URLDownloadToFile",
+        "InternetOpen",
+        # Persistence
+        "CreateFile",
+        "WriteFile",
+        "RegSetValue",
+        "RegCreateKey",
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class SuspiciousFunction:
@@ -91,6 +124,7 @@ class SuspiciousFunction:
 @dataclass
 class GhidraResult:
     """Structured output of a Ghidra analyzeHeadless run."""
+
     success: bool
     binary_path: str
     architecture: str = ""
@@ -109,6 +143,7 @@ class GhidraResult:
 # ---------------------------------------------------------------------------
 # Analyzer
 # ---------------------------------------------------------------------------
+
 
 class GhidraAnalyzer:
     """Automated binary analysis via Ghidra analyzeHeadless subprocess.
@@ -219,17 +254,25 @@ class GhidraAnalyzer:
         with tempfile.TemporaryDirectory(prefix="raven_ghidra_") as output_dir:
             cmd = [
                 headless,
-                output_dir,          # project location (temp)
+                output_dir,  # project location (temp)
                 project_name,
-                "-import", binary_path,
-                "-scriptPath", self.scripts_dir,
-                "-postScript", "ExportFunctions.java",
-                "-postScript", "ExportStrings.java",
-                "-postScript", "ExportSymbols.java",
-                "-postScript", "ExportDecompiled.java",
+                "-import",
+                binary_path,
+                "-scriptPath",
+                self.scripts_dir,
+                "-postScript",
+                "ExportFunctions.java",
+                "-postScript",
+                "ExportStrings.java",
+                "-postScript",
+                "ExportSymbols.java",
+                "-postScript",
+                "ExportDecompiled.java",
                 "-deleteProject",
-                "-analysisTimeoutPerFile", str(self.timeout),
-                "-log", os.path.join(output_dir, "ghidra.log"),
+                "-analysisTimeoutPerFile",
+                str(self.timeout),
+                "-log",
+                os.path.join(output_dir, "ghidra.log"),
             ]
 
             env = {**os.environ, "GHIDRA_OUTPUT_DIR": output_dir}
@@ -252,14 +295,14 @@ class GhidraAnalyzer:
                 )
 
             functions_data = self._load_json(output_dir, binary_name, "_functions.json")
-            strings_data   = self._load_json(output_dir, binary_name, "_strings.json")
-            symbols_data   = self._load_json(output_dir, binary_name, "_symbols.json")
-            decompiled_c   = self._load_text(output_dir, binary_name, "_decompiled.c")
+            strings_data = self._load_json(output_dir, binary_name, "_strings.json")
+            symbols_data = self._load_json(output_dir, binary_name, "_symbols.json")
+            decompiled_c = self._load_text(output_dir, binary_name, "_decompiled.c")
 
-            functions  = functions_data.get("functions", [])
+            functions = functions_data.get("functions", [])
             architecture = functions_data.get("architecture", "unknown")
-            strings    = [s.get("value", "") for s in strings_data.get("strings", [])]
-            imports    = [
+            strings = [s.get("value", "") for s in strings_data.get("strings", [])]
+            imports = [
                 sym.get("name", "")
                 for sym in symbols_data.get("symbols", [])
                 if sym.get("type") in ("Function", "ExternalFunction")
@@ -362,7 +405,7 @@ class GhidraAnalyzer:
             # Collect up to max_lines or closing brace
             block: List[str] = []
             depth = 0
-            for line in lines[start_idx: start_idx + max_lines]:
+            for line in lines[start_idx : start_idx + max_lines]:
                 block.append(line)
                 depth += line.count("{") - line.count("}")
                 if depth <= 0 and len(block) > 1:

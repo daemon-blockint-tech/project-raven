@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
@@ -14,28 +14,28 @@ from pydantic import BaseModel, Field
 class ApprovalMode(str, Enum):
     """Three approval modes — mirrors Hermes Agent ``approvals.mode``."""
 
-    MANUAL = "manual"   # always prompt
-    SMART = "smart"     # auxiliary LLM triages; high-risk escalates
-    OFF = "off"         # YOLO — only the hardline blocklist applies
+    MANUAL = "manual"  # always prompt
+    SMART = "smart"  # auxiliary LLM triages; high-risk escalates
+    OFF = "off"  # YOLO — only the hardline blocklist applies
 
 
 class ApprovalVerdict(str, Enum):
-    ALLOWED = "allowed"          # gate let it through
+    ALLOWED = "allowed"  # gate let it through
     AUTO_APPROVED = "auto_approved"  # smart mode auto-approved low-risk
     AUTO_DENIED = "auto_denied"  # smart mode auto-denied genuinely dangerous
-    APPROVED = "approved"        # human said yes
-    DENIED = "denied"            # human said no
+    APPROVED = "approved"  # human said yes
+    DENIED = "denied"  # human said no
     TIMEOUT_DENIED = "timeout_denied"  # fail-closed on operator no-response
-    BLOCKLIST_HIT = "blocklist_hit"    # hardline floor — irreversible
+    BLOCKLIST_HIT = "blocklist_hit"  # hardline floor — irreversible
 
 
 @dataclass
 class DangerousPattern:
     """Regex + human description of a sensitive command/action pattern."""
 
-    pattern: str          # regex (Python re syntax)
-    description: str      # one-line operator explanation
-    severity: str         # "low" | "medium" | "high" | "critical"
+    pattern: str  # regex (Python re syntax)
+    description: str  # one-line operator explanation
+    severity: str  # "low" | "medium" | "high" | "critical"
 
 
 @dataclass
@@ -44,7 +44,7 @@ class BlocklistMatch:
 
     pattern: str
     reason: str
-    raw: str              # the actual command that tripped
+    raw: str  # the actual command that tripped
 
 
 class ApprovalDecision(BaseModel):
@@ -59,7 +59,7 @@ class ApprovalDecision(BaseModel):
     severity: Optional[str] = None
     reason: Optional[str] = None
     decided_at: float = Field(default_factory=time.time)
-    decided_by: Optional[str] = None     # username when human-decided
+    decided_by: Optional[str] = None  # username when human-decided
     duration_ms: Optional[float] = None
 
 
@@ -73,5 +73,5 @@ class PendingApproval(BaseModel):
     severity: str
     actor: str
     created_at: float = Field(default_factory=time.time)
-    deadline_at: float                   # wallclock deadline; past this → TIMEOUT_DENIED
-    smart_assessment: Optional[str] = None   # populated in smart mode
+    deadline_at: float  # wallclock deadline; past this → TIMEOUT_DENIED
+    smart_assessment: Optional[str] = None  # populated in smart mode

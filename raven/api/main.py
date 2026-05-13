@@ -10,16 +10,28 @@ from raven.core.threat_detector import ThreatDetector
 from raven.core.anomaly_detector import AnomalyDetector
 from raven.core.behavioral_profiler import BehavioralProfiler
 from raven.tools.ssh_manager import SSHManager
+from raven.mcp.client import MCPManager
 from raven.tools.bash_executor import BashExecutor
 from raven.tools.nmap_scanner import NmapScanner
 from raven.tools.metasploit_integration import MetasploitIntegration
 from raven.tools.nuclei_scanner import NucleiScanner
 from raven.tools.empire_client import EmpireClient
 from raven.tools.ghidra_analyzer import GhidraAnalyzer
+from raven.tools.projectdiscovery import ProjectDiscoverySuite
+from raven.tools.yara_scanner import YaraScanner
+from raven.tools.exploitdb_client import ExploitDBClient
+from raven.tools.radare_client import RadareClient
+from raven.tools.frida_hook import FridaHook
+from raven.tools.volatility_analyzer import VolatilityAnalyzer
+from raven.tools.recon_ng_client import ReconNgClient
+from raven.tools.jadx_analyzer import JadxAnalyzer
+from raven.tools.cyberchef_client import CyberChefClient
+from raven.tools.x64dbg_client import X64DbgClient
+
 from raven.hunters.hypothesis_generator import HypothesisGenerator
 from raven.hunters.automated_investigator import AutomatedInvestigator
 from raven.hunters.threat_hunter import ThreatHunter
-from raven.hunters.kill_chain_planner import KillChainPlanner, PendingApprovalError
+from raven.hunters.kill_chain_planner import KillChainPlanner
 from raven.ml.zero_day_detector import ZeroDayDetector
 from raven.ml.behavioral_analyzer import BehavioralAnalyzer
 from raven.ml.sequence_analyzer import SequenceAnalyzer
@@ -30,16 +42,14 @@ from raven.monitoring.metrics_collector import MetricsCollector
 from raven.monitoring.alert_manager import AlertManager, AlertSeverity
 from raven.monitoring.dashboard_api import DashboardAPI
 from raven.config import settings
-from raven.ai import AIMessage, BaseAIClient, ProviderRegistry, SUPPORTED_PROVIDERS
-from raven.ai.model_orchestrator import ModelOrchestrator, ModelRole
+from raven.ai import BaseAIClient, ProviderRegistry, SUPPORTED_PROVIDERS
+from raven.ai.model_orchestrator import ModelOrchestrator
 from raven.integrations.shodan_client import ShodanClient
 from raven.auth.dependencies import (
-    current_user,
     require_admin,
     require_operator,
-    require_viewer,
 )
-from raven.auth.models import Role, User
+from raven.auth.models import User
 from raven.auth.routes import router as auth_router
 from raven.audit.middleware import AuditLogMiddleware
 from raven.audit.store import audit_store
@@ -53,6 +63,7 @@ from raven.observability.tracing import instrument_app
 from raven.api.routes_approval import router as approval_router
 from raven.api.routes_redteam import router as redteam_router
 from raven.api.routes_training import router as training_router
+from raven.api.routes_tools import router as tools_router
 from raven.redteam.middleware import JailbreakDetectionMiddleware
 
 # Configure structured logging early (JSON in prod/staging, console in dev)
@@ -74,6 +85,7 @@ app.include_router(auth_router)
 app.include_router(approval_router)
 app.include_router(redteam_router)
 app.include_router(training_router)
+app.include_router(tools_router)
 
 # Observability middleware (order matters: metrics → audit → jailbreak → CORS)
 app.add_middleware(MetricsMiddleware)
@@ -109,13 +121,13 @@ async def startup_event():
         "enable_metrics": settings.enable_metrics,
         "metrics_port": settings.metrics_port,
         # AI provider (new unified config)
-        "ai_provider":     settings.ai_provider,
-        "ai_model":        settings.ai_model,
-        "ai_api_key":      settings.ai_api_key,
-        "ai_base_url":     settings.ai_base_url,
-        "ai_timeout":      settings.ai_timeout,
-        "ai_temperature":  settings.ai_temperature,
-        "ai_max_tokens":   settings.ai_max_tokens,
+        "ai_provider": settings.ai_provider,
+        "ai_model": settings.ai_model,
+        "ai_api_key": settings.ai_api_key,
+        "ai_base_url": settings.ai_base_url,
+        "ai_timeout": settings.ai_timeout,
+        "ai_temperature": settings.ai_temperature,
+        "ai_max_tokens": settings.ai_max_tokens,
         # LM Studio backward-compat keys
         "lmstudio_base_url": settings.lmstudio_base_url,
         "lmstudio_model": settings.lmstudio_model,
@@ -139,73 +151,89 @@ async def startup_event():
     # Initialize Shodan client (optional — skipped if no API key configured)
     if settings.shodan_api_key:
         try:
-            components["shodan"] = ShodanClient({
-                "shodan_api_key": settings.shodan_api_key,
-                "shodan_max_results": settings.shodan_max_results,
-            })
+            components["shodan"] = ShodanClient(
+                {
+                    "shodan_api_key": settings.shodan_api_key,
+                    "shodan_max_results": settings.shodan_max_results,
+                }
+            )
         except Exception:
             components["shodan"] = None
     else:
         components["shodan"] = None
-    
+
     # Initialize core components
     components["threat_detector"] = ThreatDetector(config)
     components["anomaly_detector"] = AnomalyDetector(config)
     components["behavioral_profiler"] = BehavioralProfiler(config)
-    
+
     # Initialize tools
     components["ssh_manager"] = SSHManager(config)
     components["bash_executor"] = BashExecutor(config)
+    components["mcp_manager"] = MCPManager(config)
     components["nmap_scanner"] = NmapScanner(config)
     components["metasploit"] = MetasploitIntegration(config)
     components["nuclei"] = NucleiScanner(config)
     components["empire"] = EmpireClient(config)
     components["ghidra"] = GhidraAnalyzer(config)
-    
+
+    components["projectdiscovery"] = ProjectDiscoverySuite(config)
+    components["yara"] = YaraScanner(config)
+    components["exploitdb"] = ExploitDBClient(config)
+    components["radare"] = RadareClient(config)
+    components["frida"] = FridaHook(config)
+    components["volatility"] = VolatilityAnalyzer(config)
+    components["recon_ng"] = ReconNgClient(config)
+    components["jadx"] = JadxAnalyzer(config)
+    components["cyberchef"] = CyberChefClient(config)
+    components["x64dbg"] = X64DbgClient(config)
+
+
     ai_client = components["ai"]
 
     # Initialize hunters
-    components["hypothesis_generator"] = HypothesisGenerator(config, llm_client=ai_client)
-    components["investigator"] = AutomatedInvestigator(config, components, llm_client=ai_client)
-    components["kill_chain_planner"] = KillChainPlanner(config, components, llm_client=ai_client)
+    components["hypothesis_generator"] = HypothesisGenerator(
+        config, llm_client=ai_client
+    )
+    components["investigator"] = AutomatedInvestigator(
+        config, components, llm_client=ai_client
+    )
+    components["kill_chain_planner"] = KillChainPlanner(
+        config, components, llm_client=ai_client
+    )
     components["threat_hunter"] = ThreatHunter(
         config,
         components["hypothesis_generator"],
         components["investigator"],
-        components
+        components,
     )
-    
+
     # Initialize ML components
     components["zero_day_detector"] = ZeroDayDetector(config)
     components["behavioral_analyzer"] = BehavioralAnalyzer(config)
     components["sequence_analyzer"] = SequenceAnalyzer(config)
-    
+
     # Initialize mitigation
     components["containment"] = ContainmentActions(config, components)
     components["remediation"] = RemediationEngine(config, components)
     components["response_orchestrator"] = ResponseOrchestrator(
-        config,
-        components["containment"],
-        components["remediation"]
+        config, components["containment"], components["remediation"]
     )
-    
+
     # Initialize monitoring
     components["metrics"] = MetricsCollector(config)
     components["alerts"] = AlertManager(config)
-    
+
     # Register alert handlers
     components["alerts"].register_handler(
-        AlertSeverity.CRITICAL,
-        lambda alert: print(f"CRITICAL ALERT: {alert.title}")
+        AlertSeverity.CRITICAL, lambda alert: print(f"CRITICAL ALERT: {alert.title}")
     )
-    
+
     # Initialize dashboard API
     components["dashboard"] = DashboardAPI(
-        config,
-        components["metrics"],
-        components["alerts"]
+        config, components["metrics"], components["alerts"]
     )
-    
+
     # Mount dashboard app
     app.mount("/dashboard", components["dashboard"].get_app())
 
@@ -216,7 +244,7 @@ async def shutdown_event():
     # Close SSH connections
     if "ssh_manager" in components:
         components["ssh_manager"].disconnect_all()
-    
+
     # Disconnect Metasploit
     if "metasploit" in components:
         components["metasploit"].disconnect()
@@ -225,11 +253,7 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {
-        "message": "Project Raven API",
-        "version": "0.1.0",
-        "status": "operational"
-    }
+    return {"message": "Project Raven API", "version": "0.1.0", "status": "operational"}
 
 
 @app.get("/health/ready")
@@ -254,6 +278,7 @@ async def health_ready():
     ready = all(checks.values())
     status_code = 200 if ready else 503
     from fastapi.responses import JSONResponse
+
     return JSONResponse(
         status_code=status_code,
         content={"ready": ready, "checks": checks},
@@ -269,6 +294,7 @@ async def health_startup():
     """
     started = bool(components.get("threat_detector") is not None)
     from fastapi.responses import JSONResponse
+
     return JSONResponse(
         status_code=200 if started else 503,
         content={"started": started},
@@ -286,8 +312,8 @@ async def health():
             "anomaly_detector": "operational",
             "threat_hunter": "operational",
             "mitigation": "operational",
-            "monitoring": "operational"
-        }
+            "monitoring": "operational",
+        },
     }
 
 
@@ -298,6 +324,7 @@ def _jail_scan_path(raw: str) -> str:
     Raises 403 if traversal is attempted; 400 if scan_root not configured.
     """
     from pathlib import Path as _Path
+
     if not settings.scan_root:
         raise HTTPException(status_code=400, detail="scan_root is not configured")
     root = _Path(settings.scan_root).resolve()
@@ -319,20 +346,19 @@ async def analyze_event(
 ):
     """Analyze an event for threats"""
     start_time = time.time()
-    
+
     # Run threat detection
     threats = components["threat_detector"].analyze(event_data)
-    
+
     # Record metrics
     detection_time = time.time() - start_time
     components["metrics"].record_detection_time(detection_time)
-    
+
     for threat in threats:
         components["metrics"].record_threat_detected(
-            threat.severity.value,
-            threat.threat_type.value
+            threat.severity.value, threat.threat_type.value
         )
-        
+
         # Create alert for high/critical threats
         if threat.severity.value in ["high", "critical"]:
             components["alerts"].create_alert(
@@ -340,9 +366,9 @@ async def analyze_event(
                 description=threat.description,
                 severity=AlertSeverity[threat.severity.value.upper()],
                 source="threat_detector",
-                metadata={"threat_id": threat.threat_id}
+                metadata={"threat_id": threat.threat_id},
             )
-    
+
     return {
         "threats": [
             {
@@ -350,11 +376,11 @@ async def analyze_event(
                 "type": t.threat_type.value,
                 "severity": t.severity.value,
                 "confidence": t.confidence,
-                "description": t.description
+                "description": t.description,
             }
             for t in threats
         ],
-        "detection_time": detection_time
+        "detection_time": detection_time,
     }
 
 
@@ -365,12 +391,12 @@ async def start_threat_hunt(
 ):
     """Start a threat hunting session"""
     session = components["threat_hunter"].start_hunt(indicators)
-    
+
     # Update metrics
     components["metrics"].update_active_hypotheses(
         len(components["hypothesis_generator"].list_hypotheses(status="pending"))
     )
-    
+
     # Create alert if threats found
     if session.threats_found > 0:
         components["alerts"].create_alert(
@@ -378,15 +404,15 @@ async def start_threat_hunt(
             description=f"Hunting session {session.session_id} found {session.threats_found} confirmed threats",
             severity=AlertSeverity.HIGH,
             source="threat_hunter",
-            metadata={"session_id": session.session_id}
+            metadata={"session_id": session.session_id},
         )
-    
+
     return {
         "session_id": session.session_id,
         "hypotheses_generated": session.hypotheses_generated,
         "investigations_completed": session.investigations_completed,
         "threats_found": session.threats_found,
-        "duration": session.end_time - session.start_time if session.end_time else 0
+        "duration": session.end_time - session.start_time if session.end_time else 0,
     }
 
 
@@ -401,6 +427,7 @@ async def variant_hunt(
     Body: {"repo_path": "/path/to/repo"} (must be under settings.scan_root)
     """
     from raven.ml.variant_analyzer import VariantAnalyzer
+
     repo_path = payload.get("repo_path")
     if not repo_path:
         raise HTTPException(status_code=400, detail="repo_path is required")
@@ -444,7 +471,7 @@ async def code_hunt(
             description=f"Taint-flow scan of {repo_path} found exploitable paths",
             severity=AlertSeverity.HIGH,
             source="code_flow_scanner",
-            metadata={"report_id": result["report_id"]}
+            metadata={"report_id": result["report_id"]},
         )
 
     return result
@@ -459,23 +486,22 @@ async def execute_mitigation(
     """Execute automated mitigation for a threat"""
     # Create response plan
     plan = components["response_orchestrator"].create_response_plan(
-        {"threat_id": threat_id},
-        threat_type
+        {"threat_id": threat_id}, threat_type
     )
-    
+
     # Execute plan
     execution = components["response_orchestrator"].execute_plan(plan)
-    
+
     # Record metrics
     if execution.success:
         components["metrics"].record_threat_blocked("automated")
-    
+
     return {
         "plan_id": plan.plan_id,
         "execution_id": execution.execution_id,
         "success": execution.success,
         "execution_time": execution.execution_time,
-        "actions_executed": len(execution.results)
+        "actions_executed": len(execution.results),
     }
 
 
@@ -484,6 +510,7 @@ async def get_metrics():
     """Prometheus metrics exposition (text/plain; openmetrics-compatible)."""
     from fastapi.responses import Response as _Response
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
     return _Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
@@ -503,6 +530,7 @@ async def get_alerts():
 # Kill-chain planner endpoints
 # ------------------------------------------------------------------
 
+
 @app.post("/hunt/killchain")
 async def run_kill_chain(
     payload: Dict[str, Any],
@@ -517,7 +545,9 @@ async def run_kill_chain(
     objective = payload.get("objective", "")
     target = payload.get("target_network", "")
     if not objective or not target:
-        raise HTTPException(status_code=400, detail="objective and target_network are required")
+        raise HTTPException(
+            status_code=400, detail="objective and target_network are required"
+        )
     planner: KillChainPlanner = components["kill_chain_planner"]
     result = planner.run(objective, target)
     return result
@@ -565,6 +595,7 @@ async def set_investigation_target(
 # AI provider endpoints (runtime switch — no restart needed)
 # ------------------------------------------------------------------
 
+
 @app.get("/ai/provider")
 async def ai_provider_status():
     """Return the active provider, model, and connection status."""
@@ -603,8 +634,8 @@ async def ai_provider_switch(
             raise HTTPException(
                 status_code=403,
                 detail=(
-                    f"base_url not in allowlist. Configure AI_ALLOWED_BASE_URLS "
-                    f"or use a built-in provider default."
+                    "base_url not in allowlist. Configure AI_ALLOWED_BASE_URLS "
+                    "or use a built-in provider default."
                 ),
             )
 
@@ -641,6 +672,7 @@ async def ai_model_switch(
     registry = ProviderRegistry.get_instance()
     if ":" in model:
         from raven.ai.base import parse_provider_model
+
         inferred_provider, bare_model = parse_provider_model(model)
         if inferred_provider:
             client = registry.switch(provider=inferred_provider, model=bare_model)
@@ -763,7 +795,9 @@ async def ai_set_system_prompt(
         prompt = payload["prompt"]
         registry.set_system_prompt(prompt)
     else:
-        raise HTTPException(status_code=400, detail="Provide 'prompt' (text) or 'file' (path)")
+        raise HTTPException(
+            status_code=400, detail="Provide 'prompt' (text) or 'file' (path)"
+        )
     return {"set": True, "length": len(prompt)}
 
 
@@ -796,7 +830,9 @@ async def ai_models_status():
     """Show which specialist models (fast/reason/vision) are currently loaded."""
     orchestrator: ModelOrchestrator = components.get("model_orchestrator")
     if not orchestrator:
-        raise HTTPException(status_code=503, detail="Model orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Model orchestrator not initialized"
+        )
     return orchestrator.status()
 
 
@@ -945,12 +981,13 @@ async def ai_validate_vulnerability(
 # Shodan endpoints
 # ------------------------------------------------------------------
 
+
 def _require_shodan() -> ShodanClient:
     shodan = components.get("shodan")
     if not shodan:
         raise HTTPException(
             status_code=503,
-            detail="Shodan is not configured. Set SHODAN_API_KEY in your .env file."
+            detail="Shodan is not configured. Set SHODAN_API_KEY in your .env file.",
         )
     return shodan
 
@@ -1118,8 +1155,12 @@ async def shodan_request_scan(
         scan = shodan.request_scan(ips)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    return {"scan_id": scan.scan_id, "status": scan.status,
-            "count": scan.count, "credits_left": scan.credits_left}
+    return {
+        "scan_id": scan.scan_id,
+        "status": scan.status,
+        "count": scan.count,
+        "credits_left": scan.credits_left,
+    }
 
 
 @app.get("/shodan/scan/{scan_id}")
@@ -1130,8 +1171,12 @@ async def shodan_scan_status(scan_id: str):
         scan = shodan.scan_status(scan_id)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    return {"scan_id": scan.scan_id, "status": scan.status,
-            "count": scan.count, "created": scan.created}
+    return {
+        "scan_id": scan.scan_id,
+        "status": scan.status,
+        "count": scan.count,
+        "created": scan.created,
+    }
 
 
 @app.get("/shodan/scans")
@@ -1142,8 +1187,15 @@ async def shodan_list_scans():
         scans = shodan.list_scans()
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    return [{"scan_id": s.scan_id, "status": s.status,
-             "count": s.count, "created": s.created} for s in scans]
+    return [
+        {
+            "scan_id": s.scan_id,
+            "status": s.status,
+            "count": s.count,
+            "created": s.created,
+        }
+        for s in scans
+    ]
 
 
 @app.post("/shodan/alerts")
@@ -1164,8 +1216,12 @@ async def shodan_create_alert(
         alert = shodan.create_alert(name, ips, expires=payload.get("expires", 0))
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    return {"alert_id": alert.alert_id, "name": alert.name,
-            "size": alert.size, "created": alert.created}
+    return {
+        "alert_id": alert.alert_id,
+        "name": alert.name,
+        "size": alert.size,
+        "created": alert.created,
+    }
 
 
 @app.get("/shodan/alerts")
@@ -1176,8 +1232,16 @@ async def shodan_list_alerts():
         alerts = shodan.list_alerts()
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    return [{"alert_id": a.alert_id, "name": a.name, "filters": a.filters,
-             "size": a.size, "has_triggers": a.has_triggers} for a in alerts]
+    return [
+        {
+            "alert_id": a.alert_id,
+            "name": a.name,
+            "filters": a.filters,
+            "size": a.size,
+            "has_triggers": a.has_triggers,
+        }
+        for a in alerts
+    ]
 
 
 @app.delete("/shodan/alerts/{alert_id}")
@@ -1225,6 +1289,7 @@ async def shodan_enable_trigger(
 # ------------------------------------------------------------------
 # Audit log retrieval
 # ------------------------------------------------------------------
+
 
 @app.get("/audit/log")
 async def get_audit_log(

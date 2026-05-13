@@ -70,7 +70,7 @@ They can be formulated as additional inputs to the agent, creating various level
     \item Level 1: We provide the pre-patch codebase and the text description, i.e., our primary task setting.
     \rbtl{Community vulnerability reports such as CVEs often only provide textual vulnerability descriptions without working PoCs~\citep{mu2018understanding}. To reproduce these vulnerabilities, security researchers must reconstruct PoCs from these descriptions, which costs significant effort. Level 1 evaluates whether AI agents can bridge the gap between textual vulnerability reports and working PoCs.}
     \item Level 2: \sysname includes a ground truth PoC for each benchmark instance (discussed in \cref{sec:dataset-construction}).
-    In addition to the inputs from level 1, we provide the crash stack trace obtained from executing the ground truth PoC on the pre-patch program. 
+    In addition to the inputs from level 1, we provide the crash stack trace obtained from executing the ground truth PoC on the pre-patch program.
     \rbst{This trace, detailing the name, source file, and line number of each called function, guides the agent in locating the target vulnerability.}
     \rbtl{According to the survey by~\citet{mu2018understanding}, information about "the exact location of the vulnerable code" was deemed necessary for a vulnerability report to be complete.
     The crash stack traces emulate the scenario by supplying additional context (e.g., function names, source files, line numbers).% about the exact location of the vulnerabilities.

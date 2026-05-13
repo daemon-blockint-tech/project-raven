@@ -15,6 +15,7 @@ import time
 @dataclass
 class NucleiResult:
     """Result of a Nuclei scan"""
+
     success: bool
     target: str
     findings: List[Dict[str, Any]]
@@ -36,10 +37,7 @@ class NucleiScanner:
 
     def _binary_available(self) -> bool:
         return bool(
-            subprocess.run(
-                ["which", self.binary],
-                capture_output=True
-            ).returncode == 0
+            subprocess.run(["which", self.binary], capture_output=True).returncode == 0
         )
 
     def scan(
@@ -59,17 +57,23 @@ class NucleiScanner:
 
         if not self._binary_available():
             return NucleiResult(
-                success=False, target=target, findings=[],
-                execution_time=0.0, timestamp=start
+                success=False,
+                target=target,
+                findings=[],
+                execution_time=0.0,
+                timestamp=start,
             )
 
         cmd = [
             self.binary,
-            "-target", target,
-            "-severity", severity,
+            "-target",
+            target,
+            "-severity",
+            severity,
             "-json",
             "-silent",
-            "-timeout", str(self.timeout),
+            "-timeout",
+            str(self.timeout),
         ]
         if self.templates_dir:
             cmd += ["-t", os.path.realpath(self.templates_dir)]
@@ -101,13 +105,16 @@ class NucleiScanner:
             )
         except subprocess.TimeoutExpired:
             return NucleiResult(
-                success=False, target=target, findings=[],
+                success=False,
+                target=target,
+                findings=[],
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )
         except Exception as e:
             return NucleiResult(
-                success=False, target=target,
+                success=False,
+                target=target,
                 findings=[{"error": str(e)}],
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,

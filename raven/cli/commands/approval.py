@@ -12,7 +12,11 @@ from raven.approval.gate import approval_gate
 from raven.approval.models import ApprovalMode
 from raven.approval.store import allowlist_store
 
-app = typer.Typer(name="approval", help="Manage the dangerous-command approval gate.", no_args_is_help=True)
+app = typer.Typer(
+    name="approval",
+    help="Manage the dangerous-command approval gate.",
+    no_args_is_help=True,
+)
 
 
 @app.command("mode")
@@ -23,7 +27,9 @@ def cmd_mode(
     try:
         m = ApprovalMode(mode)
     except ValueError:
-        typer.echo(f"[error] mode must be one of: {[m.value for m in ApprovalMode]}", err=True)
+        typer.echo(
+            f"[error] mode must be one of: {[m.value for m in ApprovalMode]}", err=True
+        )
         raise typer.Exit(1)
     approval_gate().set_mode(m)
     typer.echo(f"✓ approval mode set to {m.value}")
@@ -43,7 +49,9 @@ def cmd_status():
 
 @app.command("allow")
 def cmd_allow(
-    pattern: str = typer.Argument(..., help="Regex pattern to add to the permanent allowlist"),
+    pattern: str = typer.Argument(
+        ..., help="Regex pattern to add to the permanent allowlist"
+    ),
 ):
     """Permanently allow a regex pattern."""
     allowlist_store().add(pattern)
@@ -61,7 +69,9 @@ def cmd_forget(pattern: str = typer.Argument(...)):
 
 
 @app.command("test")
-def cmd_test(command: str = typer.Argument(..., help="Command string to test against the gate")):
+def cmd_test(
+    command: str = typer.Argument(..., help="Command string to test against the gate"),
+):
     """Dry-run a command through the gate (no actual execution)."""
     decision = approval_gate().check(command, actor="cli")
     typer.echo(f"verdict:     {decision.verdict.value}")

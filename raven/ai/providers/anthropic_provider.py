@@ -31,6 +31,7 @@ class AnthropicClient(BaseAIClient):
     def _try_init(self) -> None:
         try:
             import anthropic  # type: ignore
+
             self._client = anthropic.Anthropic(
                 api_key=self.api_key or None,
                 timeout=float(self.timeout),
@@ -58,7 +59,8 @@ class AnthropicClient(BaseAIClient):
         system_parts = [m.content for m in messages if m.role == "system"]
         user_messages = [
             {"role": m.role, "content": m.content}
-            for m in messages if m.role != "system"
+            for m in messages
+            if m.role != "system"
         ]
         system_prompt = "\n\n".join(system_parts) if system_parts else None
 

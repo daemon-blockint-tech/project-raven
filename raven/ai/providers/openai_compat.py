@@ -37,14 +37,18 @@ class OpenAICompatClient(BaseAIClient):
         provider = self.provider_name
 
         if not self.base_url:
-            self.base_url = _PROVIDER_DEFAULTS.get(provider, "https://api.openai.com/v1")
+            self.base_url = _PROVIDER_DEFAULTS.get(
+                provider, "https://api.openai.com/v1"
+            )
         self.base_url = self.base_url.rstrip("/")
 
-        self._chat_url   = f"{self.base_url}/chat/completions"
+        self._chat_url = f"{self.base_url}/chat/completions"
         self._models_url = f"{self.base_url}/models"
 
-        self._http_referer    = config.get("openrouter_http_referer", "https://raven.local")
-        self._app_title       = config.get("openrouter_title", "Project Raven")
+        self._http_referer = config.get(
+            "openrouter_http_referer", "https://raven.local"
+        )
+        self._app_title = config.get("openrouter_title", "Project Raven")
 
     # ------------------------------------------------------------------
     # Auth headers
@@ -85,7 +89,7 @@ class OpenAICompatClient(BaseAIClient):
 
         if self.provider_name == "openrouter":
             sort = kwargs.get("openrouter_sort", "")
-            zdr  = kwargs.get("openrouter_zdr", False)
+            zdr = kwargs.get("openrouter_zdr", False)
             if sort or zdr:
                 provider_opts: Dict[str, Any] = {}
                 if sort:
@@ -96,8 +100,10 @@ class OpenAICompatClient(BaseAIClient):
 
         try:
             resp = requests.post(
-                self._chat_url, json=payload,
-                timeout=self.timeout, headers=self._headers(),
+                self._chat_url,
+                json=payload,
+                timeout=self.timeout,
+                headers=self._headers(),
             )
             resp.raise_for_status()
         except requests.exceptions.ConnectionError:
@@ -146,14 +152,21 @@ class OpenAICompatClient(BaseAIClient):
             payload["model"] = self.model
 
         with requests.post(
-            self._chat_url, json=payload,
-            timeout=self.timeout, headers=self._headers(), stream=True,
+            self._chat_url,
+            json=payload,
+            timeout=self.timeout,
+            headers=self._headers(),
+            stream=True,
         ) as resp:
             resp.raise_for_status()
             for raw_line in resp.iter_lines():
                 if not raw_line:
                     continue
-                line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+                line = (
+                    raw_line.decode("utf-8")
+                    if isinstance(raw_line, bytes)
+                    else raw_line
+                )
                 if not line.startswith("data: "):
                     continue
                 data_str = line[6:]

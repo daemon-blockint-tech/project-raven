@@ -41,7 +41,7 @@ REQUEST_LATENCY = Histogram(
 AI_REQUEST_COUNT = Counter(
     "raven_ai_requests_total",
     "AI provider chat requests.",
-    ["provider", "model", "outcome"],   # outcome: success|error|timeout
+    ["provider", "model", "outcome"],  # outcome: success|error|timeout
 )
 
 AI_TOKENS_PROMPT = Counter(
@@ -69,13 +69,13 @@ AI_PROVIDER_SWITCH_COUNT = Counter(
 HUNT_SESSIONS = Counter(
     "raven_hunt_sessions_total",
     "Threat-hunting sessions started.",
-    ["outcome"],   # threats_found|no_threats
+    ["outcome"],  # threats_found|no_threats
 )
 
 KILLCHAIN_STAGE = Counter(
     "raven_killchain_stage_total",
     "Kill-chain tasks executed by stage.",
-    ["stage", "status"],   # status: completed|failed|pending_approval
+    ["stage", "status"],  # status: completed|failed|pending_approval
 )
 
 KILLCHAIN_APPROVAL_QUEUE = Gauge(
@@ -112,7 +112,7 @@ APPROVAL_DECISION_LATENCY = Histogram(
 JAILBREAK_DETECTIONS = Counter(
     "raven_jailbreak_detections_total",
     "Inbound jailbreak attempts caught by the detector.",
-    ["technique", "action"],   # action: blocked|logged
+    ["technique", "action"],  # action: blocked|logged
 )
 
 PROVIDER_HARDNESS_SCORE = Gauge(
@@ -124,7 +124,7 @@ PROVIDER_HARDNESS_SCORE = Gauge(
 REDTEAM_GODMODE_ATTEMPTS = Counter(
     "raven_redteam_godmode_attempts_total",
     "OffensiveGodmode invocations.",
-    ["outcome"],   # outcome: refused|partial|full
+    ["outcome"],  # outcome: refused|partial|full
 )
 
 # ---------------------------------------------------------------------------
@@ -134,7 +134,7 @@ REDTEAM_GODMODE_ATTEMPTS = Counter(
 TRAINING_JOBS = Counter(
     "raven_training_jobs_total",
     "Training jobs submitted to Tinker.",
-    ["recipe", "outcome"],   # outcome: started|succeeded|failed|cancelled
+    ["recipe", "outcome"],  # outcome: started|succeeded|failed|cancelled
 )
 
 TRAINING_DATASET_SIZE = Gauge(
@@ -161,10 +161,21 @@ ABTEST_TRAFFIC = Gauge(
     ["run_id"],
 )
 
+# ---------------------------------------------------------------------------
+# External security tool invocations (subprocess adapters)
+# ---------------------------------------------------------------------------
+
+TOOL_INVOCATIONS = Counter(
+    "raven_tool_invocations_total",
+    "Calls to external security-tool adapters.",
+    ["tool", "outcome"],   # outcome: success|failure
+)
+
 
 # ---------------------------------------------------------------------------
 # Middleware
 # ---------------------------------------------------------------------------
+
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """Records HTTP request count + latency to Prometheus."""

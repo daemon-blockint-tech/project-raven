@@ -82,51 +82,84 @@ UNRECOVERABLE_BLOCKLIST: List[DangerousPattern] = [
 
 DANGEROUS_PATTERNS: List[DangerousPattern] = [
     # ---- filesystem ----
-    DangerousPattern(r"\brm\s+(-[rRf]+\s+|--recursive\s+|--force\s+)", "Recursive or forced delete", "high"),
+    DangerousPattern(
+        r"\brm\s+(-[rRf]+\s+|--recursive\s+|--force\s+)",
+        "Recursive or forced delete",
+        "high",
+    ),
     DangerousPattern(r"\brm\s+.*\s+/[a-zA-Z]", "Delete inside system root", "high"),
-    DangerousPattern(r"chmod\s+(777|666|a\+w|o\+w)\b", "World/other-writable permission", "medium"),
-    DangerousPattern(r"chmod\s+(-[rR]|--recursive)\s+.*\b(777|666|a\+w|o\+w)\b", "Recursive world-writable", "high"),
-    DangerousPattern(r"chown\s+(-[rR]|--recursive)\s+root\b", "Recursive chown to root", "high"),
+    DangerousPattern(
+        r"chmod\s+(777|666|a\+w|o\+w)\b", "World/other-writable permission", "medium"
+    ),
+    DangerousPattern(
+        r"chmod\s+(-[rR]|--recursive)\s+.*\b(777|666|a\+w|o\+w)\b",
+        "Recursive world-writable",
+        "high",
+    ),
+    DangerousPattern(
+        r"chown\s+(-[rR]|--recursive)\s+root\b", "Recursive chown to root", "high"
+    ),
     DangerousPattern(r"\bmkfs(\.[a-z0-9]+)?\s+", "Format filesystem", "high"),
     DangerousPattern(r"\bdd\s+.*\bof=", "dd output to device/file", "high"),
     DangerousPattern(r">\s*/dev/sd[a-z]", "Write to block device", "critical"),
     DangerousPattern(r"\btee\s+.*\s+/etc/", "Overwrite /etc via tee", "high"),
-    DangerousPattern(r"\btee\s+.*\s+~/\.ssh/", "Overwrite SSH config via tee", "critical"),
+    DangerousPattern(
+        r"\btee\s+.*\s+~/\.ssh/", "Overwrite SSH config via tee", "critical"
+    ),
     DangerousPattern(r">>?\s*/etc/", "Redirect into /etc", "high"),
     DangerousPattern(r">>?\s*~/\.ssh/", "Redirect into SSH config", "critical"),
-    DangerousPattern(r"\bsed\s+(-i|--in-place)\s+.*\s+/etc/", "In-place edit of /etc", "high"),
+    DangerousPattern(
+        r"\bsed\s+(-i|--in-place)\s+.*\s+/etc/", "In-place edit of /etc", "high"
+    ),
     DangerousPattern(r"\bcp\s+.*\s+/etc/", "Copy into /etc", "medium"),
     DangerousPattern(r"\bmv\s+.*\s+/etc/", "Move into /etc", "medium"),
-
     # ---- processes / system services ----
-    DangerousPattern(r"\bsystemctl\s+(stop|restart|disable|mask)\b", "Stop/restart/disable a service", "high"),
+    DangerousPattern(
+        r"\bsystemctl\s+(stop|restart|disable|mask)\b",
+        "Stop/restart/disable a service",
+        "high",
+    ),
     DangerousPattern(r"\bkill\s+-9\s+-1\b", "Kill all processes", "critical"),
     DangerousPattern(r"\bpkill\s+-9\b", "Force kill processes", "high"),
     DangerousPattern(r"\bkillall\s+-9\b", "Force kill processes", "high"),
-    DangerousPattern(r"\b(pkill|killall)\s+(hermes|raven|gateway)", "Self-termination of Raven/gateway", "high"),
+    DangerousPattern(
+        r"\b(pkill|killall)\s+(hermes|raven|gateway)",
+        "Self-termination of Raven/gateway",
+        "high",
+    ),
     DangerousPattern(r"\bshutdown\b", "System shutdown", "high"),
     DangerousPattern(r"\breboot\b", "System reboot", "high"),
-
     # ---- shell execution of dynamic content ----
-    DangerousPattern(r"\b(bash|sh|zsh|ksh)\s+(-[a-z]*c|--command)\b", "Inline shell command via -c", "medium"),
+    DangerousPattern(
+        r"\b(bash|sh|zsh|ksh)\s+(-[a-z]*c|--command)\b",
+        "Inline shell command via -c",
+        "medium",
+    ),
     DangerousPattern(r"\bpython\s+-c\b", "Inline Python via -c", "medium"),
     DangerousPattern(r"\b(perl|ruby|node)\s+-e\b", "Inline script via -e", "medium"),
     DangerousPattern(r"\bcurl\s+.*\|\s*(sh|bash|zsh)\b", "curl piped to shell", "high"),
     DangerousPattern(r"\bwget\s+.*\|\s*(sh|bash|zsh)\b", "wget piped to shell", "high"),
-    DangerousPattern(r"\b(bash|sh)\s*<\(\s*(curl|wget)\s+", "Process substitution from curl/wget", "high"),
-
+    DangerousPattern(
+        r"\b(bash|sh)\s*<\(\s*(curl|wget)\s+",
+        "Process substitution from curl/wget",
+        "high",
+    ),
     # ---- find / xargs ----
     DangerousPattern(r"\bxargs\s+.*\brm\b", "xargs rm", "high"),
     DangerousPattern(r"\bfind\b.*-exec\s+rm\b", "find -exec rm", "high"),
     DangerousPattern(r"\bfind\b.*-delete\b", "find -delete", "high"),
-
     # ---- SQL ----
     DangerousPattern(r"\bDROP\s+(TABLE|DATABASE|SCHEMA)\b", "SQL DROP", "high"),
-    DangerousPattern(r"\bDELETE\s+FROM\s+\w+\s*(;|$)", "SQL DELETE without WHERE", "high"),
+    DangerousPattern(
+        r"\bDELETE\s+FROM\s+\w+\s*(;|$)", "SQL DELETE without WHERE", "high"
+    ),
     DangerousPattern(r"\bTRUNCATE\s+TABLE\b", "SQL TRUNCATE", "high"),
-
     # ---- raven-specific destructive operations ----
-    DangerousPattern(r"\bgateway\s+run\b.*(&|disown|nohup|setsid)", "Detached gateway start outside service manager", "medium"),
+    DangerousPattern(
+        r"\bgateway\s+run\b.*(&|disown|nohup|setsid)",
+        "Detached gateway start outside service manager",
+        "medium",
+    ),
 ]
 
 

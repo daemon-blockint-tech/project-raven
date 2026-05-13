@@ -10,6 +10,7 @@ import time
 @dataclass
 class SSHResult:
     """Result of SSH command execution"""
+
     success: bool
     stdout: str
     stderr: str
@@ -55,8 +56,14 @@ class SSHManager:
         client.set_missing_host_key_policy(paramiko.RejectPolicy())
         return client
 
-    def connect(self, host: str, username: str, password: Optional[str] = None,
-                key_path: Optional[str] = None, port: int = 22) -> bool:
+    def connect(
+        self,
+        host: str,
+        username: str,
+        password: Optional[str] = None,
+        key_path: Optional[str] = None,
+        port: int = 22,
+    ) -> bool:
         """Establish SSH connection to a host.
 
         Returns False (and logs) on host-key mismatch — does NOT silently trust
@@ -66,21 +73,35 @@ class SSHManager:
             client = self._build_client()
 
             if key_path:
-                client.connect(host, port=port, username=username,
-                               key_filename=key_path, timeout=self.timeout,
-                               allow_agent=False, look_for_keys=False)
+                client.connect(
+                    host,
+                    port=port,
+                    username=username,
+                    key_filename=key_path,
+                    timeout=self.timeout,
+                    allow_agent=False,
+                    look_for_keys=False,
+                )
             else:
-                client.connect(host, port=port, username=username,
-                               password=password, timeout=self.timeout,
-                               allow_agent=False, look_for_keys=False)
+                client.connect(
+                    host,
+                    port=port,
+                    username=username,
+                    password=password,
+                    timeout=self.timeout,
+                    allow_agent=False,
+                    look_for_keys=False,
+                )
 
             self.connections[host] = client
             return True
 
         except paramiko.BadHostKeyException as e:
-            print(f"SSH host key mismatch for {host}: {e}. "
-                  f"Refusing connection (possible MITM). "
-                  f"Update {self.known_hosts_path} if the change is intentional.")
+            print(
+                f"SSH host key mismatch for {host}: {e}. "
+                f"Refusing connection (possible MITM). "
+                f"Update {self.known_hosts_path} if the change is intentional."
+            )
             return False
         except paramiko.SSHException as e:
             # Includes "Server '<host>' not found in known_hosts"
@@ -89,32 +110,32 @@ class SSHManager:
         except Exception as e:
             print(f"SSH connection failed to {host}: {e}")
             return False
-    
+
     def execute_command(self, host: str, command: str) -> SSHResult:
         """Execute a command on a remote host via SSH"""
         if host not in self.connections:
             raise ValueError(f"No connection to host {host}")
-        
+
         client = self.connections[host]
         start_time = time.time()
-        
+
         try:
             stdin, stdout, stderr = client.exec_command(command, timeout=self.timeout)
-            
-            stdout_str = stdout.read().decode('utf-8')
-            stderr_str = stderr.read().decode('utf-8')
+
+            stdout_str = stdout.read().decode("utf-8")
+            stderr_str = stderr.read().decode("utf-8")
             exit_code = stdout.channel.recv_exit_status()
             execution_time = time.time() - start_time
-            
+
             return SSHResult(
                 success=exit_code == 0,
                 stdout=stdout_str,
                 stderr=stderr_str,
                 exit_code=exit_code,
                 execution_time=execution_time,
-                host=host
+                host=host,
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             return SSHResult(
@@ -123,9 +144,9 @@ class SSHManager:
                 stderr=str(e),
                 exit_code=-1,
                 execution_time=execution_time,
-                host=host
+                host=host,
             )
-    
+
     def execute_commands(self, host: str, commands: List[str]) -> List[SSHResult]:
         """Execute multiple commands on a host"""
         results = []
@@ -133,7 +154,7 @@ class SSHManager:
             result = self.execute_command(host, command)
             results.append(result)
         return results
-    
+
     def disconnect(self, host: str) -> bool:
         """Close SSH connection to a host"""
         if host in self.connections:
@@ -145,16 +166,16 @@ class SSHManager:
                 print(f"Error disconnecting from {host}: {e}")
                 return False
         return False
-    
+
     def disconnect_all(self) -> None:
         """Close all SSH connections"""
         for host in list(self.connections.keys()):
             self.disconnect(host)
-    
+
     def get_connected_hosts(self) -> List[str]:
         """Get list of currently connected hosts"""
         return list(self.connections.keys())
-    
+
     def __del__(self):
         """Cleanup connections on deletion"""
         self.disconnect_all()

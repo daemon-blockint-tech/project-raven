@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import time
 
 import pytest
 
 from raven.auth.jwt_manager import JWTError, JWTManager
-from raven.auth.models import Role, User
+from raven.auth.models import Role
 from raven.auth.password import hash_password, needs_rehash, verify_password
 from raven.auth.user_store import UserStore
 
@@ -15,6 +14,7 @@ from raven.auth.user_store import UserStore
 # ---------------------------------------------------------------------------
 # Role
 # ---------------------------------------------------------------------------
+
 
 class TestRoleHierarchy:
     def test_admin_covers_operator_and_viewer(self):
@@ -36,6 +36,7 @@ class TestRoleHierarchy:
 # ---------------------------------------------------------------------------
 # Password hashing
 # ---------------------------------------------------------------------------
+
 
 class TestPasswordHashing:
     def test_round_trip(self):
@@ -62,6 +63,7 @@ class TestPasswordHashing:
 # ---------------------------------------------------------------------------
 # JWT
 # ---------------------------------------------------------------------------
+
 
 class TestJWTManager:
     @pytest.fixture
@@ -113,6 +115,7 @@ class TestJWTManager:
 # ---------------------------------------------------------------------------
 # UserStore
 # ---------------------------------------------------------------------------
+
 
 class TestUserStore:
     @pytest.fixture

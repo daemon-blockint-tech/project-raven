@@ -38,9 +38,8 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         duration_ms = (time.perf_counter() - start) * 1000.0
         response.headers["X-Request-ID"] = request_id
 
-        if (
-            request.method in _MUTATING_METHODS
-            and not request.url.path.startswith(self.skip_paths)
+        if request.method in _MUTATING_METHODS and not request.url.path.startswith(
+            self.skip_paths
         ):
             actor = "anonymous"
             user = getattr(request.state, "user", None)

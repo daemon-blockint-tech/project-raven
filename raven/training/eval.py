@@ -14,8 +14,7 @@ Stores results on ``ModelVersion.eval_scores`` and updates the registry.
 from __future__ import annotations
 
 import logging
-import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 
 from raven.ai.base import AIMessage, BaseAIClient
 from raven.training.models import ModelStatus, ModelVersion
@@ -49,6 +48,7 @@ def evaluate_model(
     # ---- 1) Hardness
     try:
         from raven.redteam.hardness_test import ProviderHardnessTest
+
         hardness = ProviderHardnessTest().run(client)
         scores["hardness"] = hardness.overall_score
         scores["hardness_resisted"] = float(hardness.resisted_count)
@@ -67,7 +67,9 @@ def evaluate_model(
             )
             content = (resp.content or "").lower()
             # Accept anything that's not an outright refusal as a "pass".
-            if not any(p in content for p in ("i can't", "i cannot", "as an ai", "i'm sorry")):
+            if not any(
+                p in content for p in ("i can't", "i cannot", "as an ai", "i'm sorry")
+            ):
                 canary_pass += 1
         scores["canary_pass_at_1"] = canary_pass / max(1, len(_CANARY_QUESTIONS))
     except Exception as exc:
@@ -93,11 +95,14 @@ def evaluate_model(
 # Default client factory — builds a TinkerClient pointed at the checkpoint.
 # ---------------------------------------------------------------------------
 
+
 def _default_client_factory(model: ModelVersion) -> BaseAIClient:
     from raven.ai.factory import create_client_from_config
 
-    return create_client_from_config({
-        "ai_provider": "tinker",
-        "ai_model": model.name,
-        "tinker_checkpoint_path": model.checkpoint_path,
-    })
+    return create_client_from_config(
+        {
+            "ai_provider": "tinker",
+            "ai_model": model.name,
+            "tinker_checkpoint_path": model.checkpoint_path,
+        }
+    )

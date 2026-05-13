@@ -16,6 +16,7 @@ import time
 @dataclass
 class EmpireResult:
     """Result of an Empire API operation"""
+
     success: bool
     operation: str
     agent_name: str
@@ -68,9 +69,7 @@ class EmpireClient:
     def list_agents(self) -> List[Dict[str, Any]]:
         """Return list of active agents, empty list on any error."""
         try:
-            resp = self._session.get(
-                f"{self.base_url}/api/v2/agents", timeout=10
-            )
+            resp = self._session.get(f"{self.base_url}/api/v2/agents", timeout=10)
             if resp.status_code == 200:
                 return resp.json().get("records", [])
         except Exception:
@@ -98,15 +97,19 @@ class EmpireClient:
             success = resp.status_code == 201
             output = resp.json().get("output", "") if success else resp.text
             return EmpireResult(
-                success=success, operation="execute_module",
-                agent_name=agent_name, output=output,
+                success=success,
+                operation="execute_module",
+                agent_name=agent_name,
+                output=output,
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )
         except Exception as e:
             return EmpireResult(
-                success=False, operation="execute_module",
-                agent_name=agent_name, output=str(e),
+                success=False,
+                operation="execute_module",
+                agent_name=agent_name,
+                output=str(e),
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )
@@ -123,15 +126,19 @@ class EmpireClient:
             success = resp.status_code == 201
             output = resp.json().get("output", "") if success else resp.text
             return EmpireResult(
-                success=success, operation="shell",
-                agent_name=agent_name, output=output,
+                success=success,
+                operation="shell",
+                agent_name=agent_name,
+                output=output,
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )
         except Exception as e:
             return EmpireResult(
-                success=False, operation="shell",
-                agent_name=agent_name, output=str(e),
+                success=False,
+                operation="shell",
+                agent_name=agent_name,
+                output=str(e),
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )
@@ -148,15 +155,19 @@ class EmpireClient:
             data = resp.json() if success else {}
             output = data.get("output", "") or resp.text
             return EmpireResult(
-                success=success, operation="get_task_result",
-                agent_name=agent_name, output=output,
+                success=success,
+                operation="get_task_result",
+                agent_name=agent_name,
+                output=output,
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )
         except Exception as e:
             return EmpireResult(
-                success=False, operation="get_task_result",
-                agent_name=agent_name, output=str(e),
+                success=False,
+                operation="get_task_result",
+                agent_name=agent_name,
+                output=str(e),
                 execution_time=round(time.time() - start, 3),
                 timestamp=start,
             )

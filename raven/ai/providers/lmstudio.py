@@ -25,17 +25,19 @@ class LMStudioClient(BaseAIClient):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.provider_name = "lmstudio"
-        base = config.get("lmstudio_base_url", config.get("ai_base_url", "http://localhost:1234"))
+        base = config.get(
+            "lmstudio_base_url", config.get("ai_base_url", "http://localhost:1234")
+        )
         self.base_url = base.rstrip("/")
         if not self.api_key:
             self.api_key = config.get("lmstudio_api_key", "")
         if not self.model:
             self.model = config.get("lmstudio_model", "")
-        self._v1_chat_url       = f"{self.base_url}/api/v1/chat"
-        self._v1_models_url     = f"{self.base_url}/api/v1/models"
-        self._v1_load_url       = f"{self.base_url}/api/v1/models/load"
-        self._v1_unload_url     = f"{self.base_url}/api/v1/models/unload"
-        self._compat_chat_url   = f"{self.base_url}/v1/chat/completions"
+        self._v1_chat_url = f"{self.base_url}/api/v1/chat"
+        self._v1_models_url = f"{self.base_url}/api/v1/models"
+        self._v1_load_url = f"{self.base_url}/api/v1/models/load"
+        self._v1_unload_url = f"{self.base_url}/api/v1/models/unload"
+        self._compat_chat_url = f"{self.base_url}/v1/chat/completions"
         self._compat_models_url = f"{self.base_url}/v1/models"
 
     # ------------------------------------------------------------------
@@ -54,7 +56,9 @@ class LMStudioClient(BaseAIClient):
 
     def _post(self, url: str, payload: Dict[str, Any]) -> requests.Response:
         try:
-            resp = requests.post(url, json=payload, timeout=self.timeout, headers=self._headers())
+            resp = requests.post(
+                url, json=payload, timeout=self.timeout, headers=self._headers()
+            )
             resp.raise_for_status()
             return resp
         except requests.exceptions.ConnectionError:
@@ -63,9 +67,7 @@ class LMStudioClient(BaseAIClient):
                 "Ensure LM Studio is running and the server is started."
             )
         except requests.exceptions.Timeout:
-            raise RuntimeError(
-                f"LM Studio request timed out after {self.timeout}s."
-            )
+            raise RuntimeError(f"LM Studio request timed out after {self.timeout}s.")
         except requests.exceptions.HTTPError as e:
             status = e.response.status_code if e.response is not None else "?"
             if status == 401:
@@ -90,8 +92,9 @@ class LMStudioClient(BaseAIClient):
     ) -> AIResponse:
         messages = self._build_messages(messages)
         if tools:
-            return self._compat_chat(messages, tools=tools,
-                                     temperature=temperature, max_tokens=max_tokens)
+            return self._compat_chat(
+                messages, tools=tools, temperature=temperature, max_tokens=max_tokens
+            )
 
         payload: Dict[str, Any] = {
             "messages": [{"role": m.role, "content": m.content} for m in messages],
@@ -107,7 +110,9 @@ class LMStudioClient(BaseAIClient):
             payload["contextLength"] = context_length
 
         data = self._post(self._v1_chat_url, payload).json()
-        content = data.get("content") or data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        content = data.get("content") or data.get("choices", [{}])[0].get(
+            "message", {}
+        ).get("content", "")
         stats = data.get("stats", {})
         return AIResponse(
             content=content,
@@ -168,14 +173,21 @@ class LMStudioClient(BaseAIClient):
             payload["model"] = self.model
 
         with requests.post(
-            self._v1_chat_url, json=payload, timeout=self.timeout,
-            headers=self._headers(), stream=True,
+            self._v1_chat_url,
+            json=payload,
+            timeout=self.timeout,
+            headers=self._headers(),
+            stream=True,
         ) as resp:
             resp.raise_for_status()
             for raw_line in resp.iter_lines():
                 if not raw_line:
                     continue
-                line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+                line = (
+                    raw_line.decode("utf-8")
+                    if isinstance(raw_line, bytes)
+                    else raw_line
+                )
                 if not line.startswith("data: "):
                     continue
                 data_str = line[6:]
@@ -196,7 +208,9 @@ class LMStudioClient(BaseAIClient):
     # Model management
     # ------------------------------------------------------------------
 
-    def load_model(self, model_id: str, context_length: Optional[int] = None) -> Dict[str, Any]:
+    def load_model(
+        self, model_id: str, context_length: Optional[int] = None
+    ) -> Dict[str, Any]:
         payload: Dict[str, Any] = {"model": model_id}
         if context_length:
             payload["contextLength"] = context_length

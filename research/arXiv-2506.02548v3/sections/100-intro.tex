@@ -21,7 +21,7 @@ As illustrated in~\cref{fig:intro}, \sysname contains 1,507 benchmark instances 
 These vulnerabilities are sourced from OSS-Fuzz~\citep{ossfuzz}, Google's continuous fuzzing service.
 We ensure the quality and timeliness of our benchmark instances through systematic automated filters and manual validation.
 
-\sysname primarily evaluates agents on their ability to reproduce vulnerabilities, a key task in software security that often challenges even human experts~\citep{bohme2017directed,klees2018evaluating,mu2018understanding}. 
+\sysname primarily evaluates agents on their ability to reproduce vulnerabilities, a key task in software security that often challenges even human experts~\citep{bohme2017directed,klees2018evaluating,mu2018understanding}.
 As shown in \cref{fig:intro}, given a text description of a vulnerability and the associated codebase, agents must produce a proof-of-concept (PoC) test to reproduce it, i.e., to demonstrate the existence of the target vulnerability.
 We rigorously validate generated PoCs by executing them on both pre-patch and post-patch versions to confirm reproduction success.
 Solving \sysname requires agents to perform deep reasoning across large codebases, spanning thousands of files and millions lines of code.

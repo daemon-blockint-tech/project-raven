@@ -10,6 +10,7 @@ import uuid
 @dataclass
 class InvestigationResult:
     """Result of an investigation"""
+
     investigation_id: str
     hypothesis_id: str
     findings: List[Dict[str, Any]]
@@ -57,8 +58,12 @@ class AutomatedInvestigator:
     a confidence threshold heuristic.
     """
 
-    def __init__(self, config: Dict[str, Any], tools: Dict[str, Any],
-                 llm_client: Optional[Any] = None):
+    def __init__(
+        self,
+        config: Dict[str, Any],
+        tools: Dict[str, Any],
+        llm_client: Optional[Any] = None,
+    ):
         self.config = config
         self.tools = tools
         self.llm = llm_client
@@ -80,8 +85,9 @@ class AutomatedInvestigator:
                 evidence.extend(result["evidence"])
 
         confidence = self._calculate_confidence(findings)
-        conclusion = self._draw_conclusion(findings, evidence, confidence,
-                                           hypothesis.attack_vector)
+        conclusion = self._draw_conclusion(
+            findings, evidence, confidence, hypothesis.attack_vector
+        )
 
         return InvestigationResult(
             investigation_id=str(uuid.uuid4()),
@@ -100,7 +106,11 @@ class AutomatedInvestigator:
 
     def _execute_investigation_step(self, step: str, hypothesis: Any) -> Dict[str, Any]:
         step_lower = step.lower()
-        if "ssh" in step_lower or "connection" in step_lower or "authenticat" in step_lower:
+        if (
+            "ssh" in step_lower
+            or "connection" in step_lower
+            or "authenticat" in step_lower
+        ):
             return self._run_ssh_commands("connection", step)
         if "process" in step_lower:
             return self._run_ssh_commands("process", step)
@@ -108,8 +118,13 @@ class AutomatedInvestigator:
             return self._run_ssh_commands("file", step)
         if "network" in step_lower or "dns" in step_lower or "beacon" in step_lower:
             return self._run_ssh_commands("network", step)
-        if "cron" in step_lower or "startup" in step_lower or "service" in step_lower \
-                or "persistence" in step_lower or "scheduled" in step_lower:
+        if (
+            "cron" in step_lower
+            or "startup" in step_lower
+            or "service" in step_lower
+            or "persistence" in step_lower
+            or "scheduled" in step_lower
+        ):
             return self._run_ssh_commands("persistence", step)
         return {"step": step, "status": "skipped", "reason": "no matching command set"}
 
@@ -122,23 +137,31 @@ class AutomatedInvestigator:
         host = self._ssh_host
 
         if ssh is None or host is None:
-            return {"step": step, "status": "skipped",
-                    "reason": "ssh_manager not configured or no target host set"}
+            return {
+                "step": step,
+                "status": "skipped",
+                "reason": "ssh_manager not configured or no target host set",
+            }
 
         if host not in ssh.get_connected_hosts():
-            return {"step": step, "status": "skipped",
-                    "reason": f"no active SSH connection to {host}"}
+            return {
+                "step": step,
+                "status": "skipped",
+                "reason": f"no active SSH connection to {host}",
+            }
 
         commands = _SSH_COMMANDS.get(category, [])
         raw_outputs: List[Dict[str, Any]] = []
         for cmd in commands:
             result = ssh.execute_command(host, cmd)
-            raw_outputs.append({
-                "command": cmd,
-                "stdout": result.stdout.strip(),
-                "stderr": result.stderr.strip(),
-                "exit_code": result.exit_code,
-            })
+            raw_outputs.append(
+                {
+                    "command": cmd,
+                    "stdout": result.stdout.strip(),
+                    "stderr": result.stderr.strip(),
+                    "exit_code": result.exit_code,
+                }
+            )
 
         evidence = [r for r in raw_outputs if (r["stdout"] or r["exit_code"] == 0)]
         return {
@@ -158,15 +181,19 @@ class AutomatedInvestigator:
             return 0.0
         completed = sum(1 for f in findings if f.get("status") == "completed")
         with_evidence = sum(
-            1 for f in findings
-            if f.get("status") == "completed" and f.get("evidence")
+            1 for f in findings if f.get("status") == "completed" and f.get("evidence")
         )
         base = completed / len(findings)
         evidence_boost = (with_evidence / completed * 0.3) if completed else 0.0
         return round(min(base + evidence_boost, 1.0), 3)
 
-    def _draw_conclusion(self, findings: List[Dict], evidence: List[Dict],
-                         confidence: float, attack_vector: str) -> str:
+    def _draw_conclusion(
+        self,
+        findings: List[Dict],
+        evidence: List[Dict],
+        confidence: float,
+        attack_vector: str,
+    ) -> str:
         if self.llm is not None and evidence:
             try:
                 return self._llm_conclusion(findings, evidence, attack_vector)
@@ -181,8 +208,9 @@ class AutomatedInvestigator:
             return "Limited evidence found — hypothesis unlikely but not ruled out"
         return "No supporting evidence found — likely false positive"
 
-    def _llm_conclusion(self, findings: List[Dict], evidence: List[Dict],
-                        attack_vector: str) -> str:
+    def _llm_conclusion(
+        self, findings: List[Dict], evidence: List[Dict], attack_vector: str
+    ) -> str:
         from raven.ai.lmstudio_client import AIMessage
 
         system = (
@@ -194,18 +222,25 @@ class AutomatedInvestigator:
         )
         summary = {
             "attack_vector": attack_vector,
-            "steps_completed": sum(1 for f in findings if f.get("status") == "completed"),
+            "steps_completed": sum(
+                1 for f in findings if f.get("status") == "completed"
+            ),
             "steps_total": len(findings),
             "evidence_samples": [
-                {"command": e.get("command"), "output_preview": e.get("stdout", "")[:400]}
+                {
+                    "command": e.get("command"),
+                    "output_preview": e.get("stdout", "")[:400],
+                }
                 for e in evidence[:6]
             ],
         }
         user = json.dumps(summary, default=str)
 
         response = self.llm.chat(
-            [AIMessage(role="system", content=system),
-             AIMessage(role="user", content=user)],
+            [
+                AIMessage(role="system", content=system),
+                AIMessage(role="user", content=user),
+            ],
             temperature=0.0,
         )
         return response.content.strip()

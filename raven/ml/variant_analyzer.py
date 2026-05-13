@@ -15,20 +15,19 @@ Also incorporates ZeroDayBench grep patterns (arXiv-2603.02297):
 """
 
 from typing import List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 import subprocess
 import os
 import re
-import time
 import uuid
 
 
 class VariantType(Enum):
-    INCOMPLETE_PATCH       = "incomplete_patch"
-    DEEP_PRECONDITION      = "deep_precondition"
-    ALGORITHM_ASSUMPTION   = "algorithm_assumption"
-    DANGEROUS_PATTERN      = "dangerous_pattern"
+    INCOMPLETE_PATCH = "incomplete_patch"
+    DEEP_PRECONDITION = "deep_precondition"
+    ALGORITHM_ASSUMPTION = "algorithm_assumption"
+    DANGEROUS_PATTERN = "dangerous_pattern"
 
 
 @dataclass
@@ -51,68 +50,85 @@ class VariantFinding:
 # ------------------------------------------------------------------
 DANGEROUS_PATTERNS: List[Tuple[str, str, str]] = [
     # (regex, description, reproduction_hint)
-    (r"subprocess\.(run|call|Popen|check_output)\s*\(.*shell\s*=\s*True",
-     "subprocess call with shell=True — command injection risk",
-     "Inject: `'; id #` or `$(id)` via user-controlled input"),
-
-    (r"pickle\.loads?\s*\(",
-     "pickle.loads — arbitrary code execution via deserialization",
-     "Craft malicious pickle payload: pickle.dumps(os.system('id'))"),
-
-    (r"yaml\.(unsafe_load|load)\s*\((?!.*safe)",
-     "yaml.load/unsafe_load — arbitrary Python object instantiation",
-     "YAML payload: !!python/object/apply:os.system ['id']"),
-
-    (r"eval\s*\(",
-     "eval() — arbitrary code execution",
-     "Inject Python expression via user input"),
-
-    (r"exec\s*\(",
-     "exec() — arbitrary code execution",
-     "Inject Python statements via user input"),
-
-    (r"marshal\.loads?\s*\(",
-     "marshal.loads — arbitrary bytecode execution",
-     "Craft malicious marshal payload"),
-
-    (r"__import__\s*\(",
-     "Dynamic __import__ — may allow module injection",
-     "Inject module name to load unexpected code"),
-
-    (r"os\.system\s*\(",
-     "os.system — command injection if input is unsanitized",
-     "Inject shell metacharacters: ; && ||"),
-
-    (r"open\s*\(.*['\"]w['\"]",
-     "File write with potentially user-controlled path",
-     "Path traversal: ../../../../etc/cron.d/backdoor"),
-
-    (r"strcat\s*\(",
-     "strcat() without bounds check — buffer overflow risk (C code)",
-     "Supply PATH_MAX+ string to overflow fixed buffer"),
-
-    (r"strcpy\s*\(",
-     "strcpy() — classic buffer overflow",
-     "Supply input longer than destination buffer"),
-
-    (r"sprintf\s*\(",
-     "sprintf without snprintf — potential buffer overflow",
-     "Supply format string longer than destination buffer"),
+    (
+        r"subprocess\.(run|call|Popen|check_output)\s*\(.*shell\s*=\s*True",
+        "subprocess call with shell=True — command injection risk",
+        "Inject: `'; id #` or `$(id)` via user-controlled input",
+    ),
+    (
+        r"pickle\.loads?\s*\(",
+        "pickle.loads — arbitrary code execution via deserialization",
+        "Craft malicious pickle payload: pickle.dumps(os.system('id'))",
+    ),
+    (
+        r"yaml\.(unsafe_load|load)\s*\((?!.*safe)",
+        "yaml.load/unsafe_load — arbitrary Python object instantiation",
+        "YAML payload: !!python/object/apply:os.system ['id']",
+    ),
+    (
+        r"eval\s*\(",
+        "eval() — arbitrary code execution",
+        "Inject Python expression via user input",
+    ),
+    (
+        r"exec\s*\(",
+        "exec() — arbitrary code execution",
+        "Inject Python statements via user input",
+    ),
+    (
+        r"marshal\.loads?\s*\(",
+        "marshal.loads — arbitrary bytecode execution",
+        "Craft malicious marshal payload",
+    ),
+    (
+        r"__import__\s*\(",
+        "Dynamic __import__ — may allow module injection",
+        "Inject module name to load unexpected code",
+    ),
+    (
+        r"os\.system\s*\(",
+        "os.system — command injection if input is unsanitized",
+        "Inject shell metacharacters: ; && ||",
+    ),
+    (
+        r"open\s*\(.*['\"]w['\"]",
+        "File write with potentially user-controlled path",
+        "Path traversal: ../../../../etc/cron.d/backdoor",
+    ),
+    (
+        r"strcat\s*\(",
+        "strcat() without bounds check — buffer overflow risk (C code)",
+        "Supply PATH_MAX+ string to overflow fixed buffer",
+    ),
+    (
+        r"strcpy\s*\(",
+        "strcpy() — classic buffer overflow",
+        "Supply input longer than destination buffer",
+    ),
+    (
+        r"sprintf\s*\(",
+        "sprintf without snprintf — potential buffer overflow",
+        "Supply format string longer than destination buffer",
+    ),
 ]
 
 # Algorithm design assumption checks (CGIF/LZW pattern)
 ALGORITHM_ASSUMPTIONS: List[Tuple[str, str, str]] = [
-    (r"compressed.*<.*input|output.*<=.*input|buf.*len.*compressed",
-     "Code assumes compressed output is always smaller than input",
-     "LZW/Deflate can expand incompressible data — overflow possible"),
-
-    (r"len\(.*\)\s*<=\s*len\(.*original",
-     "Implicit assumption: output length bounded by input length",
-     "Verify algorithm guarantees — some encodings expand data"),
-
-    (r"malloc\s*\(\s*input_len|buf\s*=.*alloc.*input\.size",
-     "Buffer allocated based on input size without expansion factor",
-     "Encoding/compression/escaping may produce output > input"),
+    (
+        r"compressed.*<.*input|output.*<=.*input|buf.*len.*compressed",
+        "Code assumes compressed output is always smaller than input",
+        "LZW/Deflate can expand incompressible data — overflow possible",
+    ),
+    (
+        r"len\(.*\)\s*<=\s*len\(.*original",
+        "Implicit assumption: output length bounded by input length",
+        "Verify algorithm guarantees — some encodings expand data",
+    ),
+    (
+        r"malloc\s*\(\s*input_len|buf\s*=.*alloc.*input\.size",
+        "Buffer allocated based on input size without expansion factor",
+        "Encoding/compression/escaping may produce output > input",
+    ),
 ]
 
 
@@ -152,7 +168,9 @@ class VariantAnalyzer:
 
     def _scan_dangerous_patterns(self, repo_path: str) -> List[VariantFinding]:
         findings = []
-        py_files = self._collect_files(repo_path, extensions=[".py", ".c", ".cpp", ".h"])
+        py_files = self._collect_files(
+            repo_path, extensions=[".py", ".c", ".cpp", ".h"]
+        )
 
         for file_path in py_files:
             try:
@@ -164,16 +182,18 @@ class VariantAnalyzer:
             for lineno, line in enumerate(lines, start=1):
                 for compiled_pat, description, hint in _COMPILED_DANGEROUS:
                     if compiled_pat.search(line):
-                        findings.append(VariantFinding(
-                            finding_id=str(uuid.uuid4()),
-                            variant_type=VariantType.DANGEROUS_PATTERN,
-                            file_path=file_path,
-                            line_number=lineno,
-                            description=description,
-                            evidence=line.strip(),
-                            confidence=0.75,
-                            reproduction_hint=hint,
-                        ))
+                        findings.append(
+                            VariantFinding(
+                                finding_id=str(uuid.uuid4()),
+                                variant_type=VariantType.DANGEROUS_PATTERN,
+                                file_path=file_path,
+                                line_number=lineno,
+                                description=description,
+                                evidence=line.strip(),
+                                confidence=0.75,
+                                reproduction_hint=hint,
+                            )
+                        )
         return findings
 
     # ------------------------------------------------------------------
@@ -205,32 +225,42 @@ class VariantAnalyzer:
                 )
 
                 for file_path, lineno, evidence in missing_locations:
-                    findings.append(VariantFinding(
-                        finding_id=str(uuid.uuid4()),
-                        variant_type=VariantType.INCOMPLETE_PATCH,
-                        file_path=file_path,
-                        line_number=lineno,
-                        description=(
-                            f"Security fix from commit {commit_hash[:8]} "
-                            f"({commit_msg[:60]}) not applied here"
-                        ),
-                        evidence=evidence,
-                        confidence=0.70,
-                        git_commit=commit_hash,
-                        reproduction_hint=(
-                            "Trigger the code path that was patched in the "
-                            "original commit but not at this location"
-                        ),
-                    ))
+                    findings.append(
+                        VariantFinding(
+                            finding_id=str(uuid.uuid4()),
+                            variant_type=VariantType.INCOMPLETE_PATCH,
+                            file_path=file_path,
+                            line_number=lineno,
+                            description=(
+                                f"Security fix from commit {commit_hash[:8]} "
+                                f"({commit_msg[:60]}) not applied here"
+                            ),
+                            evidence=evidence,
+                            confidence=0.70,
+                            git_commit=commit_hash,
+                            reproduction_hint=(
+                                "Trigger the code path that was patched in the "
+                                "original commit but not at this location"
+                            ),
+                        )
+                    )
 
         return findings
 
     def _get_security_commits(self, repo_path: str) -> List[Tuple[str, str, List[str]]]:
         """Find commits with security-relevant keywords in their messages"""
         security_keywords = [
-            "bounds check", "buffer overflow", "sanitize", "validate",
-            "fix security", "CVE-", "security fix", "out of bounds",
-            "integer overflow", "null check", "bounds checking",
+            "bounds check",
+            "buffer overflow",
+            "sanitize",
+            "validate",
+            "fix security",
+            "CVE-",
+            "security fix",
+            "out of bounds",
+            "integer overflow",
+            "null check",
+            "bounds checking",
         ]
         results = []
         # Use --grep at git level to avoid pulling 200 commits and filtering in Python
@@ -239,9 +269,11 @@ class VariantAnalyzer:
             grep_args += ["--grep", kw]
         try:
             log_output = subprocess.check_output(
-                ["git", "log", "--oneline", "--no-merges",
-                 "--regexp-ignore-case"] + grep_args,
-                cwd=repo_path, stderr=subprocess.DEVNULL, timeout=15,
+                ["git", "log", "--oneline", "--no-merges", "--regexp-ignore-case"]
+                + grep_args,
+                cwd=repo_path,
+                stderr=subprocess.DEVNULL,
+                timeout=15,
                 text=True,
             )
             for line in log_output.splitlines():
@@ -258,8 +290,18 @@ class VariantAnalyzer:
     def _get_changed_files(self, repo_path: str, commit_hash: str) -> List[str]:
         try:
             output = subprocess.check_output(
-                ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", commit_hash],
-                cwd=repo_path, stderr=subprocess.DEVNULL, timeout=10, text=True,
+                [
+                    "git",
+                    "diff-tree",
+                    "--no-commit-id",
+                    "-r",
+                    "--name-only",
+                    commit_hash,
+                ],
+                cwd=repo_path,
+                stderr=subprocess.DEVNULL,
+                timeout=10,
+                text=True,
             )
             return output.strip().splitlines()
         except (subprocess.SubprocessError, OSError):
@@ -273,7 +315,10 @@ class VariantAnalyzer:
         try:
             diff = subprocess.check_output(
                 ["git", "show", "--unified=3", commit_hash],
-                cwd=repo_path, stderr=subprocess.DEVNULL, timeout=10, text=True,
+                cwd=repo_path,
+                stderr=subprocess.DEVNULL,
+                timeout=10,
+                text=True,
             )
             for line in diff.splitlines():
                 if line.startswith("+") and not line.startswith("+++"):
@@ -282,7 +327,8 @@ class VariantAnalyzer:
                     if re.search(
                         r"(bounds|check|validate|sanitize|assert|if.*len|"
                         r"if.*null|if.*size|snprintf|strncat|strncpy)",
-                        added, re.IGNORECASE
+                        added,
+                        re.IGNORECASE,
                     ):
                         patterns.append((added, commit_hash))
         except (subprocess.SubprocessError, OSError):
@@ -314,8 +360,10 @@ class VariantAnalyzer:
 
         # Escape for safe use in a pattern; strip trailing punctuation
         unsafe_fn = re.escape(unsafe_match.group(1).rstrip("("))
-        search_re = re.compile(rf"\b{unsafe_fn}\s*[\.(]") 
-        all_files = self._collect_files(repo_path, extensions=[".c", ".cpp", ".h", ".py"])
+        search_re = re.compile(rf"\b{unsafe_fn}\s*[\.(]")
+        all_files = self._collect_files(
+            repo_path, extensions=[".c", ".cpp", ".h", ".py"]
+        )
 
         for file_path in all_files:
             rel = os.path.relpath(file_path, repo_path)
@@ -351,16 +399,18 @@ class VariantAnalyzer:
             for lineno, line in enumerate(lines, start=1):
                 for compiled_pat, description, hint in _COMPILED_ASSUMPTIONS:
                     if compiled_pat.search(line):
-                        findings.append(VariantFinding(
-                            finding_id=str(uuid.uuid4()),
-                            variant_type=VariantType.ALGORITHM_ASSUMPTION,
-                            file_path=file_path,
-                            line_number=lineno,
-                            description=description,
-                            evidence=line.strip(),
-                            confidence=0.60,
-                            reproduction_hint=hint,
-                        ))
+                        findings.append(
+                            VariantFinding(
+                                finding_id=str(uuid.uuid4()),
+                                variant_type=VariantType.ALGORITHM_ASSUMPTION,
+                                file_path=file_path,
+                                line_number=lineno,
+                                description=description,
+                                evidence=line.strip(),
+                                confidence=0.60,
+                                reproduction_hint=hint,
+                            )
+                        )
         return findings
 
     # ------------------------------------------------------------------
@@ -396,26 +446,27 @@ class VariantAnalyzer:
                 # lines[lineno-1] is the current line, so slice [lineno-31:lineno-1]
                 context_start = max(0, lineno - 31)
                 precond_count = sum(
-                    1 for l in lines[context_start:lineno - 1]
-                    if cond_re.match(l)
+                    1 for l in lines[context_start : lineno - 1] if cond_re.match(l)
                 )
                 if precond_count >= 4:
-                    findings.append(VariantFinding(
-                        finding_id=str(uuid.uuid4()),
-                        variant_type=VariantType.DEEP_PRECONDITION,
-                        file_path=file_path,
-                        line_number=lineno,
-                        description=(
-                            f"Dangerous operation behind {precond_count} "
-                            "conditionals — fuzzers unlikely to reach this path"
-                        ),
-                        evidence=line.strip(),
-                        confidence=0.55 + min(0.25, precond_count * 0.03),
-                        reproduction_hint=(
-                            "Manually trace preconditions and craft input that "
-                            "satisfies all guards to reach the dangerous operation"
-                        ),
-                    ))
+                    findings.append(
+                        VariantFinding(
+                            finding_id=str(uuid.uuid4()),
+                            variant_type=VariantType.DEEP_PRECONDITION,
+                            file_path=file_path,
+                            line_number=lineno,
+                            description=(
+                                f"Dangerous operation behind {precond_count} "
+                                "conditionals — fuzzers unlikely to reach this path"
+                            ),
+                            evidence=line.strip(),
+                            confidence=0.55 + min(0.25, precond_count * 0.03),
+                            reproduction_hint=(
+                                "Manually trace preconditions and craft input that "
+                                "satisfies all guards to reach the dangerous operation"
+                            ),
+                        )
+                    )
         return findings
 
     # ------------------------------------------------------------------

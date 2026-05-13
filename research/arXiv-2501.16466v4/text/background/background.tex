@@ -15,15 +15,15 @@ We address a key gap in prior work~\cite{offsec_sok}---understanding how existin
 \subsection{Motivating example: Red teaming Equifax}
 We begin by highlighting the importance of red teams in multi-host settings using  the 2017 Equifax data breach as an illustrative example~\cite{equifax_report}, shown in \figRef{fig:equifax_example}.
 Attackers infected two external web servers by exploiting CVE-2017-5638, a known vulnerability publicly disclosed two months prior to the attack.
-Attackers then found plain text credentials on one of the web servers, used the credentials to compromise database servers, and then exfiltrated  sensitive user data from 48 databases. 
-This example illustrates the  {\em multi-host} and ``stepping stones'' nature of a real-world attack spanning multiple network segments and different vulnerabilities to acquire the critical asset(s). 
- 
-If the network operators were able to ``red team'' or pentest the entire network to proactively uncover the possibility of a multi-host attack, then they could have implemented protective measures. 
+Attackers then found plain text credentials on one of the web servers, used the credentials to compromise database servers, and then exfiltrated  sensitive user data from 48 databases.
+This example illustrates the  {\em multi-host} and ``stepping stones'' nature of a real-world attack spanning multiple network segments and different vulnerabilities to acquire the critical asset(s).
+
+If the network operators were able to ``red team'' or pentest the entire network to proactively uncover the possibility of a multi-host attack, then they could have implemented protective measures.
 For instance, it  may have flagged that data exfiltration monitoring rules were not being actively monitored~\cite{equifax_ftc_settlment}.
 Or it may have highlighted how unpatched vulnerabilities and plaintext credentials could be chained together to exfiltrate critical data~\cite{equifax_ftc_settlment}, to help prioritize these problems to operators.
 
-Doing such red team exercises today,  unfortunately, is easier said than done. 
-Such exercises require manual effort from specialized and expensive  teams of experts~\cite{rehberger2020cybersecurity}. 
+Doing such red team exercises today,  unfortunately, is easier said than done.
+Such exercises require manual effort from specialized and expensive  teams of experts~\cite{rehberger2020cybersecurity}.
 
 
 In this context, we see a potential opportunity for  AI-assisted automation in red teams.
@@ -35,7 +35,7 @@ Such a mechanism, if feasible, can  lower the cost and effort for continuous red
 
 
 \subsection{Approaches to offense systems}
-We  categorize existing cyber-offense approaches along three dimensions: 
+We  categorize existing cyber-offense approaches along three dimensions:
 (1) type of attack challenge (e.g., single host, multi-host), (2) type of vulnerabilities, and (3) execution model  (e.g., LLM vs.\  non-LLM).
 Our  focus is on red teaming involving {\em multi-host} challenges executed {\em autonomously}  by {\em LLM-based} systems~\cite{offsec_sok}.
 
@@ -55,16 +55,16 @@ As a first step in the multi-host setting, we focus on attacks using known vulne
 
 
 We summarize prior work as seen in Table \ref{tab:attack_taxonomy}: (1) LLM-based systems and (2) Non-LLM-based systems.
- 
 
-\para{LLM-based systems} LLM-based autonomous offense systems~\cite{happe2023getting, yang2023language, intercode_ctf, fang2024teams, shao2024empirical, shao2024nyu_ctf, cyberseceval3,  o1systemcard, zhang2024cybench, anthropic_AISI, mayoral2025cai} entail instructing LLMs to attack the environment. 
+
+\para{LLM-based systems} LLM-based autonomous offense systems~\cite{happe2023getting, yang2023language, intercode_ctf, fang2024teams, shao2024empirical, shao2024nyu_ctf, cyberseceval3,  o1systemcard, zhang2024cybench, anthropic_AISI, mayoral2025cai} entail instructing LLMs to attack the environment.
 The LLM outputs shell commands, which a second entity (e.g., human, MCP server) executes on a computer with access to the environment, shown in \figRef{fig:intro_before_after}.
 The output of the command is optionally processed~\cite{pentestgpt, mayoral2025cai} and appended to the context.
-Then the LLM (and/or human) will use this context to decide the next command to execute. 
+Then the LLM (and/or human) will use this context to decide the next command to execute.
 
 
-\para{Non-LLM-based systems} There is also work on multi-host attacks that do not rely on LLMs—some fully autonomous~\cite{caldera, holm2022lore, enoch2020harmer, yoo2020cyber, sved_tool}. 
-There are rule-based and state-machine-based systems (e.g.,~\cite{holm2022lore, sved_tool, enoch2020harmer, yoo2020cyber, ajmal2021offensive}). 
+\para{Non-LLM-based systems} There is also work on multi-host attacks that do not rely on LLMs—some fully autonomous~\cite{caldera, holm2022lore, enoch2020harmer, yoo2020cyber, sved_tool}.
+There are rule-based and state-machine-based systems (e.g.,~\cite{holm2022lore, sved_tool, enoch2020harmer, yoo2020cyber, ajmal2021offensive}).
 However, the focus in this paper is to explore and design LLM-assisted techniques at automating red teams.
 
 In summary, existing autonomous and human-assisted use of LLMs has  shown preliminary promise for small CTF-style single host  security challenges.
@@ -77,14 +77,14 @@ To address the gap in evaluating state-of-the-art LLM-based systems,  we  create
 \para{Success criteria}
 In real-world multi-host environments, there  are often multiple key assets (e.g., Equifax had multiple sensitive databases in \figRef{fig:equifax_example}).
 Similar to human red teams~\cite{oakley2019professional}, we consider an attack successful if an attacker is able to compromise at least one key asset (e.g., exfiltrated SSNs from at least one database).
-For the experiments in this section, we consider two kinds of  metrics: {\em  \acquisition} indicates if {\em any} critical asset was acquired;  and {\em \comprehensiveness} to measure {\em how many} critical assets were captured (formal definitions in \secRef{sec:eval}).  
+For the experiments in this section, we consider two kinds of  metrics: {\em  \acquisition} indicates if {\em any} critical asset was acquired;  and {\em \comprehensiveness} to measure {\em how many} critical assets were captured (formal definitions in \secRef{sec:eval}).
 
 \para{Baselines}
 In terms of  autonomous LLM systems, we consider three baselines: (1) CyberSecEval3~\cite{cyberseceval3}, (2) \sotaSystem, a shell system with a prompt we created in collaboration with a domain expert at a leading LLM provider, and (3) CAI~\cite{mayoral2025cai}, a popular open-source system.\footnote{
 All prompts are in our open-source repository.
 }
 We choose these systems because they use a variety of the techniques (e.g., chain-of-thought~\cite{cyberseceval3, wei2022chain}, ReAct~\cite{yao2023react}, and self-reflection~\cite{cyberseceval3, pentestgpt}) and were reproducible with open-source prompts and systems.
-For the semi-autonomous or human-in-the-loop systems,  we evaluate PentestGPT~\cite{pentestgpt} because it encompasses many ``reasoning'' strategies in other work (e.g., ~\cite{pentestgpt, zhang2024cybench}). 
+For the semi-autonomous or human-in-the-loop systems,  we evaluate PentestGPT~\cite{pentestgpt} because it encompasses many ``reasoning'' strategies in other work (e.g., ~\cite{pentestgpt, zhang2024cybench}).
 Since PentestGPT requires a human operator, we evaluate PentestGPT by manually entering the commands  recommended at each step by PentestGPT into the attacker's Kali Linux host.
 For \sotaSystem and CyberSecEval3, we consider 3 state-of-the-art LLMs: Sonnet 4, GPT 4o, Gemini 2.5 Pro.\footnote{We were unable to evaluate OpenAI's ``o'' or ``GPT-5'' models because the public API has a safeguard that prevents them from executing attacks.
 }
@@ -98,21 +98,16 @@ We execute Caldera with a variety of strategies (we only show the results of the
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.48\textwidth]{figures/background/bash_goal_summary.png}
-    \tightcaption{The \acquisition and \comprehensiveness metrics of LLM offense systems across 10 environments. 
-    The systems were largely unable to realize multi-host attacks. 
-    } 
+    \tightcaption{The \acquisition and \comprehensiveness metrics of LLM offense systems across 10 environments.
+    The systems were largely unable to realize multi-host attacks.
+    }
     \label{fig:bash_goal_summary}
 \end{figure}
 
-\para{Findings} 
+\para{Findings}
 Across all evaluated LLMs and environments, we find that existing state-of-the-art   LLM-assisted and non-LLM-based systems are  largely unable to realize multi-host attacks w.r.t both \acquisition and \comprehensiveness, shown in \figRef{fig:bash_goal_summary}.
  Only \sotaSystem with Sonnet 4 was able to succeed even partially, by managing to  exfiltrate data from  one of the  database servers in the Equifax-inspired environment.
 \sotaSystem with Gemini 2.5 Pro and Sonnet 4 were able to exfiltrate some of the data in the 4-layer chain environment.
-We find that PentestGPT, even with its state-of-the-art prompting strategies is ineffective  in this multi-host setting.\footnote{We have tested other models such as DeepSeek and Llama 3 but do not show these results for brevity. 
-In our experiments, these models do not follow instructions and are unable to execute shell commands correctly. 
+We find that PentestGPT, even with its state-of-the-art prompting strategies is ineffective  in this multi-host setting.\footnote{We have tested other models such as DeepSeek and Llama 3 but do not show these results for brevity.
+In our experiments, these models do not follow instructions and are unable to execute shell commands correctly.
 As models get released, we plan to update our benchmark ``scorecard'' (\figRef{fig:bash_goal_summary}).}
-
-
-
-
-

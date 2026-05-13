@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
-from raven.auth.dependencies import current_user, require_admin, require_operator
+from raven.auth.dependencies import require_admin, require_operator
 from raven.auth.models import User
 from raven.observability.metrics import (
     JAILBREAK_DETECTIONS,
@@ -58,7 +58,9 @@ async def redteam_scan(payload: ScanRequest, user: User = Depends(require_operat
 
 
 @router.post("/decode")
-async def redteam_decode(payload: DecodeRequest, user: User = Depends(require_operator)):
+async def redteam_decode(
+    payload: DecodeRequest, user: User = Depends(require_operator)
+):
     """Run Parseltongue normalisation. Returns the decoded text and which
     obfuscation techniques fired."""
     norm = ParseltongueNormaliser(tier=payload.tier).normalise(payload.text)
@@ -77,9 +79,9 @@ async def redteam_hardness(
 ):
     """Run the canary suite against the active AI provider."""
     report = ProviderHardnessTest().run()
-    PROVIDER_HARDNESS_SCORE.labels(provider=report.provider, model=report.model or "auto").set(
-        report.overall_score
-    )
+    PROVIDER_HARDNESS_SCORE.labels(
+        provider=report.provider, model=report.model or "auto"
+    ).set(report.overall_score)
     return report.model_dump()
 
 
@@ -87,7 +89,9 @@ async def redteam_hardness(
 async def redteam_godmode(
     payload: OffensiveRequest,
     user: User = Depends(require_admin),
-    x_raven_authorization_token: Optional[str] = Header(default=None, alias="X-Raven-Authorization-Token"),
+    x_raven_authorization_token: Optional[str] = Header(
+        default=None, alias="X-Raven-Authorization-Token"
+    ),
 ):
     """OffensiveGodmode — sandboxed, audit-logged, double-gated.
 
@@ -120,7 +124,9 @@ async def redteam_godmode(
         raise HTTPException(status_code=403, detail="authorization token mismatch")
 
     if result.winning_strategy is None:
-        REDTEAM_GODMODE_ATTEMPTS.labels(outcome="full").inc()  # full resistance from provider
+        REDTEAM_GODMODE_ATTEMPTS.labels(
+            outcome="full"
+        ).inc()  # full resistance from provider
     else:
         REDTEAM_GODMODE_ATTEMPTS.labels(outcome="partial").inc()
     return result.model_dump()

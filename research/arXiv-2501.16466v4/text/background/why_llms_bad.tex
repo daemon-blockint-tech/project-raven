@@ -6,7 +6,7 @@ In this section, we analyze {\em how} existing  state-of-the-art LLM-assisted sy
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.48\textwidth]{figures/background/mental_model.png}
-    \tightcaption{A mental model of how red teams execute multi-host attacks. Red teams start with a goal (e.g., exfiltrate important data). Then, they follow a loop of deciding a task (e.g., infect a server), executing the task (e.g., launching an exploit), and updating their knowledge/capabilities.} 
+    \tightcaption{A mental model of how red teams execute multi-host attacks. Red teams start with a goal (e.g., exfiltrate important data). Then, they follow a loop of deciding a task (e.g., infect a server), executing the task (e.g., launching an exploit), and updating their knowledge/capabilities.}
     \label{fig:mental_model}
 \end{figure}
 
@@ -27,24 +27,24 @@ With this mental model, we create reference solutions for how a red team would s
 For each environment, we create a reference solution based on an attack graph model~\cite{attack_graph_og}.
 We define a {\em task} as a sequence of commands to reach a state in the attack graph (e.g., found the correct vulnerability, gained access to a server).
 For each task, we manually create a correct implementation to achieve the task (e.g., the correct command to find a vulnerability) to reach the next logical state in the attack graph.
-For completeness, we provide the details of the attack graph model   in \appRef{sec:appendix_log_analysis}. 
+For completeness, we provide the details of the attack graph model   in \appRef{sec:appendix_log_analysis}.
 
 \para{Log analysis}
-Using the reference solutions, we manually analyze the logs from the execution runs of the baseline systems from \secRef{sec:background}.  
- This helps us shed light on  common failure modes.    
-Given the manual effort of this analysis, we do a qualitative inspection  across  baselines and a deeper dive on the best performing system, \sotaSystem. 
+Using the reference solutions, we manually analyze the logs from the execution runs of the baseline systems from \secRef{sec:background}.
+ This helps us shed light on  common failure modes.
+Given the manual effort of this analysis, we do a qualitative inspection  across  baselines and a deeper dive on the best performing system, \sotaSystem.
 For  \sotaSystem, we first categorize tasks by the LLM-based systems as either relevant or irrelevant.
 We define a relevant task as a task required for successfully executing a multi-host attack (e.g., found the correct exploit).
 Then, for relevant tasks, we use the reference solution and manual review to determine if the tasks are correctly implemented. %
 The details of this analysis are in \appRef{sec:appendix_log_analysis}.
 
 \subsection{Observations}
-We now describe our key observations about how existing systems  fail in our  multi-host red team exercises from \secRef{sec:background}. 
+We now describe our key observations about how existing systems  fail in our  multi-host red team exercises from \secRef{sec:background}.
 
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.45\textwidth]{figures/background/ag_states_bash.png}
-    \tightcaption{Percentage of tasks successfully implemented by \sotaSystem with different LLMs. Across all environments, \sotaSystem was only able to execute 1--30\% of the tasks.} 
+    \tightcaption{Percentage of tasks successfully implemented by \sotaSystem with different LLMs. Across all environments, \sotaSystem was only able to execute 1--30\% of the tasks.}
     \label{fig:bash_ag_states}
 \end{figure}
 
@@ -61,7 +61,7 @@ Caldera, a non-LLM  based system  also executed irrelevant tasks; e.g.,  frequen
     \centering
     \includegraphics[width=0.45\textwidth]{figures/background/equifax_bash_ag.png}
     \tightcaption{In the Equifax-inspired and chain environments, 47--90\% of \sotaSystem's tasks are irrelevant.
-    Furthermore, 6--41\% of \sotaSystem's tasks are implemented incorrectly.} 
+    Furthermore, 6--41\% of \sotaSystem's tasks are implemented incorrectly.}
     \label{fig:ag_breakdown}
 \end{figure}
 
@@ -72,7 +72,7 @@ Incorrect implementations are a critical failure mode: they can produce cascadin
 An incorrectly implemented exploit will not only fail to compromise one host, it also prevents the discovery of downstream vulnerabilities.
 
 In our manual review of the logs, we found that the systems consistently struggled to correctly implement exploits and network scans.
-For example, in one case we see that \sotaSystem with Sonnet 4 tried to create a complex exploit for  the  Apache Struts vulnerability, but the implementation is wrong and fails: 
+For example, in one case we see that \sotaSystem with Sonnet 4 tried to create a complex exploit for  the  Apache Struts vulnerability, but the implementation is wrong and fails:
 
 {\scriptsize
 \begin{verbatim}
@@ -122,7 +122,6 @@ All of the prior LLM-systems store all knowledge by adding observations (e.g., c
 We found this especially in \sotaSystem (the best performing system) and CyberSecEval3, where  the  context grew  with many low-level implementation details clogging the red team's knowledge in \figRef{fig:mental_model}.
 For instance, in one case \sotaSystem with Sonnet 4 on the Enterprise A environment executed 108 shell commands with a final context of 54K tokens (157,760 characters).
 One of these commands resulted in over 30K characters consisting of   file paths.
-These long contexts likely cause  the LLM systems to struggle to maintain a high-level plan~\cite{cemri2025multi, pentestgpt}.\footnote{ 
-Interestingly, the authors of PentestGPT~\cite{pentestgpt} noted this same problem when solving CTF challenges and introduced a token compression module to limit the context. 
+These long contexts likely cause  the LLM systems to struggle to maintain a high-level plan~\cite{cemri2025multi, pentestgpt}.\footnote{
+Interestingly, the authors of PentestGPT~\cite{pentestgpt} noted this same problem when solving CTF challenges and introduced a token compression module to limit the context.
 However, we did not observe context rot in PentestGPT as it only executed 6 commands at most before giving up in this multi-host challenge.}
-

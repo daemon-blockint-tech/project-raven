@@ -23,9 +23,9 @@ class ShodanHost:
     org: str
     country: str
     ports: List[int]
-    vulns: List[str]          # CVE IDs reported by Shodan
+    vulns: List[str]  # CVE IDs reported by Shodan
     tags: List[str]
-    honeyscore: float         # 0.0–1.0 probability of being a honeypot
+    honeyscore: float  # 0.0–1.0 probability of being a honeypot
     banner_count: int
     asn: str = ""
     isp: str = ""
@@ -75,11 +75,11 @@ class ShodanClient:
             )
         try:
             import shodan
+
             self._api = shodan.Shodan(api_key)
         except ImportError:
             raise RuntimeError(
-                "shodan package is not installed. "
-                "Run: pip install shodan"
+                "shodan package is not installed. " "Run: pip install shodan"
             )
         self._max_results = config.get("shodan_max_results", 100)
 
@@ -98,6 +98,7 @@ class ShodanClient:
         :param minify: If True, return only ports + general info (no banners). Does not count against query credits.
         """
         from shodan.exception import APIError
+
         self._validate_ip(ip)
         try:
             data = self._api.host(ip, history=history, minify=minify)
@@ -130,6 +131,7 @@ class ShodanClient:
     def bulk_host_info(self, ips: List[str]) -> List[ShodanHost]:
         """Look up multiple IPs in a single Shodan API call (up to 100)."""
         from shodan.exception import APIError
+
         for ip in ips:
             self._validate_ip(ip)
         try:
@@ -158,7 +160,9 @@ class ShodanClient:
     # Threat hunting searches
     # ------------------------------------------------------------------
 
-    def search_cve(self, cve_id: str, max_results: Optional[int] = None) -> ShodanSearchResult:
+    def search_cve(
+        self, cve_id: str, max_results: Optional[int] = None
+    ) -> ShodanSearchResult:
         """
         Find internet-exposed hosts vulnerable to a specific CVE.
         Uses Shodan's vuln: filter.
@@ -182,7 +186,9 @@ class ShodanClient:
             query += f" country:{country}"
         return self.search(query)
 
-    def search_open_port(self, port: int, banner_text: Optional[str] = None) -> ShodanSearchResult:
+    def search_open_port(
+        self, port: int, banner_text: Optional[str] = None
+    ) -> ShodanSearchResult:
         """Find hosts with a specific port open, optionally with matching banner text."""
         query = f"port:{port}"
         if banner_text:
@@ -201,6 +207,7 @@ class ShodanClient:
         Note: queries with filters consume 1 query credit per 100 results past page 1.
         """
         from shodan.exception import APIError
+
         limit = max_results or self._max_results
         try:
             results = self._api.search(query, page=page, facets=facets)
@@ -209,21 +216,23 @@ class ShodanClient:
 
         hosts = []
         for match in results.get("matches", [])[:limit]:
-            hosts.append(ShodanHost(
-                ip=match.get("ip_str", ""),
-                hostnames=match.get("hostnames", []),
-                org=match.get("org", ""),
-                country=match.get("location", {}).get("country_name", ""),
-                ports=[match.get("port", 0)],
-                vulns=list(match.get("vulns", {}).keys()),
-                tags=match.get("tags", []),
-                honeyscore=0.0,
-                banner_count=1,
-                asn=match.get("asn", ""),
-                isp=match.get("isp", ""),
-                os=match.get("os"),
-                raw=match,
-            ))
+            hosts.append(
+                ShodanHost(
+                    ip=match.get("ip_str", ""),
+                    hostnames=match.get("hostnames", []),
+                    org=match.get("org", ""),
+                    country=match.get("location", {}).get("country_name", ""),
+                    ports=[match.get("port", 0)],
+                    vulns=list(match.get("vulns", {}).keys()),
+                    tags=match.get("tags", []),
+                    honeyscore=0.0,
+                    banner_count=1,
+                    asn=match.get("asn", ""),
+                    isp=match.get("isp", ""),
+                    os=match.get("os"),
+                    raw=match,
+                )
+            )
 
         return ShodanSearchResult(
             total=results.get("total", 0),
@@ -234,6 +243,7 @@ class ShodanClient:
     def search_facets(self) -> List[str]:
         """Return the list of available search facets (free, no credits)."""
         from shodan.exception import APIError
+
         try:
             return self._api._request("/shodan/host/search/facets", {})
         except APIError as e:
@@ -242,6 +252,7 @@ class ShodanClient:
     def search_filters(self) -> List[str]:
         """Return the list of all search filters that can be used in queries."""
         from shodan.exception import APIError
+
         try:
             return self._api._request("/shodan/host/search/filters", {})
         except APIError as e:
@@ -253,6 +264,7 @@ class ShodanClient:
         Useful for validating queries before running a credit-consuming search.
         """
         from shodan.exception import APIError
+
         try:
             return self._api._request("/shodan/host/search/tokens", {"query": query})
         except APIError as e:
@@ -261,6 +273,7 @@ class ShodanClient:
     def count(self, query: str) -> int:
         """Return the total number of Shodan results for a query without fetching them."""
         from shodan.exception import APIError
+
         try:
             result = self._api.count(query)
             return result.get("total", 0)
@@ -274,6 +287,7 @@ class ShodanClient:
     def domain_info(self, domain: str) -> Dict[str, Any]:
         """Get DNS records and subdomains for a domain."""
         from shodan.exception import APIError
+
         try:
             return self._api.dns.domain_info(domain)
         except APIError as e:
@@ -282,6 +296,7 @@ class ShodanClient:
     def resolve(self, hostnames: List[str]) -> Dict[str, str]:
         """Resolve hostnames to IPs using Shodan's DNS resolver."""
         from shodan.exception import APIError
+
         try:
             return self._api.resolve(hostnames)
         except APIError as e:
@@ -290,6 +305,7 @@ class ShodanClient:
     def reverse_dns(self, ips: List[str]) -> Dict[str, List[str]]:
         """Reverse DNS lookup for a list of IPs."""
         from shodan.exception import APIError
+
         try:
             return self._api.reverse(ips)
         except APIError as e:
@@ -305,6 +321,7 @@ class ShodanClient:
         Requires a paid API plan. 1 IP = 1 scan credit.
         """
         from shodan.exception import APIError
+
         try:
             result = self._api.scan(",".join(ips))
             return ShodanScan(
@@ -319,6 +336,7 @@ class ShodanClient:
     def scan_status(self, scan_id: str) -> ShodanScan:
         """Check the status of a previously submitted scan (SUBMITTING/QUEUE/PROCESSING/DONE)."""
         from shodan.exception import APIError
+
         try:
             result = self._api._request(f"/shodan/scans/{scan_id}", {})
             return ShodanScan(
@@ -333,6 +351,7 @@ class ShodanClient:
     def list_scans(self) -> List[ShodanScan]:
         """List all on-demand scans currently active on the account."""
         from shodan.exception import APIError
+
         try:
             result = self._api._request("/shodan/scans", {})
             return [
@@ -364,6 +383,7 @@ class ShodanClient:
         :param expires: seconds until alert expires (0 = never)
         """
         from shodan.exception import APIError
+
         try:
             result = self._api.create_alert(name, ips, expires=expires)
             return self._parse_alert(result)
@@ -373,8 +393,11 @@ class ShodanClient:
     def delete_alert(self, alert_id: str) -> bool:
         """Delete a network alert."""
         from shodan.exception import APIError
+
         try:
-            result = self._api._request(f"/shodan/alert/{alert_id}", {}, method="delete")
+            result = self._api._request(
+                f"/shodan/alert/{alert_id}", {}, method="delete"
+            )
             return result.get("success", False)
         except APIError as e:
             raise RuntimeError(f"Shodan delete alert failed for {alert_id}: {e}")
@@ -382,6 +405,7 @@ class ShodanClient:
     def list_alerts(self) -> List[ShodanAlert]:
         """List all active network alerts on the account."""
         from shodan.exception import APIError
+
         try:
             results = self._api.alerts()
             return [self._parse_alert(a) for a in (results or [])]
@@ -391,6 +415,7 @@ class ShodanClient:
     def list_alert_triggers(self) -> List[Dict[str, Any]]:
         """Return all available alert trigger types (e.g. malware, ics, open_database)."""
         from shodan.exception import APIError
+
         try:
             return self._api._request("/shodan/alert/triggers", {})
         except APIError as e:
@@ -402,6 +427,7 @@ class ShodanClient:
         :param trigger: comma-separated trigger names, e.g. "malware,open_database"
         """
         from shodan.exception import APIError
+
         try:
             result = self._api._request(
                 f"/shodan/alert/{alert_id}/trigger/{trigger}", {}, method="put"
@@ -431,6 +457,7 @@ class ShodanClient:
         Useful for finding PoC code matching discovered CVEs.
         """
         from shodan.exception import APIError
+
         try:
             results = self._api.exploits.search(query)
             return results.get("matches", [])
@@ -444,6 +471,7 @@ class ShodanClient:
     def api_info(self) -> Dict[str, Any]:
         """Return plan info and credits for the current API key."""
         from shodan.exception import APIError
+
         try:
             return self._api.info()
         except APIError as e:

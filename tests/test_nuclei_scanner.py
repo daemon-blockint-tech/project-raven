@@ -4,7 +4,6 @@ import json
 import subprocess
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from raven.tools.nuclei_scanner import NucleiScanner, NucleiResult
 
@@ -20,6 +19,7 @@ def _make_scanner(**overrides) -> NucleiScanner:
 # ---------------------------------------------------------------------------
 # binary availability
 # ---------------------------------------------------------------------------
+
 
 def test_scan_returns_failure_when_binary_missing():
     scanner = _make_scanner()
@@ -58,8 +58,9 @@ def _mock_proc(stdout: str, returncode: int = 0) -> MagicMock:
 def test_scan_parses_json_findings():
     scanner = _make_scanner()
     stdout = "\n".join([json.dumps(_FINDING_1), json.dumps(_FINDING_LOW)])
-    with patch.object(scanner, "_binary_available", return_value=True), \
-         patch("subprocess.run", return_value=_mock_proc(stdout)):
+    with patch.object(scanner, "_binary_available", return_value=True), patch(
+        "subprocess.run", return_value=_mock_proc(stdout)
+    ):
         result = scanner.scan("192.168.1.10")
     assert result.success is True
     assert len(result.findings) == 2
@@ -69,8 +70,9 @@ def test_scan_parses_json_findings():
 def test_scan_ignores_non_json_lines():
     scanner = _make_scanner()
     stdout = "[INF] Using Nuclei Engine\n" + json.dumps(_FINDING_1)
-    with patch.object(scanner, "_binary_available", return_value=True), \
-         patch("subprocess.run", return_value=_mock_proc(stdout)):
+    with patch.object(scanner, "_binary_available", return_value=True), patch(
+        "subprocess.run", return_value=_mock_proc(stdout)
+    ):
         result = scanner.scan("192.168.1.10")
     assert result.success is True
     assert len(result.findings) == 1
@@ -78,8 +80,9 @@ def test_scan_ignores_non_json_lines():
 
 def test_scan_timeout_returns_failure():
     scanner = _make_scanner()
-    with patch.object(scanner, "_binary_available", return_value=True), \
-         patch("subprocess.run", side_effect=subprocess.TimeoutExpired("nuclei", 30)):
+    with patch.object(scanner, "_binary_available", return_value=True), patch(
+        "subprocess.run", side_effect=subprocess.TimeoutExpired("nuclei", 30)
+    ):
         result = scanner.scan("192.168.1.10")
     assert result.success is False
     assert result.findings == []
@@ -89,10 +92,12 @@ def test_scan_timeout_returns_failure():
 # convenience wrappers
 # ---------------------------------------------------------------------------
 
+
 def test_scan_cves_uses_cve_tag():
     scanner = _make_scanner()
-    with patch.object(scanner, "_binary_available", return_value=True), \
-         patch("subprocess.run", return_value=_mock_proc("")) as mock_run:
+    with patch.object(scanner, "_binary_available", return_value=True), patch(
+        "subprocess.run", return_value=_mock_proc("")
+    ) as mock_run:
         scanner.scan_cves("10.0.0.1")
     cmd = mock_run.call_args[0][0]
     assert "-tags" in cmd
@@ -101,8 +106,9 @@ def test_scan_cves_uses_cve_tag():
 
 def test_scan_exposures_uses_exposure_tag():
     scanner = _make_scanner()
-    with patch.object(scanner, "_binary_available", return_value=True), \
-         patch("subprocess.run", return_value=_mock_proc("")) as mock_run:
+    with patch.object(scanner, "_binary_available", return_value=True), patch(
+        "subprocess.run", return_value=_mock_proc("")
+    ) as mock_run:
         scanner.scan_exposures("10.0.0.1")
     cmd = mock_run.call_args[0][0]
     assert "exposure" in cmd[cmd.index("-tags") + 1]

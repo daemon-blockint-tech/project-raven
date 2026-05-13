@@ -43,6 +43,7 @@ def build_audit_dataset(
 
     if entries is None:
         from raven.audit.store import audit_store
+
         entries = audit_store().tail(n=limit, actor=actor)
 
     out_path = Path(out_path)

@@ -52,7 +52,11 @@ def approval_required(command_field: str = "command") -> Callable:
                     "pattern": decision.matched_description,
                 },
             )
-        if decision.verdict == ApprovalVerdict.DENIED and decision.request_id and decision.matched_pattern:
+        if (
+            decision.verdict == ApprovalVerdict.DENIED
+            and decision.request_id
+            and decision.matched_pattern
+        ):
             # Pending — surface 202 with the request_id so the caller can poll.
             raise HTTPException(
                 status_code=status.HTTP_202_ACCEPTED,

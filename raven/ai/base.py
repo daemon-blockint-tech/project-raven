@@ -19,11 +19,12 @@ from typing import Any, Dict, Iterator, List, Optional
 # Shared message / response types (provider-agnostic)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class AIMessage:
-    role: str                          # "system" | "user" | "assistant"
+    role: str  # "system" | "user" | "assistant"
     content: str
-    reasoning: Optional[str] = None   # populated for reasoning models
+    reasoning: Optional[str] = None  # populated for reasoning models
 
 
 @dataclass
@@ -36,17 +37,18 @@ class AIResponse:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     provider: str = ""
-    chat_id: Optional[str] = None     # LM Studio stateful chat session ID
+    chat_id: Optional[str] = None  # LM Studio stateful chat session ID
 
 
 # ---------------------------------------------------------------------------
 # Provider catalogue
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ProviderInfo:
     name: str
-    default_base_url: str             # empty = SDK-managed (e.g. Anthropic)
+    default_base_url: str  # empty = SDK-managed (e.g. Anthropic)
     needs_api_key: bool
     description: str
     example_models: List[str] = field(default_factory=list)
@@ -85,7 +87,11 @@ SUPPORTED_PROVIDERS: Dict[str, ProviderInfo] = {
         default_base_url="",
         needs_api_key=True,
         description="Anthropic Claude (native SDK)",
-        example_models=["claude-opus-4-5", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022"],
+        example_models=[
+            "claude-opus-4-5",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+        ],
     ),
     "ollama": ProviderInfo(
         name="ollama",
@@ -140,6 +146,7 @@ def parse_provider_model(spec: str) -> tuple[str, str]:
 # Abstract base client
 # ---------------------------------------------------------------------------
 
+
 class BaseAIClient(ABC):
     """Common interface for all AI provider adapters.
 
@@ -154,7 +161,9 @@ class BaseAIClient(ABC):
         self.model: str = config.get("ai_model", config.get("lmstudio_model", ""))
         self.api_key: str = config.get("ai_api_key", config.get("lmstudio_api_key", ""))
         self.base_url: str = config.get("ai_base_url", "")
-        self.timeout: int = int(config.get("ai_timeout", config.get("lmstudio_timeout", 120)))
+        self.timeout: int = int(
+            config.get("ai_timeout", config.get("lmstudio_timeout", 120))
+        )
         self.temperature: float = float(
             config.get("ai_temperature", config.get("lmstudio_temperature", 0.2))
         )
@@ -222,10 +231,12 @@ class BaseAIClient(ABC):
             if context
             else f"Analyze this code for security vulnerabilities:\n```\n{code}\n```"
         )
-        return self.chat([
-            AIMessage(role="system", content=system),
-            AIMessage(role="user", content=user),
-        ])
+        return self.chat(
+            [
+                AIMessage(role="system", content=system),
+                AIMessage(role="user", content=user),
+            ]
+        )
 
     def generate_hypothesis(self, indicators: Dict[str, Any]) -> AIResponse:
         system = (
@@ -235,10 +246,13 @@ class BaseAIClient(ABC):
             "Respond in JSON."
         )
         user = f"Security indicators:\n{json.dumps(indicators, indent=2)}"
-        return self.chat([
-            AIMessage(role="system", content=system),
-            AIMessage(role="user", content=user),
-        ], temperature=0.1)
+        return self.chat(
+            [
+                AIMessage(role="system", content=system),
+                AIMessage(role="user", content=user),
+            ],
+            temperature=0.1,
+        )
 
     def validate_vulnerability(self, vuln_data: Dict[str, Any]) -> AIResponse:
         system = (
@@ -248,10 +262,13 @@ class BaseAIClient(ABC):
             "confidence (0-1), reasoning. Respond in JSON."
         )
         user = f"Potential vulnerability:\n{json.dumps(vuln_data, indent=2)}"
-        return self.chat([
-            AIMessage(role="system", content=system),
-            AIMessage(role="user", content=user),
-        ], temperature=0.0)
+        return self.chat(
+            [
+                AIMessage(role="system", content=system),
+                AIMessage(role="user", content=user),
+            ],
+            temperature=0.0,
+        )
 
     def explain_cve(self, cve_id: str, description: str) -> AIResponse:
         system = (
@@ -259,10 +276,12 @@ class BaseAIClient(ABC):
             "root cause, affected versions, exploitation difficulty, mitigation."
         )
         user = f"CVE: {cve_id}\nDescription: {description}\n\nProvide a technical explanation."
-        return self.chat([
-            AIMessage(role="system", content=system),
-            AIMessage(role="user", content=user),
-        ])
+        return self.chat(
+            [
+                AIMessage(role="system", content=system),
+                AIMessage(role="user", content=user),
+            ]
+        )
 
     # ------------------------------------------------------------------
     # LM Studio model management stubs (no-op for cloud providers)
@@ -271,7 +290,9 @@ class BaseAIClient(ABC):
     def list_loaded_models(self) -> List[str]:
         return [self.model] if self.model else []
 
-    def load_model(self, model_id: str, context_length: Optional[int] = None) -> Dict[str, Any]:
+    def load_model(
+        self, model_id: str, context_length: Optional[int] = None
+    ) -> Dict[str, Any]:
         return {"status": "not_supported", "provider": self.provider_name}
 
     def unload_model(self, model_id: str) -> Dict[str, Any]:

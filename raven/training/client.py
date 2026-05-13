@@ -30,11 +30,12 @@ log = logging.getLogger(__name__)
 # Status payload
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class TinkerJobStatus:
     job_id: str
-    state: str               # "queued" | "running" | "succeeded" | "failed" | "cancelled"
-    progress: float = 0.0    # 0.0–1.0
+    state: str  # "queued" | "running" | "succeeded" | "failed" | "cancelled"
+    progress: float = 0.0  # 0.0–1.0
     checkpoint_path: Optional[str] = None
     metrics: Optional[Dict[str, float]] = None
     error: Optional[str] = None
@@ -43,6 +44,7 @@ class TinkerJobStatus:
 # ---------------------------------------------------------------------------
 # Real Tinker client (lazy SDK import)
 # ---------------------------------------------------------------------------
+
 
 class TinkerClient:
     """Thin wrapper around the upstream ``tinker`` SDK.
@@ -113,7 +115,13 @@ class TinkerClient:
         # NB: production code would spin up the cookbook recipe runner here.
         # We expose just the bare-bones forward/backward loop for testability.
         job_id = getattr(training, "job_id", None) or uuid.uuid4().hex
-        log.info("tinker.job.started id=%s base=%s rank=%d recipe=%s", job_id, base_model, rank, recipe)
+        log.info(
+            "tinker.job.started id=%s base=%s rank=%d recipe=%s",
+            job_id,
+            base_model,
+            rank,
+            recipe,
+        )
         return job_id
 
     def status(self, job_id: str) -> TinkerJobStatus:
@@ -156,6 +164,7 @@ class TinkerClient:
 # ---------------------------------------------------------------------------
 # Mock client — replays fixture state machines
 # ---------------------------------------------------------------------------
+
 
 class MockTinkerClient:
     """Offline stand-in for the Tinker SDK.
@@ -200,14 +209,21 @@ class MockTinkerClient:
                 "dataset_path": dataset_path,
                 "started_at": time.time(),
             }
-        log.info("mock_tinker.job.started id=%s base=%s recipe=%s", job_id, base_model, recipe)
+        log.info(
+            "mock_tinker.job.started id=%s base=%s recipe=%s",
+            job_id,
+            base_model,
+            recipe,
+        )
         return job_id
 
     def status(self, job_id: str) -> TinkerJobStatus:
         with self._lock:
             job = self._jobs.get(job_id)
             if job is None:
-                return TinkerJobStatus(job_id=job_id, state="failed", error="unknown job")
+                return TinkerJobStatus(
+                    job_id=job_id, state="failed", error="unknown job"
+                )
             job["ticks"] += 1
             ticks = job["ticks"]
 
@@ -251,8 +267,11 @@ def tinker_client() -> Any:
         if _singleton is not None:
             return _singleton
         from raven.config import settings
+
         use_mock = getattr(settings, "tinker_use_mock", False)
-        api_key = getattr(settings, "tinker_api_key", "") or os.environ.get("TINKER_API_KEY", "")
+        api_key = getattr(settings, "tinker_api_key", "") or os.environ.get(
+            "TINKER_API_KEY", ""
+        )
         if use_mock or not api_key:
             if not use_mock and not api_key:
                 log.info("tinker_client: no TINKER_API_KEY — using MockTinkerClient")

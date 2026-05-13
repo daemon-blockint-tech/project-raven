@@ -44,7 +44,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.6,
         description="L1B3RT4S output-boundary marker",
     ),
-
     # ---- og_godmode family (GPT-targeted) ----
     Fingerprint(
         name="godmode_active_phrase",
@@ -74,7 +73,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.85,
         description="Leetspeak GODMODE",
     ),
-
     # ---- refusal_inversion (Gemini/general) ----
     Fingerprint(
         name="write_oppositely",
@@ -97,7 +95,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.6,
         description="Semantic-opposite instruction",
     ),
-
     # ---- unfiltered / liberated (Grok / generic) ----
     Fingerprint(
         name="unfiltered_liberated",
@@ -113,7 +110,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.55,
         description="Restriction-removal instruction",
     ),
-
     # ---- DAN family ----
     Fingerprint(
         name="do_anything_now",
@@ -122,7 +118,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.9,
         description="DAN ('Do Anything Now') jailbreak",
     ),
-
     # ---- prompt-injection meta ----
     Fingerprint(
         name="ignore_previous_instructions",
@@ -145,7 +140,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.45,
         description="'New instructions' social-engineering hook",
     ),
-
     # ---- role-play exploits ----
     Fingerprint(
         name="developer_mode",
@@ -161,7 +155,6 @@ FINGERPRINTS: List[Fingerprint] = [
         weight=0.4,
         description="Hypothetical-no-rules framing",
     ),
-
     # ---- payload markers from Anthropic 0-day research / CyberGym scope ----
     Fingerprint(
         name="explicit_exploit_request",

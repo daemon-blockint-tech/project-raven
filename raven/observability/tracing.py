@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -36,11 +35,13 @@ def configure_tracing(service_name: str = "raven-api") -> bool:
         log.warning("OpenTelemetry SDK not installed; tracing disabled")
         return False
 
-    resource = Resource.create({
-        "service.name": service_name,
-        "service.namespace": "raven",
-        "deployment.environment": os.getenv("RAVEN_ENVIRONMENT", "dev"),
-    })
+    resource = Resource.create(
+        {
+            "service.name": service_name,
+            "service.namespace": "raven",
+            "deployment.environment": os.getenv("RAVEN_ENVIRONMENT", "dev"),
+        }
+    )
     provider = TracerProvider(resource=resource)
     provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint)))
     trace.set_tracer_provider(provider)
@@ -52,6 +53,7 @@ def configure_tracing(service_name: str = "raven-api") -> bool:
         pass
     try:
         from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
         RequestsInstrumentor().instrument()
     except ImportError:
         pass
@@ -64,6 +66,7 @@ def instrument_app(app) -> None:
     """Apply FastAPI auto-instrumentation to a running app instance."""
     try:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
         FastAPIInstrumentor.instrument_app(app)
     except ImportError:
         pass

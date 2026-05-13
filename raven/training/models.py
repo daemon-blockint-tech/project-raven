@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 # Enumerations
 # ---------------------------------------------------------------------------
+
 
 class DatasetSource(str, Enum):
     AUDIT_LOG = "audit_log"
@@ -63,6 +64,7 @@ class ABTestState(str, Enum):
 # ---------------------------------------------------------------------------
 # Payloads (Pydantic v2)
 # ---------------------------------------------------------------------------
+
 
 class Dataset(BaseModel):
     """A curated training corpus on disk (or remotely)."""
@@ -120,7 +122,7 @@ class ABTestRun(BaseModel):
 
     run_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:12])
     candidate_model_id: str
-    incumbent_model_id: Optional[str] = None        # None => current ProviderRegistry default
+    incumbent_model_id: Optional[str] = None  # None => current ProviderRegistry default
     traffic_pct: float = 0.05
     min_samples: int = 500
     promote_threshold_pct: float = 0.95
@@ -131,7 +133,7 @@ class ABTestRun(BaseModel):
     incumbent_score_sum: float = 0.0
     started_at: float = Field(default_factory=time.time)
     decided_at: Optional[float] = None
-    decision: Optional[str] = None      # "promote" | "rollback" | "inconclusive"
+    decision: Optional[str] = None  # "promote" | "rollback" | "inconclusive"
 
     @property
     def total_samples(self) -> int:

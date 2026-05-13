@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import threading
 import time
-from pathlib import Path
 from typing import Dict, List, Optional
 
 from raven.training.models import (
@@ -104,7 +103,9 @@ class ModelRegistry:
             self._promoted_model_id = model_id
             return model
 
-    def rollback_model(self, model_id: str, reason: Optional[str] = None) -> ModelVersion:
+    def rollback_model(
+        self, model_id: str, reason: Optional[str] = None
+    ) -> ModelVersion:
         with self._lock:
             model = self._models.get(model_id)
             if model is None:

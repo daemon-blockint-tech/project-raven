@@ -1,8 +1,8 @@
 # Project Raven — Default System Prompt
 
-> Loaded automatically by `ProviderRegistry` on startup.  
-> Set `AI_SYSTEM_PROMPT_PATH=` (empty) in `.env` to disable.  
-> Override path: `AI_SYSTEM_PROMPT_PATH=/path/to/custom_prompt.md`  
+> Loaded automatically by `ProviderRegistry` on startup.
+> Set `AI_SYSTEM_PROMPT_PATH=` (empty) in `.env` to disable.
+> Override path: `AI_SYSTEM_PROMPT_PATH=/path/to/custom_prompt.md`
 > Change at runtime: `POST /ai/system-prompt {"prompt": "..."}` or `raven prompt set`
 
 ---

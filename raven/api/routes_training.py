@@ -42,6 +42,7 @@ router = APIRouter(prefix="/training", tags=["training"])
 # Requests
 # ---------------------------------------------------------------------------
 
+
 class DatasetRegisterRequest(BaseModel):
     source: DatasetSource
     name: str
@@ -67,13 +68,14 @@ class ABTestStartRequest(BaseModel):
 
 
 class ABTestRecordRequest(BaseModel):
-    variant: str        # "candidate" | "incumbent"
+    variant: str  # "candidate" | "incumbent"
     score: float = 1.0
 
 
 # ---------------------------------------------------------------------------
 # Tinker status (read-only)
 # ---------------------------------------------------------------------------
+
 
 @router.get("/tinker/status")
 async def tinker_status(user: User = Depends(current_user)):
@@ -89,13 +91,16 @@ async def tinker_status(user: User = Depends(current_user)):
 # Datasets
 # ---------------------------------------------------------------------------
 
+
 @router.get("/datasets", response_model=List[Dataset])
 async def list_datasets(user: User = Depends(current_user)):
     return registry().list_datasets()
 
 
 @router.post("/datasets", response_model=Dataset)
-async def register_dataset(payload: DatasetRegisterRequest, user: User = Depends(require_admin)):
+async def register_dataset(
+    payload: DatasetRegisterRequest, user: User = Depends(require_admin)
+):
     dataset = Dataset(
         source=payload.source,
         name=payload.name,
@@ -138,10 +143,14 @@ async def start_job(payload: JobStartRequest, user: User = Depends(require_admin
 
     dataset = registry().get_dataset(payload.dataset_id)
     if dataset is None:
-        raise HTTPException(status_code=404, detail=f"dataset not found: {payload.dataset_id}")
+        raise HTTPException(
+            status_code=404, detail=f"dataset not found: {payload.dataset_id}"
+        )
     job_cls = _JOB_CLASSES.get(payload.recipe)
     if job_cls is None:
-        raise HTTPException(status_code=400, detail=f"unsupported recipe: {payload.recipe.value}")
+        raise HTTPException(
+            status_code=400, detail=f"unsupported recipe: {payload.recipe.value}"
+        )
     job_obj = job_cls(
         dataset=dataset,
         base_model=payload.base_model or settings.tinker_default_base_model,
@@ -163,7 +172,9 @@ async def get_job(job_id: str, user: User = Depends(current_user)):
     # Poll for fresh state
     job_cls = _JOB_CLASSES.get(job.recipe, SFTJob)
     dataset = registry().get_dataset(job.dataset_id) or Dataset(
-        source=DatasetSource.MANUAL, name="orphan", path="",
+        source=DatasetSource.MANUAL,
+        name="orphan",
+        path="",
     )
     return job_cls(dataset=dataset, base_model=job.base_model, rank=job.rank).poll(job)
 
@@ -175,9 +186,13 @@ async def cancel_job(job_id: str, user: User = Depends(require_admin)):
         raise HTTPException(status_code=404, detail="job not found")
     job_cls = _JOB_CLASSES.get(job.recipe, SFTJob)
     dataset = registry().get_dataset(job.dataset_id) or Dataset(
-        source=DatasetSource.MANUAL, name="orphan", path="",
+        source=DatasetSource.MANUAL,
+        name="orphan",
+        path="",
     )
-    cancelled = job_cls(dataset=dataset, base_model=job.base_model, rank=job.rank).cancel(job)
+    cancelled = job_cls(
+        dataset=dataset, base_model=job.base_model, rank=job.rank
+    ).cancel(job)
     TRAINING_JOBS.labels(recipe=job.recipe.value, outcome="cancelled").inc()
     return cancelled
 
@@ -194,7 +209,9 @@ async def finalize_job(
         raise HTTPException(status_code=404, detail="job not found")
     job_cls = _JOB_CLASSES.get(job.recipe, SFTJob)
     dataset = registry().get_dataset(job.dataset_id) or Dataset(
-        source=DatasetSource.MANUAL, name="orphan", path="",
+        source=DatasetSource.MANUAL,
+        name="orphan",
+        path="",
     )
     job_obj = job_cls(dataset=dataset, base_model=job.base_model, rank=job.rank)
     try:
@@ -209,6 +226,7 @@ async def finalize_job(
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
+
 
 @router.get("/models", response_model=List[ModelVersion])
 async def list_models(
@@ -262,8 +280,11 @@ async def rollback_model(
 # A/B tests
 # ---------------------------------------------------------------------------
 
+
 @router.post("/abtest")
-async def start_abtest(payload: ABTestStartRequest, user: User = Depends(require_admin)):
+async def start_abtest(
+    payload: ABTestStartRequest, user: User = Depends(require_admin)
+):
     if registry().get_model(payload.candidate_model_id) is None:
         raise HTTPException(status_code=404, detail="candidate model not found")
     router_obj = ABTestRouter.start(
@@ -315,6 +336,7 @@ async def stop_abtest(run_id: str, user: User = Depends(require_admin)):
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+
 
 def _refresh_model_gauges() -> None:
     for status in ModelStatus:

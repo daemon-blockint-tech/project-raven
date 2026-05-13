@@ -52,6 +52,7 @@ class ApprovalGate:
 
     def __init__(self) -> None:
         from raven.config import settings
+
         self._mode = ApprovalMode(settings.approval_mode)
         self._timeout = settings.approval_timeout_seconds
         self._yolo_env = settings.yolo_env_override
@@ -185,7 +186,9 @@ class ApprovalGate:
     # Operator resolution of a pending decision
     # ------------------------------------------------------------------
 
-    def resolve(self, request_id: str, approve: bool, decided_by: str) -> ApprovalDecision:
+    def resolve(
+        self, request_id: str, approve: bool, decided_by: str
+    ) -> ApprovalDecision:
         item = pending_store().pop(request_id)
         if item is None:
             return ApprovalDecision(

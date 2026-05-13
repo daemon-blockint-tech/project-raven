@@ -137,6 +137,7 @@ def jwt_manager() -> JWTManager:
     global _singleton
     if _singleton is None:
         from raven.config import settings
+
         _singleton = JWTManager(
             secret=settings.secret_key,
             algorithm=settings.jwt_algorithm,

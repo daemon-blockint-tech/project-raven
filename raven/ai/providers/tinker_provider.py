@@ -36,8 +36,9 @@ class TinkerClient(BaseAIClient):
         self._delegate: Optional[BaseAIClient] = None
         if self.base_url:
             from raven.ai.providers.openai_compat import OpenAICompatClient
+
             compat_cfg = dict(config)
-            compat_cfg["ai_provider"] = "openai"   # transport only
+            compat_cfg["ai_provider"] = "openai"  # transport only
             self._delegate = OpenAICompatClient(compat_cfg)
             self._delegate.provider_name = "tinker"
         else:
@@ -56,7 +57,9 @@ class TinkerClient(BaseAIClient):
     ) -> AIResponse:
         messages = self._build_messages(messages)
         if self._delegate is not None:
-            return self._delegate.chat(messages, temperature=temperature, max_tokens=max_tokens, **kwargs)
+            return self._delegate.chat(
+                messages, temperature=temperature, max_tokens=max_tokens, **kwargs
+            )
         return self._sdk_chat(messages, temperature=temperature, max_tokens=max_tokens)
 
     def is_available(self) -> bool:
@@ -111,7 +114,9 @@ class TinkerClient(BaseAIClient):
             result = sampling.sample(
                 prompt=prompt,
                 max_tokens=max_tokens if max_tokens is not None else self.max_tokens,
-                temperature=temperature if temperature is not None else self.temperature,
+                temperature=temperature
+                if temperature is not None
+                else self.temperature,
             )
             content = getattr(result, "text", None) or str(result)
         except Exception as exc:

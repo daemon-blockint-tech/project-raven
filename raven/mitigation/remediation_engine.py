@@ -1,6 +1,6 @@
 """Remediation engine for vulnerability fixing and system hardening"""
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from dataclasses import dataclass
 import time
 
@@ -8,6 +8,7 @@ import time
 @dataclass
 class RemediationResult:
     """Result of a remediation action"""
+
     action_id: str
     action_type: str
     target: str
@@ -19,11 +20,11 @@ class RemediationResult:
 
 class RemediationEngine:
     """Execute remediation actions to fix vulnerabilities and harden systems"""
-    
+
     def __init__(self, config: Dict[str, Any], tools: Dict[str, Any]):
         self.config = config
         self.tools = tools
-        
+
     # Allowed shape of a Debian/RPM-style package id. Closes VULN-3 latent
     # command-injection by refusing patch_ids that contain shell metacharacters.
     _PATCH_ID_RE = __import__("re").compile(r"^[A-Za-z0-9][A-Za-z0-9._+:~=-]{0,127}$")
@@ -32,6 +33,7 @@ class RemediationEngine:
         """Apply a security patch to a host"""
         import shlex
         import uuid
+
         start_time = time.time()
 
         if not self._PATCH_ID_RE.match(patch_id):
@@ -55,9 +57,9 @@ class RemediationEngine:
                 success = ssh_result.success
             else:
                 success = False
-            
+
             execution_time = time.time() - start_time
-            
+
             return RemediationResult(
                 action_id=str(uuid.uuid4()),
                 action_type="patch_application",
@@ -65,9 +67,9 @@ class RemediationEngine:
                 success=success,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"patch_id": patch_id, "host": host}
+                details={"patch_id": patch_id, "host": host},
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             return RemediationResult(
@@ -77,25 +79,26 @@ class RemediationEngine:
                 success=False,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
-    
+
     def update_firewall_rules(self, host: str, rules: List[Dict]) -> RemediationResult:
         """Update firewall rules on a host"""
         import uuid
+
         start_time = time.time()
-        
+
         try:
             # Apply firewall rules
             # Placeholder for actual firewall rule application
             result = {
                 "success": True,
                 "rules_applied": len(rules),
-                "details": "Firewall rules updated"
+                "details": "Firewall rules updated",
             }
-            
+
             execution_time = time.time() - start_time
-            
+
             return RemediationResult(
                 action_id=str(uuid.uuid4()),
                 action_type="firewall_update",
@@ -103,9 +106,9 @@ class RemediationEngine:
                 success=True,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details=result
+                details=result,
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             return RemediationResult(
@@ -115,34 +118,35 @@ class RemediationEngine:
                 success=False,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
-    
+
     def harden_configuration(self, host: str, hardening_type: str) -> RemediationResult:
         """Apply security hardening configuration"""
         import uuid
+
         start_time = time.time()
-        
+
         try:
             # Apply hardening based on type
             hardening_scripts = {
                 "ssh": "configure_ssh_hardening",
                 "password": "enforce_password_policy",
                 "logging": "enable_security_logging",
-                "network": "configure_network_security"
+                "network": "configure_network_security",
             }
-            
+
             script = hardening_scripts.get(hardening_type, "default_hardening")
-            
+
             # Execute hardening script via SSH
             if "ssh" in self.tools:
                 ssh_result = self.tools["ssh"].execute_command(host, script)
                 success = ssh_result.success
             else:
                 success = False
-            
+
             execution_time = time.time() - start_time
-            
+
             return RemediationResult(
                 action_id=str(uuid.uuid4()),
                 action_type="configuration_hardening",
@@ -150,9 +154,9 @@ class RemediationEngine:
                 success=success,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"hardening_type": hardening_type, "host": host}
+                details={"hardening_type": hardening_type, "host": host},
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             return RemediationResult(
@@ -162,24 +166,25 @@ class RemediationEngine:
                 success=False,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
-    
+
     def rotate_credentials(self, service: str) -> RemediationResult:
         """Rotate credentials for a service"""
         import uuid
+
         start_time = time.time()
-        
+
         try:
             # Placeholder for credential rotation
             result = {
                 "success": True,
                 "service": service,
-                "details": "Credentials rotated successfully"
+                "details": "Credentials rotated successfully",
             }
-            
+
             execution_time = time.time() - start_time
-            
+
             return RemediationResult(
                 action_id=str(uuid.uuid4()),
                 action_type="credential_rotation",
@@ -187,9 +192,9 @@ class RemediationEngine:
                 success=True,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details=result
+                details=result,
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             return RemediationResult(
@@ -199,25 +204,26 @@ class RemediationEngine:
                 success=False,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
-    
+
     def restore_from_backup(self, host: str, backup_id: str) -> RemediationResult:
         """Restore system from backup"""
         import uuid
+
         start_time = time.time()
-        
+
         try:
             # Placeholder for backup restoration
             result = {
                 "success": True,
                 "backup_id": backup_id,
                 "host": host,
-                "details": "System restored from backup"
+                "details": "System restored from backup",
             }
-            
+
             execution_time = time.time() - start_time
-            
+
             return RemediationResult(
                 action_id=str(uuid.uuid4()),
                 action_type="backup_restoration",
@@ -225,9 +231,9 @@ class RemediationEngine:
                 success=True,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details=result
+                details=result,
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             return RemediationResult(
@@ -237,5 +243,5 @@ class RemediationEngine:
                 success=False,
                 execution_time=execution_time,
                 timestamp=time.time(),
-                details={"error": str(e)}
+                details={"error": str(e)},
             )

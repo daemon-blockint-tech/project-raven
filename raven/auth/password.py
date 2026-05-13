@@ -10,9 +10,7 @@ try:
     from argon2 import PasswordHasher
     from argon2.exceptions import VerifyMismatchError, InvalidHash
 except ImportError:  # pragma: no cover
-    raise ImportError(
-        "argon2-cffi is required. Install with: pip install argon2-cffi"
-    )
+    raise ImportError("argon2-cffi is required. Install with: pip install argon2-cffi")
 
 
 # OWASP 2023 minimum: t=2, m=19456, p=1

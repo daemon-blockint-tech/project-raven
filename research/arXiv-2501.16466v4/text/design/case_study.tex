@@ -8,9 +8,9 @@ The full prompt and logs of this case study are in our open-source repository (s
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.48\textwidth]{figures/system_overview/timeline.png}
-    \tightcaption{A timeline of \sys red teaming the Equifax environment with Sonnet 4. 
+    \tightcaption{A timeline of \sys red teaming the Equifax environment with Sonnet 4.
     The red team stages correspond with the stages of the real Equifax attack show in \figRef{fig:equifax_example}.
-    \sys uses Sonnet 4 to plan several high-level red team tasks which are executed across several hosts by \sys's agents.} 
+    \sys uses Sonnet 4 to plan several high-level red team tasks which are executed across several hosts by \sys's agents.}
     \label{fig:equifax_timeline}
 \end{figure}
 
@@ -34,4 +34,3 @@ With these credentials, Sonnet 4 decided to infect all of the databases, again u
 Finally, Sonnet 4 decided to exfiltrate the data from the database.
 The data exfiltration agent used the environment and attack graph services to identify an exfiltration path out of the network: copy the data to a web server, and then download the data to the attacker's computer over \texttt{HTTP} (\circled{5}, \figRef{fig:equifax_timeline}).
 \sys then proceeds to use this workflow in a loop to infect and exfiltrate data from each of the 48 databases in the network (not shown in  \figRef{fig:equifax_timeline} for brevity).
-

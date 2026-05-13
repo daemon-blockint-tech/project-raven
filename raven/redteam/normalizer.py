@@ -22,7 +22,7 @@ import logging
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List
 
 log = logging.getLogger(__name__)
 
@@ -32,63 +32,179 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _LEET = {
-    "0": "o", "1": "i", "2": "z", "3": "e", "4": "a",
-    "5": "s", "6": "g", "7": "t", "8": "b", "9": "g",
-    "@": "a", "$": "s", "!": "i", "+": "t", "|": "i",
+    "0": "o",
+    "1": "i",
+    "2": "z",
+    "3": "e",
+    "4": "a",
+    "5": "s",
+    "6": "g",
+    "7": "t",
+    "8": "b",
+    "9": "g",
+    "@": "a",
+    "$": "s",
+    "!": "i",
+    "+": "t",
+    "|": "i",
 }
 
 # Cyrillic / Greek / Armenian look-alikes
 _HOMOGLYPHS = {
-    "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p", "\u0441": "c",
-    "\u0445": "x", "\u0443": "y", "\u0456": "i", "\u04bb": "h", "\u0410": "A",
-    "\u0415": "E", "\u041e": "O", "\u0420": "P", "\u0421": "C", "\u0425": "X",
-    "\u03c0": "n", "\u03b1": "a", "\u03b5": "e", "\u03bf": "o", "\u03bd": "v",
-    "\u03c1": "p", "\u03c4": "t",
+    "\u0430": "a",
+    "\u0435": "e",
+    "\u043e": "o",
+    "\u0440": "p",
+    "\u0441": "c",
+    "\u0445": "x",
+    "\u0443": "y",
+    "\u0456": "i",
+    "\u04bb": "h",
+    "\u0410": "A",
+    "\u0415": "E",
+    "\u041e": "O",
+    "\u0420": "P",
+    "\u0421": "C",
+    "\u0425": "X",
+    "\u03c0": "n",
+    "\u03b1": "a",
+    "\u03b5": "e",
+    "\u03bf": "o",
+    "\u03bd": "v",
+    "\u03c1": "p",
+    "\u03c4": "t",
 }
 
 # Zero-width / invisible characters
-_ZERO_WIDTH = "".join([
-    "\u200b", "\u200c", "\u200d", "\u200e", "\u200f",
-    "\u202a", "\u202b", "\u202c", "\u202d", "\u202e",
-    "\u2060", "\ufeff",
-])
+_ZERO_WIDTH = "".join(
+    [
+        "\u200b",
+        "\u200c",
+        "\u200d",
+        "\u200e",
+        "\u200f",
+        "\u202a",
+        "\u202b",
+        "\u202c",
+        "\u202d",
+        "\u202e",
+        "\u2060",
+        "\ufeff",
+    ]
+)
 
 # Superscript digits + a few letters
 _SUPERSCRIPT = {
-    "\u2070": "0", "\u00b9": "1", "\u00b2": "2", "\u00b3": "3", "\u2074": "4",
-    "\u2075": "5", "\u2076": "6", "\u2077": "7", "\u2078": "8", "\u2079": "9",
-    "\u1d43": "a", "\u1d47": "b", "\u1d9c": "c", "\u1d48": "d", "\u1d49": "e",
-    "\u1da0": "f", "\u1d4d": "g", "\u02b0": "h", "\u2071": "i", "\u02b2": "j",
-    "\u1d4f": "k", "\u02e1": "l", "\u1d50": "m", "\u207f": "n", "\u1d52": "o",
-    "\u1d56": "p", "\u02b3": "r", "\u02e2": "s", "\u1d57": "t", "\u1d58": "u",
-    "\u1d5b": "v", "\u02b7": "w", "\u02e3": "x", "\u02b8": "y",
+    "\u2070": "0",
+    "\u00b9": "1",
+    "\u00b2": "2",
+    "\u00b3": "3",
+    "\u2074": "4",
+    "\u2075": "5",
+    "\u2076": "6",
+    "\u2077": "7",
+    "\u2078": "8",
+    "\u2079": "9",
+    "\u1d43": "a",
+    "\u1d47": "b",
+    "\u1d9c": "c",
+    "\u1d48": "d",
+    "\u1d49": "e",
+    "\u1da0": "f",
+    "\u1d4d": "g",
+    "\u02b0": "h",
+    "\u2071": "i",
+    "\u02b2": "j",
+    "\u1d4f": "k",
+    "\u02e1": "l",
+    "\u1d50": "m",
+    "\u207f": "n",
+    "\u1d52": "o",
+    "\u1d56": "p",
+    "\u02b3": "r",
+    "\u02e2": "s",
+    "\u1d57": "t",
+    "\u1d58": "u",
+    "\u1d5b": "v",
+    "\u02b7": "w",
+    "\u02e3": "x",
+    "\u02b8": "y",
 }
 
 # Mathematical / fraktur / monospace alphabets — strip variants back to ASCII
 _MATH_ALPHA_RANGES = [
-    (0x1D400, 0x1D7FF),   # Mathematical alphanumerics block
-    (0x1D538, 0x1D56B),   # Double-struck
-    (0x1D504, 0x1D537),   # Fraktur
+    (0x1D400, 0x1D7FF),  # Mathematical alphanumerics block
+    (0x1D538, 0x1D56B),  # Double-struck
+    (0x1D504, 0x1D537),  # Fraktur
 ]
 
 # Morse table
 _MORSE = {
-    ".-": "a", "-...": "b", "-.-.": "c", "-..": "d", ".": "e", "..-.": "f",
-    "--.": "g", "....": "h", "..": "i", ".---": "j", "-.-": "k", ".-..": "l",
-    "--": "m", "-.": "n", "---": "o", ".--.": "p", "--.-": "q", ".-.": "r",
-    "...": "s", "-": "t", "..-": "u", "...-": "v", ".--": "w", "-..-": "x",
-    "-.--": "y", "--..": "z", "-----": "0", ".----": "1", "..---": "2",
-    "...--": "3", "....-": "4", ".....": "5", "-....": "6", "--...": "7",
-    "---..": "8", "----.": "9",
+    ".-": "a",
+    "-...": "b",
+    "-.-.": "c",
+    "-..": "d",
+    ".": "e",
+    "..-.": "f",
+    "--.": "g",
+    "....": "h",
+    "..": "i",
+    ".---": "j",
+    "-.-": "k",
+    ".-..": "l",
+    "--": "m",
+    "-.": "n",
+    "---": "o",
+    ".--.": "p",
+    "--.-": "q",
+    ".-.": "r",
+    "...": "s",
+    "-": "t",
+    "..-": "u",
+    "...-": "v",
+    ".--": "w",
+    "-..-": "x",
+    "-.--": "y",
+    "--..": "z",
+    "-----": "0",
+    ".----": "1",
+    "..---": "2",
+    "...--": "3",
+    "....-": "4",
+    ".....": "5",
+    "-....": "6",
+    "--...": "7",
+    "---..": "8",
+    "----.": "9",
 }
 
 # Braille (only Grade-1 lowercase)
 _BRAILLE = {
-    "\u2801": "a", "\u2803": "b", "\u2809": "c", "\u2819": "d", "\u2811": "e",
-    "\u280b": "f", "\u281b": "g", "\u2813": "h", "\u280a": "i", "\u281a": "j",
-    "\u2805": "k", "\u2807": "l", "\u280d": "m", "\u281d": "n", "\u2815": "o",
-    "\u280f": "p", "\u281f": "q", "\u2817": "r", "\u280e": "s", "\u281e": "t",
-    "\u2825": "u", "\u2827": "v", "\u283a": "w", "\u282d": "x", "\u283d": "y",
+    "\u2801": "a",
+    "\u2803": "b",
+    "\u2809": "c",
+    "\u2819": "d",
+    "\u2811": "e",
+    "\u280b": "f",
+    "\u281b": "g",
+    "\u2813": "h",
+    "\u280a": "i",
+    "\u281a": "j",
+    "\u2805": "k",
+    "\u2807": "l",
+    "\u280d": "m",
+    "\u281d": "n",
+    "\u2815": "o",
+    "\u280f": "p",
+    "\u281f": "q",
+    "\u2817": "r",
+    "\u280e": "s",
+    "\u281e": "t",
+    "\u2825": "u",
+    "\u2827": "v",
+    "\u283a": "w",
+    "\u282d": "x",
+    "\u283d": "y",
     "\u2835": "z",
 }
 
@@ -96,6 +212,7 @@ _BRAILLE = {
 # ---------------------------------------------------------------------------
 # Result type
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class NormalisationResult:
@@ -111,6 +228,7 @@ class NormalisationResult:
 # ---------------------------------------------------------------------------
 # ParseltongueNormaliser
 # ---------------------------------------------------------------------------
+
 
 class ParseltongueNormaliser:
     """Decodes obfuscated text. Run inputs through ``normalise()`` before
@@ -227,7 +345,11 @@ class ParseltongueNormaliser:
     @staticmethod
     def _collapse_spacing(s: str) -> tuple[str, bool]:
         # "h e l l o" -> "hello" only inside word-like runs
-        compact = re.sub(r"\b(?:([a-zA-Z])\s){2,}([a-zA-Z])\b", lambda m: m.group(0).replace(" ", ""), s)
+        compact = re.sub(
+            r"\b(?:([a-zA-Z])\s){2,}([a-zA-Z])\b",
+            lambda m: m.group(0).replace(" ", ""),
+            s,
+        )
         return compact, compact != s
 
     @staticmethod
@@ -256,8 +378,16 @@ class ParseltongueNormaliser:
     @staticmethod
     def _brackets(s: str) -> tuple[str, bool]:
         # "[h][a][c][k]" or "(h)(a)(c)(k)" → "hack"
-        out = re.sub(r"(?:\[([a-zA-Z])\]\s*){3,}", lambda m: re.sub(r"[\[\]\s]", "", m.group(0)), s)
-        out = re.sub(r"(?:\(([a-zA-Z])\)\s*){3,}", lambda m: re.sub(r"[()\s]", "", m.group(0)), out)
+        out = re.sub(
+            r"(?:\[([a-zA-Z])\]\s*){3,}",
+            lambda m: re.sub(r"[\[\]\s]", "", m.group(0)),
+            s,
+        )
+        out = re.sub(
+            r"(?:\(([a-zA-Z])\)\s*){3,}",
+            lambda m: re.sub(r"[()\s]", "", m.group(0)),
+            out,
+        )
         return out, out != s
 
     @staticmethod
@@ -274,6 +404,7 @@ class ParseltongueNormaliser:
             if not m:
                 return tok
             return m.group(2) + m.group(1)
+
         tokens = re.findall(r"\w+|\W+", s)
         out_tokens = [undo(t) if t.isalpha() else t for t in tokens]
         out = "".join(out_tokens)
@@ -288,33 +419,40 @@ class ParseltongueNormaliser:
     def _morse(s: str) -> tuple[str, bool]:
         if not re.search(r"[.-]{2,}", s):
             return s, False
+
         def decode_block(m: re.Match[str]) -> str:
             return _MORSE.get(m.group(0), m.group(0))
+
         out = re.sub(r"[.-]{1,6}", decode_block, s)
         return out, out != s
 
     @staticmethod
     def _base64(s: str) -> tuple[str, bool]:
         changed = False
+
         def maybe_decode(m: re.Match[str]) -> str:
             nonlocal changed
             tok = m.group(0)
             if len(tok) < 8 or len(tok) % 4 != 0:
                 return tok
             try:
-                decoded = base64.b64decode(tok, validate=True).decode("utf-8", errors="strict")
+                decoded = base64.b64decode(tok, validate=True).decode(
+                    "utf-8", errors="strict"
+                )
             except (binascii.Error, UnicodeDecodeError, ValueError):
                 return tok
             if not decoded.isprintable() or len(decoded) < 3:
                 return tok
             changed = True
             return f" {decoded} "
+
         out = re.sub(r"[A-Za-z0-9+/=]{8,}", maybe_decode, s)
         return out, changed
 
     @staticmethod
     def _hex_decode(s: str) -> tuple[str, bool]:
         changed = False
+
         def maybe_decode(m: re.Match[str]) -> str:
             nonlocal changed
             tok = m.group(0)
@@ -328,6 +466,7 @@ class ParseltongueNormaliser:
                 return tok
             changed = True
             return f" {decoded} "
+
         out = re.sub(r"\b[0-9a-fA-F]{6,}\b", maybe_decode, s)
         return out, changed
 

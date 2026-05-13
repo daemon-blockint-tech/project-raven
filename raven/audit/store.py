@@ -8,7 +8,6 @@ same `record()` and `tail()` interface.
 from __future__ import annotations
 
 import threading
-import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from typing import Any, Deque, Dict, List, Optional
@@ -17,7 +16,7 @@ from typing import Any, Deque, Dict, List, Optional
 @dataclass
 class AuditEntry:
     timestamp: float
-    actor: str                  # username or "anonymous"
+    actor: str  # username or "anonymous"
     method: str
     path: str
     status_code: int

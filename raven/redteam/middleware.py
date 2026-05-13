@@ -14,18 +14,24 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Iterable
 
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
 
 log = logging.getLogger(__name__)
 
 # Body fields that we scan when present.
-_PROMPT_FIELDS = ("code", "prompt", "messages", "vuln_data", "indicators",
-                  "system_prompt", "objective", "target_network")
+_PROMPT_FIELDS = (
+    "code",
+    "prompt",
+    "messages",
+    "vuln_data",
+    "indicators",
+    "system_prompt",
+    "objective",
+    "target_network",
+)
 
 # Only inspect bodies on these path prefixes.
 _SCAN_PREFIXES = ("/ai/", "/hunt/", "/investigate/", "/redteam/scan")
@@ -67,7 +73,12 @@ class JailbreakDetectionMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         from raven.config import settings
-        if not settings.jailcheck_enabled if hasattr(settings, "jailcheck_enabled") else False:
+
+        if (
+            not settings.jailcheck_enabled
+            if hasattr(settings, "jailcheck_enabled")
+            else False
+        ):
             pass  # placeholder for old toggle
 
         if not settings.jailbreak_detect_enabled:
@@ -100,7 +111,9 @@ class JailbreakDetectionMiddleware(BaseHTTPMiddleware):
                 JAILBREAK_DETECTIONS.labels(technique=tech, action="blocked").inc()
             log.warning(
                 "jailbreak.detected path=%s score=%.2f techniques=%s",
-                path, result.score, result.techniques,
+                path,
+                result.score,
+                result.techniques,
             )
             return JSONResponse(
                 status_code=403,

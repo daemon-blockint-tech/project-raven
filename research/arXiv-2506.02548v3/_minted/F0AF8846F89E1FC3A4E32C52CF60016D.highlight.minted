@@ -8,6 +8,6 @@ Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}
    491	        dbgln\PYGZus{}if(JPEG\PYGZus{}DEBUG, \PYGZdq{}\PYGZob{}\PYGZcb{}: Unsupported number of components: [...]
    492	        return Error::from\PYGZus{}string\PYGZus{}literal(\PYGZdq{}Unsupported number of com[...]
    493	    \PYGZcb{}
-   494	
+   494
    495	    for (int i = 0; i \PYGZlt{} component\PYGZus{}count; i++) \PYGZob{}
 \end{MintedVerbatim}

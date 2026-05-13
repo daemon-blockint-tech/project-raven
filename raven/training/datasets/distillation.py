@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from raven.ai.base import AIMessage, BaseAIClient
 from raven.training.datasets.base import JsonlWriter, pii_scrub
@@ -40,6 +40,7 @@ def build_distillation_dataset(
 
     if teacher is None:
         from raven.ai.registry import ProviderRegistry
+
         teacher = ProviderRegistry.get_instance().get_client()
 
     out_path = Path(out_path)

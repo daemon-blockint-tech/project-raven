@@ -13,6 +13,7 @@ from raven.redteam.offensive import OffensiveGodmode
 # Parseltongue normaliser — 33 techniques
 # ---------------------------------------------------------------------------
 
+
 class TestParseltongueNormaliser:
     def test_zero_width_stripped(self):
         n = ParseltongueNormaliser()
@@ -69,6 +70,7 @@ class TestParseltongueNormaliser:
 # Jailbreak detector
 # ---------------------------------------------------------------------------
 
+
 class TestJailbreakDetector:
     def test_clean_prompt_passes(self):
         det = JailbreakDetector(threshold=0.8)
@@ -116,9 +118,11 @@ class TestJailbreakDetector:
 # OffensiveGodmode — gating
 # ---------------------------------------------------------------------------
 
+
 class TestOffensiveGodmodeGating:
     def test_disabled_by_default_returns_disabled_result(self, monkeypatch):
         from raven.config import settings as s
+
         monkeypatch.setattr(s, "offensive_redteam_enabled", False)
         monkeypatch.setattr(s, "offensive_redteam_session_token", "")
         result = OffensiveGodmode().run(
@@ -131,6 +135,7 @@ class TestOffensiveGodmodeGating:
 
     def test_wrong_token_refused(self, monkeypatch):
         from raven.config import settings as s
+
         monkeypatch.setattr(s, "offensive_redteam_enabled", True)
         monkeypatch.setattr(s, "offensive_redteam_session_token", "secret-token")
         result = OffensiveGodmode().run(
@@ -142,6 +147,7 @@ class TestOffensiveGodmodeGating:
 
     def test_missing_sandbox_id_raises(self, monkeypatch):
         from raven.config import settings as s
+
         monkeypatch.setattr(s, "offensive_redteam_enabled", True)
         monkeypatch.setattr(s, "offensive_redteam_session_token", "secret-token")
         with pytest.raises(ValueError):

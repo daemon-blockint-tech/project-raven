@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     # -----------------------------------------------------------------
     environment: Literal["dev", "staging", "prod"] = Field(
         default="dev",
-        validation_alias=AliasChoices("RAVEN_ENVIRONMENT", "ENVIRONMENT", "environment"),
+        validation_alias=AliasChoices(
+            "RAVEN_ENVIRONMENT", "ENVIRONMENT", "environment"
+        ),
     )
 
     # -----------------------------------------------------------------
@@ -68,12 +70,16 @@ class Settings(BaseSettings):
     # -----------------------------------------------------------------
     # Scan jails (closes F2: filesystem disclosure)
     # -----------------------------------------------------------------
-    scan_root: str = "/var/lib/raven/repos"  # /hunt/code, /hunt/variant must stay under this
+    scan_root: str = (
+        "/var/lib/raven/repos"  # /hunt/code, /hunt/variant must stay under this
+    )
 
     # -----------------------------------------------------------------
     # AI provider allowlist (closes F1: base_url override exfiltration)
     # -----------------------------------------------------------------
-    ai_allowed_base_urls: List[str] = []  # empty → only built-in provider defaults allowed
+    ai_allowed_base_urls: List[
+        str
+    ] = []  # empty → only built-in provider defaults allowed
 
     # -----------------------------------------------------------------
     # Rate limiting
@@ -141,17 +147,19 @@ class Settings(BaseSettings):
 
     # AI Provider — runtime-switchable via `raven provider set` or POST /ai/provider
     # Use "provider:model" shorthand in ai_model, e.g. "openrouter:nous-hermes-2-mixtral-8x7b"
-    ai_provider: str = "lmstudio"          # lmstudio|openai|openrouter|anthropic|ollama|opencode|nous
-    ai_model: str = ""                     # model name; empty = provider default / loaded model
-    ai_api_key: str = ""                   # API key for cloud providers
-    ai_base_url: str = ""                  # override provider base URL (optional)
+    ai_provider: str = (
+        "lmstudio"  # lmstudio|openai|openrouter|anthropic|ollama|opencode|nous
+    )
+    ai_model: str = ""  # model name; empty = provider default / loaded model
+    ai_api_key: str = ""  # API key for cloud providers
+    ai_base_url: str = ""  # override provider base URL (optional)
     ai_timeout: int = 120
     ai_temperature: float = 0.2
     ai_max_tokens: int = 4096
 
     # LM Studio (local AI inference) — kept for backward compatibility
     lmstudio_base_url: str = "http://localhost:1234"
-    lmstudio_model: str = ""   # empty = use whatever model is loaded in LM Studio
+    lmstudio_model: str = ""  # empty = use whatever model is loaded in LM Studio
     lmstudio_api_key: str = ""  # required when LM Studio authentication is enabled
     lmstudio_timeout: int = 120
     lmstudio_temperature: float = 0.2
@@ -164,16 +172,16 @@ class Settings(BaseSettings):
     # OpenRouter-specific options
     openrouter_http_referer: str = "https://raven.local"
     openrouter_title: str = "Project Raven"
-    
+
     # Tool Configuration
     ssh_timeout: int = 30
     nmap_timeout: int = 300
     metasploit_timeout: int = 600
-    
+
     # Monitoring
     enable_metrics: bool = True
     metrics_port: int = 9090
-    
+
     # Logging
     log_level: str = "INFO"
     log_file: str = "./logs/raven.log"
@@ -224,6 +232,7 @@ class Settings(BaseSettings):
             )
         if self.secret_key == _DEFAULT_SECRET:
             import warnings
+
             warnings.warn(
                 "RAVEN: running with the default JWT secret. Anyone with the "
                 "source code can mint admin tokens. Do not expose this "
@@ -241,7 +250,9 @@ class Settings(BaseSettings):
 
         errors: list[str] = []
         if self.secret_key == _DEFAULT_SECRET or len(self.secret_key) < 32:
-            errors.append("SECRET_KEY must be set to a strong random value (>=32 chars) in prod")
+            errors.append(
+                "SECRET_KEY must be set to a strong random value (>=32 chars) in prod"
+            )
         if self.allow_insecure_defaults:
             errors.append("RAVEN_ALLOW_INSECURE_DEFAULTS must be False in prod")
         if self.debug:
@@ -261,7 +272,11 @@ class Settings(BaseSettings):
             errors.append(
                 "APPROVAL_MODE=off (YOLO) is forbidden in prod — use 'manual' or 'smart'"
             )
-        if self.continual_learning_enabled and not self.tinker_api_key and not self.tinker_use_mock:
+        if (
+            self.continual_learning_enabled
+            and not self.tinker_api_key
+            and not self.tinker_use_mock
+        ):
             errors.append(
                 "CONTINUAL_LEARNING_ENABLED=true requires TINKER_API_KEY "
                 "(or set TINKER_USE_MOCK=true for dry-run mode)"
@@ -274,4 +289,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

@@ -20,7 +20,7 @@ from raven.training.models import Dataset, DatasetSource
 _SYSTEM = (
     "You are Raven's kill-chain planner. Given the current MITRE ATT&CK stage "
     "and target, output a single JSON object specifying the next declarative "
-    "task: {\"stage\": str, \"action\": str, \"target\": str, \"parameters\": {}}."
+    'task: {"stage": str, "action": str, "target": str, "parameters": {}}.'
 )
 
 
@@ -46,12 +46,16 @@ def build_killchain_dataset(
                 f"Stage: {stage}\nTarget: {target}\nWhat is the next "
                 f"declarative task?"
             )
-            assistant = json.dumps({
-                "stage": stage,
-                "action": task.get("action", "unknown"),
-                "target": target,
-                "parameters": params,
-            }, ensure_ascii=False, separators=(",", ":"))
+            assistant = json.dumps(
+                {
+                    "stage": stage,
+                    "action": task.get("action", "unknown"),
+                    "target": target,
+                    "parameters": params,
+                },
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
             messages: List[Dict[str, str]] = [
                 {"role": "system", "content": _SYSTEM},
                 {"role": "user", "content": user},

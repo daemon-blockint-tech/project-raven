@@ -2,7 +2,6 @@
 
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from raven.tools.empire_client import EmpireClient, EmpireResult
 
@@ -25,6 +24,7 @@ def _mock_response(status_code: int, body: dict) -> MagicMock:
 # ---------------------------------------------------------------------------
 # Authentication
 # ---------------------------------------------------------------------------
+
 
 def test_authenticate_success():
     client = _make_client()
@@ -52,11 +52,13 @@ def test_authenticate_failure_connection_error():
 # Agent listing
 # ---------------------------------------------------------------------------
 
+
 def test_list_agents_returns_records():
     client = _make_client()
     agents = [{"name": "AGENT1", "os": "linux"}]
-    with patch.object(client._session, "get",
-                      return_value=_mock_response(200, {"records": agents})):
+    with patch.object(
+        client._session, "get", return_value=_mock_response(200, {"records": agents})
+    ):
         result = client.list_agents()
     assert result == agents
 
@@ -72,11 +74,14 @@ def test_list_agents_returns_empty_on_error():
 # execute_module
 # ---------------------------------------------------------------------------
 
+
 def test_execute_module_success():
     client = _make_client()
     resp = _mock_response(201, {"output": "Administrator"})
     with patch.object(client._session, "post", return_value=resp):
-        result = client.execute_module("AGENT1", "powershell/situational_awareness/host/winenum")
+        result = client.execute_module(
+            "AGENT1", "powershell/situational_awareness/host/winenum"
+        )
     assert isinstance(result, EmpireResult)
     assert result.success is True
     assert result.output == "Administrator"
@@ -103,6 +108,7 @@ def test_execute_module_connection_error():
 # run_shell
 # ---------------------------------------------------------------------------
 
+
 def test_run_shell_success():
     client = _make_client()
     resp = _mock_response(201, {"output": "root"})
@@ -115,6 +121,7 @@ def test_run_shell_success():
 # ---------------------------------------------------------------------------
 # SSL verification config
 # ---------------------------------------------------------------------------
+
 
 def test_ssl_verify_default_true():
     client = _make_client()

@@ -73,7 +73,9 @@ class SmartApprover:
                 max_tokens=200,
             )
         except Exception as exc:
-            log.warning("SmartApprover LLM call failed (%s) — fail-closed escalate", exc)
+            log.warning(
+                "SmartApprover LLM call failed (%s) — fail-closed escalate", exc
+            )
             return SmartAssessment(
                 verdict="escalate",
                 reasoning=f"classifier_unavailable: {exc}",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List
 
 
 # ---------------------------------------------------------------------------
@@ -33,6 +33,7 @@ def pii_scrub(text: str) -> str:
 # ---------------------------------------------------------------------------
 # JSONL writer
 # ---------------------------------------------------------------------------
+
 
 class JsonlWriter:
     """Append-only JSONL writer with a running example count."""
@@ -63,11 +64,10 @@ class JsonlWriter:
         self.close()
 
 
-def write_messages(writer: JsonlWriter, messages: List[Dict[str, str]], scrub: bool = True) -> None:
+def write_messages(
+    writer: JsonlWriter, messages: List[Dict[str, str]], scrub: bool = True
+) -> None:
     """Write one conversational training example."""
     if scrub:
-        messages = [
-            {**m, "content": pii_scrub(m.get("content", ""))}
-            for m in messages
-        ]
+        messages = [{**m, "content": pii_scrub(m.get("content", ""))} for m in messages]
     writer.write({"messages": messages})

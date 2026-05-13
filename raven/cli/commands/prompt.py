@@ -11,14 +11,14 @@ Usage:
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
 
 import typer
 
 from raven.ai.registry import ProviderRegistry
 
-app = typer.Typer(name="prompt", help="Manage the AI system prompt.", no_args_is_help=True)
+app = typer.Typer(
+    name="prompt", help="Manage the AI system prompt.", no_args_is_help=True
+)
 
 
 def _registry() -> ProviderRegistry:
@@ -48,7 +48,9 @@ def prompt_set(
 
 @app.command("load")
 def prompt_load(
-    path: str = typer.Argument("RAVEN_SYSTEM_PROMPT.md", help="Path to .md or .txt file"),
+    path: str = typer.Argument(
+        "RAVEN_SYSTEM_PROMPT.md", help="Path to .md or .txt file"
+    ),
 ):
     """Load the system prompt from a file.
 

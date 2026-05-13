@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List
 
 from raven.training.datasets.base import JsonlWriter, pii_scrub
 from raven.training.models import Dataset, DatasetSource
@@ -64,14 +64,16 @@ def build_cybergym_dataset(
                 {"role": "user", "content": description},
                 {"role": "assistant", "content": poc},
             ]
-            writer.write({
-                "messages": messages,
-                "reward": 1.0 if passed else -1.0,
-                "metadata": {
-                    "task_id": run.get("task_id"),
-                    "difficulty": run.get("difficulty"),
-                },
-            })
+            writer.write(
+                {
+                    "messages": messages,
+                    "reward": 1.0 if passed else -1.0,
+                    "metadata": {
+                        "task_id": run.get("task_id"),
+                        "difficulty": run.get("difficulty"),
+                    },
+                }
+            )
             count = writer.count
             if passed:
                 successes += 1

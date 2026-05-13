@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable
 
 from raven.training.datasets.base import JsonlWriter, pii_scrub
 from raven.training.models import Dataset, DatasetSource
@@ -55,12 +55,14 @@ def build_redteam_dataset(
             family = ", ".join(families)
             obfuscation = ", ".join(obfus)
             chosen = _SAFE_REFUSAL.format(family=family, obfuscation=obfuscation)
-            writer.write({
-                "prompt": prompt,
-                "chosen": chosen,
-                "rejected": _REJECTED_PLACEHOLDER,
-                "metadata": {"families": families, "obfuscation": obfus},
-            })
+            writer.write(
+                {
+                    "prompt": prompt,
+                    "chosen": chosen,
+                    "rejected": _REJECTED_PLACEHOLDER,
+                    "metadata": {"families": families, "obfuscation": obfus},
+                }
+            )
             count = writer.count
 
     return Dataset(

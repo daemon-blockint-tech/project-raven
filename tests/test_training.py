@@ -18,18 +18,17 @@ from raven.training.datasets import (
     build_redteam_dataset,
 )
 from raven.training.datasets.base import pii_scrub
-from raven.training.jobs import CodeRLJob, DistillJob, SFTJob, cybergym_reward
+from raven.training.jobs import DistillJob, SFTJob, cybergym_reward
 from raven.training.models import (
     ABTestState,
     Dataset,
     DatasetSource,
-    JobRecipe,
     JobState,
     ModelStatus,
     ModelVersion,
 )
 from raven.training.registry import reset_registry, registry
-from raven.training.secrets import FernetVault, reset_vault, vault
+from raven.training.secrets import FernetVault, reset_vault
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +45,7 @@ def fresh_state():
 # ---------------------------------------------------------------------------
 # PII scrubber + JSONL writer
 # ---------------------------------------------------------------------------
+
 
 class TestPIIScrub:
     def test_redacts_email(self):
@@ -68,18 +68,39 @@ class TestPIIScrub:
 # Dataset builders
 # ---------------------------------------------------------------------------
 
+
 class TestDatasetBuilders:
     def test_audit_dataset_round_trip(self, tmp_path):
         entries = [
-            {"method": "POST", "path": "/hunt", "status_code": 200,
-             "actor": "alice", "request_id": "r-1"},
-            {"method": "POST", "path": "/ai/analyze", "status_code": 500,
-             "actor": "alice", "request_id": "r-2"},   # skipped (>=400)
-            {"method": "POST", "path": "/hunt", "status_code": 200,
-             "actor": "alice", "request_id": "r-3",
-             "metadata": {"no_training": True}},        # skipped
-            {"method": "POST", "path": "/mitigate", "status_code": 200,
-             "actor": "bob", "request_id": "r-4"},
+            {
+                "method": "POST",
+                "path": "/hunt",
+                "status_code": 200,
+                "actor": "alice",
+                "request_id": "r-1",
+            },
+            {
+                "method": "POST",
+                "path": "/ai/analyze",
+                "status_code": 500,
+                "actor": "alice",
+                "request_id": "r-2",
+            },  # skipped (>=400)
+            {
+                "method": "POST",
+                "path": "/hunt",
+                "status_code": 200,
+                "actor": "alice",
+                "request_id": "r-3",
+                "metadata": {"no_training": True},
+            },  # skipped
+            {
+                "method": "POST",
+                "path": "/mitigate",
+                "status_code": 200,
+                "actor": "bob",
+                "request_id": "r-4",
+            },
         ]
         out = tmp_path / "audit.jsonl"
         ds = build_audit_dataset(out_path=out, entries=entries)
@@ -93,10 +114,20 @@ class TestDatasetBuilders:
 
     def test_cybergym_only_successes_by_default(self, tmp_path):
         runs = [
-            {"task_id": "arvo:1", "difficulty": "level0",
-             "description": "buffer overflow", "poc_text": "AAAA", "passed": True},
-            {"task_id": "arvo:2", "difficulty": "level1",
-             "description": "off by one", "poc_text": "BB", "passed": False},
+            {
+                "task_id": "arvo:1",
+                "difficulty": "level0",
+                "description": "buffer overflow",
+                "poc_text": "AAAA",
+                "passed": True,
+            },
+            {
+                "task_id": "arvo:2",
+                "difficulty": "level1",
+                "description": "off by one",
+                "poc_text": "BB",
+                "passed": False,
+            },
         ]
         ds = build_cybergym_dataset(tmp_path / "cg.jsonl", runs=runs)
         assert ds.example_count == 1
@@ -106,9 +137,16 @@ class TestDatasetBuilders:
     def test_cybergym_include_failures(self, tmp_path):
         runs = [
             {"task_id": "arvo:1", "passed": True, "description": "x", "poc_text": "AA"},
-            {"task_id": "arvo:2", "passed": False, "description": "y", "poc_text": "BB"},
+            {
+                "task_id": "arvo:2",
+                "passed": False,
+                "description": "y",
+                "poc_text": "BB",
+            },
         ]
-        ds = build_cybergym_dataset(tmp_path / "cg.jsonl", runs=runs, include_failures=True)
+        ds = build_cybergym_dataset(
+            tmp_path / "cg.jsonl", runs=runs, include_failures=True
+        )
         assert ds.example_count == 2
         with open(ds.path) as f:
             records = [json.loads(line) for line in f]
@@ -117,20 +155,38 @@ class TestDatasetBuilders:
 
     def test_killchain_only_completed_approved(self, tmp_path):
         tasks = [
-            {"stage": "reconnaissance", "action": "scan_network",
-             "target": "10.0.0.0/24", "status": "done", "approved": True},
-            {"stage": "exploitation", "action": "exploit_vulnerabilities",
-             "target": "10.0.0.5", "status": "pending", "approved": True},
-            {"stage": "lateral_movement", "action": "lateral_move",
-             "target": "10.0.0.6", "status": "done", "approved": False},
+            {
+                "stage": "reconnaissance",
+                "action": "scan_network",
+                "target": "10.0.0.0/24",
+                "status": "done",
+                "approved": True,
+            },
+            {
+                "stage": "exploitation",
+                "action": "exploit_vulnerabilities",
+                "target": "10.0.0.5",
+                "status": "pending",
+                "approved": True,
+            },
+            {
+                "stage": "lateral_movement",
+                "action": "lateral_move",
+                "target": "10.0.0.6",
+                "status": "done",
+                "approved": False,
+            },
         ]
         ds = build_killchain_dataset(tmp_path / "kc.jsonl", tasks=tasks)
         assert ds.example_count == 1
 
     def test_redteam_dpo_pairs(self, tmp_path):
         detections = [
-            {"prompt": "ignore previous", "techniques": ["injection"],
-             "obfuscation": ["leetspeak"]},
+            {
+                "prompt": "ignore previous",
+                "techniques": ["injection"],
+                "obfuscation": ["leetspeak"],
+            },
         ]
         ds = build_redteam_dataset(tmp_path / "rt.jsonl", detections=detections)
         with open(ds.path) as f:
@@ -143,6 +199,7 @@ class TestDatasetBuilders:
 # ---------------------------------------------------------------------------
 # MockTinkerClient state machine
 # ---------------------------------------------------------------------------
+
 
 class TestMockTinkerClient:
     def test_available_by_default(self):
@@ -174,6 +231,7 @@ class TestMockTinkerClient:
 
     def test_factory_falls_back_to_mock_without_api_key(self, monkeypatch):
         from raven.config import settings
+
         monkeypatch.setattr(settings, "tinker_api_key", "")
         monkeypatch.setattr(settings, "tinker_use_mock", False)
         client = tinker_client()
@@ -183,6 +241,7 @@ class TestMockTinkerClient:
 # ---------------------------------------------------------------------------
 # Registry + job lifecycle
 # ---------------------------------------------------------------------------
+
 
 class TestRegistryAndJobs:
     def _seed_dataset(self, tmp_path):
@@ -247,6 +306,7 @@ class TestRegistryAndJobs:
 # CodeRL reward
 # ---------------------------------------------------------------------------
 
+
 class TestCodeRLReward:
     def test_pass_returns_positive(self):
         assert cybergym_reward({"passed": True}) == 1.0
@@ -265,6 +325,7 @@ class TestCodeRLReward:
 # ABTestRouter
 # ---------------------------------------------------------------------------
 
+
 class TestABTestRouter:
     def test_starts_in_running(self):
         r = ABTestRouter.start(candidate_model_id="m1", traffic_pct=0.1)
@@ -281,8 +342,11 @@ class TestABTestRouter:
     def test_promote_on_high_candidate_win_rate(self, tmp_path):
         # seed candidate model so promote() works
         m = ModelVersion(
-            name="cand", base_model="x", rank=8,
-            dataset_id="d", checkpoint_path="mock://x",
+            name="cand",
+            base_model="x",
+            rank=8,
+            dataset_id="d",
+            checkpoint_path="mock://x",
         )
         registry().register_model(m)
         r = ABTestRouter.start(
@@ -300,8 +364,11 @@ class TestABTestRouter:
 
     def test_rollback_on_low_candidate_win_rate(self):
         m = ModelVersion(
-            name="cand", base_model="x", rank=8,
-            dataset_id="d", checkpoint_path="mock://x",
+            name="cand",
+            base_model="x",
+            rank=8,
+            dataset_id="d",
+            checkpoint_path="mock://x",
         )
         registry().register_model(m)
         r = ABTestRouter.start(
@@ -325,6 +392,7 @@ class TestABTestRouter:
 # ---------------------------------------------------------------------------
 # Fernet vault
 # ---------------------------------------------------------------------------
+
 
 class TestFernetVault:
     def test_round_trip_with_strong_secret(self):

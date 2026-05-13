@@ -9,6 +9,7 @@ import uuid
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -18,6 +19,7 @@ class AlertSeverity(Enum):
 
 class AlertStatus(Enum):
     """Alert status"""
+
     OPEN = "open"
     ACKNOWLEDGED = "acknowledged"
     RESOLVED = "resolved"
@@ -27,6 +29,7 @@ class AlertStatus(Enum):
 @dataclass
 class Alert:
     """Security alert"""
+
     alert_id: str
     title: str
     description: str
@@ -42,14 +45,20 @@ class Alert:
 
 class AlertManager:
     """Manage security alerts"""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.alerts: List[Alert] = []
         self.alert_handlers: Dict[str, Callable] = {}
-        
-    def create_alert(self, title: str, description: str, severity: AlertSeverity,
-                   source: str, metadata: Optional[Dict[str, Any]] = None) -> Alert:
+
+    def create_alert(
+        self,
+        title: str,
+        description: str,
+        severity: AlertSeverity,
+        source: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Alert:
         """Create a new alert"""
         alert = Alert(
             alert_id=str(uuid.uuid4()),
@@ -60,16 +69,16 @@ class AlertManager:
             source=source,
             created_at=time.time(),
             updated_at=time.time(),
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
-        
+
         self.alerts.append(alert)
-        
+
         # Trigger handlers
         self._trigger_handlers(alert)
-        
+
         return alert
-    
+
     def acknowledge_alert(self, alert_id: str, user: str) -> bool:
         """Acknowledge an alert"""
         alert = self.get_alert(alert_id)
@@ -79,7 +88,7 @@ class AlertManager:
             alert.updated_at = time.time()
             return True
         return False
-    
+
     def resolve_alert(self, alert_id: str) -> bool:
         """Resolve an alert"""
         alert = self.get_alert(alert_id)
@@ -89,7 +98,7 @@ class AlertManager:
             alert.updated_at = time.time()
             return True
         return False
-    
+
     def escalate_alert(self, alert_id: str) -> bool:
         """Escalate an alert"""
         alert = self.get_alert(alert_id)
@@ -98,43 +107,46 @@ class AlertManager:
             alert.updated_at = time.time()
             return True
         return False
-    
+
     def get_alert(self, alert_id: str) -> Optional[Alert]:
         """Get a specific alert"""
         for alert in self.alerts:
             if alert.alert_id == alert_id:
                 return alert
         return None
-    
-    def list_alerts(self, status: Optional[AlertStatus] = None,
-                   severity: Optional[AlertSeverity] = None,
-                   limit: int = 100) -> List[Alert]:
+
+    def list_alerts(
+        self,
+        status: Optional[AlertStatus] = None,
+        severity: Optional[AlertSeverity] = None,
+        limit: int = 100,
+    ) -> List[Alert]:
         """List alerts with optional filters"""
         filtered = self.alerts
-        
+
         if status:
             filtered = [a for a in filtered if a.status == status]
-        
+
         if severity:
             filtered = [a for a in filtered if a.severity == severity]
-        
+
         # Sort by creation time (newest first)
         filtered.sort(key=lambda a: a.created_at, reverse=True)
-        
+
         return filtered[:limit]
-    
+
     def get_open_alerts(self) -> List[Alert]:
         """Get all open alerts"""
         return self.list_alerts(status=AlertStatus.OPEN)
-    
+
     def get_critical_alerts(self) -> List[Alert]:
         """Get all critical alerts"""
         return self.list_alerts(severity=AlertSeverity.CRITICAL)
-    
+
     def register_handler(self, severity: AlertSeverity, handler: Callable) -> None:
         """Register a handler for alerts of a specific severity"""
         self.alert_handlers[severity.value] = handler
-    
+
     def _trigger_handlers(self, alert: Alert) -> None:
         """Trigger handlers for an alert"""
         handler = self.alert_handlers.get(alert.severity.value)
@@ -143,31 +155,33 @@ class AlertManager:
                 handler(alert)
             except Exception as e:
                 print(f"Handler error: {e}")
-    
+
     def get_alert_summary(self) -> Dict[str, Any]:
         """Get alert summary statistics"""
         total = len(self.alerts)
         open_count = len([a for a in self.alerts if a.status == AlertStatus.OPEN])
-        resolved_count = len([a for a in self.alerts if a.status == AlertStatus.RESOLVED])
-        
+        resolved_count = len(
+            [a for a in self.alerts if a.status == AlertStatus.RESOLVED]
+        )
+
         severity_counts = {}
         for severity in AlertSeverity:
             count = len([a for a in self.alerts if a.severity == severity])
             severity_counts[severity.value] = count
-        
+
         return {
             "total": total,
             "open": open_count,
             "resolved": resolved_count,
             "by_severity": severity_counts,
-            "avg_resolution_time": self._calculate_avg_resolution_time()
+            "avg_resolution_time": self._calculate_avg_resolution_time(),
         }
-    
+
     def _calculate_avg_resolution_time(self) -> float:
         """Calculate average resolution time"""
         resolved = [a for a in self.alerts if a.resolved_at]
         if not resolved:
             return 0.0
-        
+
         resolution_times = [a.resolved_at - a.created_at for a in resolved]
         return sum(resolution_times) / len(resolution_times)

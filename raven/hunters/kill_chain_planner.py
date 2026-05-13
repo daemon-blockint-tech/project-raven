@@ -26,14 +26,15 @@ class PendingApprovalError(Exception):
 
 class KillChainStage(Enum):
     """MITRE ATT&CK / Cyber Kill Chain stages"""
-    RECONNAISSANCE    = "reconnaissance"
-    WEAPONIZATION     = "weaponization"
-    DELIVERY          = "delivery"
-    EXPLOITATION      = "exploitation"
-    INSTALLATION      = "installation"
-    C2                = "command_and_control"
-    EXFILTRATION      = "exfiltration"
-    LATERAL_MOVEMENT  = "lateral_movement"
+
+    RECONNAISSANCE = "reconnaissance"
+    WEAPONIZATION = "weaponization"
+    DELIVERY = "delivery"
+    EXPLOITATION = "exploitation"
+    INSTALLATION = "installation"
+    C2 = "command_and_control"
+    EXFILTRATION = "exfiltration"
+    LATERAL_MOVEMENT = "lateral_movement"
     PRIVILEGE_ESCALATION = "privilege_escalation"
     POST_EXPLOITATION = "post_exploitation"
 
@@ -41,14 +42,15 @@ class KillChainStage(Enum):
 @dataclass
 class DeclarativeTask:
     """High-level declarative task output by the planner LLM"""
+
     task_id: str
     stage: KillChainStage
-    action: str               # e.g. "scan_network", "lateral_move", "exfiltrate"
-    target: str               # host, subnet, or asset identifier
+    action: str  # e.g. "scan_network", "lateral_move", "exfiltrate"
+    target: str  # host, subnet, or asset identifier
     parameters: Dict[str, Any]
-    priority: int             # 1 = highest
-    depends_on: List[str] = field(default_factory=list)   # task_ids
-    status: str = "pending"   # pending | running | done | failed
+    priority: int  # 1 = highest
+    depends_on: List[str] = field(default_factory=list)  # task_ids
+    status: str = "pending"  # pending | running | done | failed
     result: Optional[Dict[str, Any]] = None
     created_at: float = field(default_factory=time.time)
 
@@ -56,6 +58,7 @@ class DeclarativeTask:
 @dataclass
 class EnvironmentState:
     """Structured knowledge base of the scanned environment (avoids context bloat)"""
+
     hosts: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     services: Dict[str, List[str]] = field(default_factory=dict)
     vulnerabilities: Dict[str, List[str]] = field(default_factory=dict)
@@ -86,6 +89,8 @@ class EnvironmentState:
 
     def query(self, query_type: str, **kwargs) -> Any:
         """Generic queryable interface for planner/agents (RAG-style)"""
+        if query_type == "objective":
+            return self.hosts.get("objective", "")
         if query_type == "hosts_on_network":
             subnet = kwargs.get("subnet", "")
             return [h for h in self.hosts if h.startswith(subnet)]
@@ -99,13 +104,15 @@ class EnvironmentState:
         return {}
 
 
-_STAGES_REQUIRING_APPROVAL: frozenset = frozenset({
-    KillChainStage.EXPLOITATION,
-    KillChainStage.LATERAL_MOVEMENT,
-    KillChainStage.EXFILTRATION,
-    KillChainStage.PRIVILEGE_ESCALATION,
-    KillChainStage.POST_EXPLOITATION,
-})
+_STAGES_REQUIRING_APPROVAL: frozenset = frozenset(
+    {
+        KillChainStage.EXPLOITATION,
+        KillChainStage.LATERAL_MOVEMENT,
+        KillChainStage.EXFILTRATION,
+        KillChainStage.PRIVILEGE_ESCALATION,
+        KillChainStage.POST_EXPLOITATION,
+    }
+)
 
 
 class KillChainPlanner:
@@ -115,8 +122,12 @@ class KillChainPlanner:
     Delegates execution to specialist agents (nmap, bash, metasploit, etc.).
     """
 
-    def __init__(self, config: Dict[str, Any], tools: Dict[str, Any],
-                 llm_client: Optional[Any] = None):
+    def __init__(
+        self,
+        config: Dict[str, Any],
+        tools: Dict[str, Any],
+        llm_client: Optional[Any] = None,
+    ):
         self.config = config
         self.tools = tools
         self.llm = llm_client
@@ -167,8 +178,10 @@ class KillChainPlanner:
 
         try:
             response = self.llm.chat(
-                [AIMessage(role="system", content=system),
-                 AIMessage(role="user", content=user)],
+                [
+                    AIMessage(role="system", content=system),
+                    AIMessage(role="user", content=user),
+                ],
                 temperature=0.1,
             )
             raw = response.content.strip()
@@ -183,14 +196,16 @@ class KillChainPlanner:
         for item in items:
             stage_val = item.get("stage", "reconnaissance")
             stage = stage_map.get(stage_val, KillChainStage.RECONNAISSANCE)
-            tasks.append(DeclarativeTask(
-                task_id=str(uuid.uuid4()),
-                stage=stage,
-                action=item.get("action", "unknown"),
-                target=item.get("target", ""),
-                parameters=item.get("parameters", {}),
-                priority=int(item.get("priority", 5)),
-            ))
+            tasks.append(
+                DeclarativeTask(
+                    task_id=str(uuid.uuid4()),
+                    stage=stage,
+                    action=item.get("action", "unknown"),
+                    target=item.get("target", ""),
+                    parameters=item.get("parameters", {}),
+                    priority=int(item.get("priority", 5)),
+                )
+            )
 
         self.task_queue.extend(tasks)
         return tasks
@@ -199,7 +214,9 @@ class KillChainPlanner:
     # Static planning fallback (hardcoded initial plan)
     # ------------------------------------------------------------------
 
-    def plan_red_team(self, objective: str, target_network: str) -> List[DeclarativeTask]:
+    def plan_red_team(
+        self, objective: str, target_network: str
+    ) -> List[DeclarativeTask]:
         """
         Generate a kill-chain plan for a target network.
         LLM decides WHAT; agents execute HOW.
@@ -207,48 +224,56 @@ class KillChainPlanner:
         tasks = []
 
         # Stage 1: Reconnaissance
-        tasks.append(DeclarativeTask(
-            task_id=str(uuid.uuid4()),
-            stage=KillChainStage.RECONNAISSANCE,
-            action="scan_network",
-            target=target_network,
-            parameters={"scan_type": "service_version", "ports": "top_1000"},
-            priority=1,
-        ))
+        tasks.append(
+            DeclarativeTask(
+                task_id=str(uuid.uuid4()),
+                stage=KillChainStage.RECONNAISSANCE,
+                action="scan_network",
+                target=target_network,
+                parameters={"scan_type": "service_version", "ports": "top_1000"},
+                priority=1,
+            )
+        )
 
         # Stage 2: Exploitation planning (depends on recon)
         exploit_task_id = str(uuid.uuid4())
-        tasks.append(DeclarativeTask(
-            task_id=exploit_task_id,
-            stage=KillChainStage.EXPLOITATION,
-            action="exploit_vulnerabilities",
-            target=target_network,
-            parameters={"use_metasploit": True},
-            priority=2,
-            depends_on=[tasks[0].task_id],
-        ))
+        tasks.append(
+            DeclarativeTask(
+                task_id=exploit_task_id,
+                stage=KillChainStage.EXPLOITATION,
+                action="exploit_vulnerabilities",
+                target=target_network,
+                parameters={"use_metasploit": True},
+                priority=2,
+                depends_on=[tasks[0].task_id],
+            )
+        )
 
         # Stage 3: Lateral movement
-        tasks.append(DeclarativeTask(
-            task_id=str(uuid.uuid4()),
-            stage=KillChainStage.LATERAL_MOVEMENT,
-            action="lateral_move",
-            target="internal_network",
-            parameters={"technique": "ssh_key_reuse"},
-            priority=3,
-            depends_on=[exploit_task_id],
-        ))
+        tasks.append(
+            DeclarativeTask(
+                task_id=str(uuid.uuid4()),
+                stage=KillChainStage.LATERAL_MOVEMENT,
+                action="lateral_move",
+                target="internal_network",
+                parameters={"technique": "ssh_key_reuse"},
+                priority=3,
+                depends_on=[exploit_task_id],
+            )
+        )
 
         # Stage 4: Exfiltration
-        tasks.append(DeclarativeTask(
-            task_id=str(uuid.uuid4()),
-            stage=KillChainStage.EXFILTRATION,
-            action="exfiltrate_data",
-            target="critical_assets",
-            parameters={"method": "encrypted_channel"},
-            priority=4,
-            depends_on=[tasks[-1].task_id],
-        ))
+        tasks.append(
+            DeclarativeTask(
+                task_id=str(uuid.uuid4()),
+                stage=KillChainStage.EXFILTRATION,
+                action="exfiltrate_data",
+                target="critical_assets",
+                parameters={"method": "encrypted_channel"},
+                priority=4,
+                depends_on=[tasks[-1].task_id],
+            )
+        )
 
         self.task_queue.extend(tasks)
         return tasks
@@ -257,7 +282,8 @@ class KillChainPlanner:
         """Return the highest-priority ready task (dependencies met)"""
         completed_ids = {t.task_id for t in self.completed_tasks}
         ready = [
-            t for t in self.task_queue
+            t
+            for t in self.task_queue
             if t.status == "pending"
             and all(dep in completed_ids for dep in t.depends_on)
         ]
@@ -306,8 +332,9 @@ class KillChainPlanner:
         self.mark_task_failed(task.task_id, "rejected by operator")
         return task.task_id
 
-    def execute_task(self, task: DeclarativeTask,
-                     auto_approve: bool = False) -> Dict[str, Any]:
+    def execute_task(
+        self, task: DeclarativeTask, auto_approve: bool = False
+    ) -> Dict[str, Any]:
         """Dispatch task to the appropriate specialist agent.
 
         Raises PendingApprovalError for destructive stages unless
@@ -331,7 +358,9 @@ class KillChainPlanner:
             "exfiltrate_data":         self._execute_exfiltrate,
             "privilege_escalation":    self._execute_privesc,
             "post_exploitation":       self._execute_empire,
+            "malware_analysis":        self._execute_malware_analysis,
         }
+
 
         handler = dispatch.get(task.action)
         if not handler:
@@ -348,24 +377,29 @@ class KillChainPlanner:
             return {"error": str(e)}
 
     def _execute_scan(self, task: DeclarativeTask) -> Dict[str, Any]:
-        if "nmap" not in self.tools:
-            return {"error": "nmap tool not available"}
-        scanner = self.tools["nmap"]
-        result = scanner.scan(task.target, **task.parameters)
-        return {"scan_result": result, "stage": task.stage.value}
+        results = {}
+        if "nmap_scanner" in self.tools:
+            results["nmap"] = self.tools["nmap_scanner"].scan_network(task.target, ports="top_100")
+        if "projectdiscovery" in self.tools:
+            pd = self.tools["projectdiscovery"]
+            results["subdomains"] = pd.enumerate_subdomains(task.target)
+            results["http_probe"] = pd.probe_http(task.target)
+        if "recon_ng" in self.tools:
+            results["recon"] = self.tools["recon_ng"].execute_workspace("default", "recon/domains-hosts/brute_hosts", {})
+        return {"scan_result": results, "stage": task.stage.value}
 
     def _execute_exploit(self, task: DeclarativeTask) -> Dict[str, Any]:
-        if "metasploit" not in self.tools:
-            return {"error": "metasploit tool not available"}
-        vulnerable_hosts = self.env_state.query("vulnerable_hosts")
         results = []
+        vulnerable_hosts = self.env_state.query("vulnerable_hosts")
         for host in vulnerable_hosts:
             vulns = self.env_state.vulnerabilities.get(host, [])
             for vuln in vulns:
-                res = self.tools["metasploit"].exploit(host, vuln)
-                results.append({"host": host, "vuln": vuln, "result": res})
+                if "exploitdb" in self.tools:
+                    results.append({"host": host, "searchsploit": self.tools["exploitdb"].search(vuln)})
+                if "metasploit" in self.tools:
+                    res = self.tools["metasploit"].exploit(host, vuln)
+                    results.append({"host": host, "vuln": vuln, "result": res})
         return {"exploits": results}
-
     def _execute_lateral_move(self, task: DeclarativeTask) -> Dict[str, Any]:
         if "ssh_manager" not in self.tools:
             return {"error": "ssh tool not available"}
@@ -400,8 +434,7 @@ class KillChainPlanner:
         llm_verdict = ""
         if result.decompiled and "ai" in self.tools:
             snippets = "\n\n".join(
-                f"// {fn}\n{code}"
-                for fn, code in list(result.decompiled.items())[:3]
+                f"// {fn}\n{code}" for fn, code in list(result.decompiled.items())[:3]
             )
             try:
                 resp = self.tools["ai"].analyze_code(
@@ -435,7 +468,9 @@ class KillChainPlanner:
         module = task.parameters.get("module", "")
         command = task.parameters.get("command", "")
         if module:
-            res = empire.execute_module(agent, module, task.parameters.get("options", {}))
+            res = empire.execute_module(
+                agent, module, task.parameters.get("options", {})
+            )
         else:
             res = empire.run_shell(agent, command or "whoami")
         return res.__dict__
@@ -522,12 +557,14 @@ class KillChainPlanner:
                     "stages": executed,
                 }
 
-            executed.append({
-                "stage": task.stage.value,
-                "action": task.action,
-                "target": task.target,
-                "status": task.status,
-            })
+            executed.append(
+                {
+                    "stage": task.stage.value,
+                    "action": task.action,
+                    "target": task.target,
+                    "status": task.status,
+                }
+            )
 
         return {
             "objective": objective,
@@ -539,3 +576,21 @@ class KillChainPlanner:
             "acquired_assets": self.env_state.acquired_assets,
             "stages": executed,
         }
+
+    def _execute_malware_analysis(self, task: DeclarativeTask) -> Dict[str, Any]:
+        """Agentic Malware Analysis Orchestrator integration"""
+        target_file = task.target
+        results = {}
+        if "yara" in self.tools:
+            results["yara"] = self.tools["yara"].scan_file(target_file)
+        if "radare" in self.tools:
+            results["r2_info"] = self.tools["radare"].analyze_binary(target_file)
+        if "ghidra" in self.tools:
+            results["ghidra"] = self.tools["ghidra"].analyze(target_file)
+        if "jadx" in self.tools and target_file.endswith(".apk"):
+            results["jadx"] = self.tools["jadx"].decompile_apk(target_file, "/tmp/jadx_out")
+        if "volatility" in self.tools and target_file.endswith(".vmem"):
+            results["volatility"] = self.tools["volatility"].run_plugin(target_file, "windows.pslist")
+        if "cyberchef" in self.tools:
+            results["cyberchef"] = self.tools["cyberchef"].bake(target_file, [{"op": "To Base64"}])
+        return {"malware_analysis": results}

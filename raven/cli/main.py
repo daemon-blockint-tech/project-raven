@@ -86,6 +86,7 @@ app.add_typer(train_app, name="train")
 def version():
     """Print the Raven version and banner."""
     from importlib.metadata import version as pkg_version, PackageNotFoundError
+
     _print_banner()
     try:
         v = pkg_version("project-raven")

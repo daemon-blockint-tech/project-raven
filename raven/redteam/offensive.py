@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 # Result type
 # ---------------------------------------------------------------------------
 
+
 class StrategyAttempt(BaseModel):
     strategy: str
     succeeded: bool
@@ -58,11 +59,12 @@ class OffensiveResult(BaseModel):
 # Each function returns a (system_prompt, user_prompt_wrapper) pair.
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class StrategyTemplate:
     name: str
     system_prompt: str
-    user_wrapper: str   # "{q}" gets substituted for the canary question
+    user_wrapper: str  # "{q}" gets substituted for the canary question
 
 
 def _strategies() -> List[StrategyTemplate]:
@@ -103,6 +105,7 @@ def _strategies() -> List[StrategyTemplate]:
 # OffensiveGodmode
 # ---------------------------------------------------------------------------
 
+
 class OffensiveGodmode:
     """Runs synthesised strategies against the active provider for a
     benchmark canary question, reporting which strategies the provider
@@ -116,6 +119,7 @@ class OffensiveGodmode:
     @staticmethod
     def _authorised(supplied_token: str) -> bool:
         from raven.config import settings
+
         if not settings.offensive_redteam_enabled:
             return False
         if not settings.offensive_redteam_session_token:
@@ -137,6 +141,7 @@ class OffensiveGodmode:
         if not self._authorised(authorization_token):
             log.warning("OffensiveGodmode invocation refused — authorization failed")
             from raven.ai.registry import ProviderRegistry
+
             client = client or ProviderRegistry.get_instance().get_client()
             return OffensiveResult(
                 enabled=False,
@@ -149,6 +154,7 @@ class OffensiveGodmode:
             raise ValueError("sandbox_session_id is required")
 
         from raven.ai.registry import ProviderRegistry
+
         if client is None:
             client = ProviderRegistry.get_instance().get_client()
 
@@ -176,12 +182,14 @@ class OffensiveGodmode:
                 succeeded = False
                 score = -1.0
 
-            attempts.append(StrategyAttempt(
-                strategy=strategy.name,
-                succeeded=succeeded,
-                score=score,
-                response_preview=content,
-            ))
+            attempts.append(
+                StrategyAttempt(
+                    strategy=strategy.name,
+                    succeeded=succeeded,
+                    score=score,
+                    response_preview=content,
+                )
+            )
             if succeeded and winner is None:
                 winner = strategy.name
 

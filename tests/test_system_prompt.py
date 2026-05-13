@@ -7,14 +7,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from raven.ai.base import AIMessage, AIResponse, BaseAIClient
+from raven.ai.base import AIMessage
 from raven.ai.providers.lmstudio import LMStudioClient
-from raven.ai.registry import ProviderRegistry, ProviderConfig
+from raven.ai.registry import ProviderRegistry
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def fresh_registry():
@@ -36,6 +37,7 @@ def client() -> LMStudioClient:
 # ---------------------------------------------------------------------------
 # BaseAIClient._build_messages
 # ---------------------------------------------------------------------------
+
 
 class TestBuildMessages:
     def test_prepends_when_no_system_message(self, client):
@@ -74,6 +76,7 @@ class TestBuildMessages:
 # ProviderRegistry system prompt methods
 # ---------------------------------------------------------------------------
 
+
 class TestRegistrySystemPrompt:
     def test_set_and_get(self, registry):
         registry.set_system_prompt("You are Raven.")
@@ -92,6 +95,7 @@ class TestRegistrySystemPrompt:
 
     def test_prompt_persists_in_profile(self, registry, tmp_path, monkeypatch):
         import raven.ai.registry as reg_module
+
         monkeypatch.setattr(reg_module, "_PROFILES_DIR", tmp_path)
         registry.set_system_prompt("Persisted prompt.")
         registry.save_profile("test")
@@ -100,6 +104,7 @@ class TestRegistrySystemPrompt:
 
     def test_prompt_restored_on_profile_load(self, registry, tmp_path, monkeypatch):
         import raven.ai.registry as reg_module
+
         monkeypatch.setattr(reg_module, "_PROFILES_DIR", tmp_path)
         registry.set_system_prompt("Persisted prompt.")
         registry.save_profile("test")
@@ -125,6 +130,7 @@ class TestRegistrySystemPrompt:
 # ---------------------------------------------------------------------------
 # load_system_prompt_from_file
 # ---------------------------------------------------------------------------
+
 
 class TestLoadSystemPromptFromFile:
     def test_load_plain_text(self, registry, tmp_path):
@@ -165,7 +171,9 @@ class TestLoadSystemPromptFromFile:
             registry.load_system_prompt_from_file("/nonexistent/prompt.md")
 
     def test_missing_file_silent_returns_empty(self, registry):
-        result = registry.load_system_prompt_from_file("/nonexistent/prompt.md", silent=True)
+        result = registry.load_system_prompt_from_file(
+            "/nonexistent/prompt.md", silent=True
+        )
         assert result == ""
 
     def test_loads_actual_raven_system_prompt_md(self, registry):
@@ -181,6 +189,7 @@ class TestLoadSystemPromptFromFile:
 # ---------------------------------------------------------------------------
 # initialise_from_config auto-loads prompt
 # ---------------------------------------------------------------------------
+
 
 class TestProviderChatInjectsSystemPrompt:
     """Regression tests for Bug 1: providers' chat() must auto-inject
@@ -220,13 +229,18 @@ class TestProviderChatInjectsSystemPrompt:
 
     def test_openai_compat_chat_injects_prompt_for_user_only_messages(self):
         from raven.ai.providers.openai_compat import OpenAICompatClient
-        client = OpenAICompatClient({
-            "ai_provider": "openai",
-            "ai_api_key": "test",
-        })
+
+        client = OpenAICompatClient(
+            {
+                "ai_provider": "openai",
+                "ai_api_key": "test",
+            }
+        )
         client.system_prompt = "OPERATIONAL_GUARDRAIL"
         captured, fake_post = self._capture_payload(client)
-        with patch("raven.ai.providers.openai_compat.requests.post", side_effect=fake_post):
+        with patch(
+            "raven.ai.providers.openai_compat.requests.post", side_effect=fake_post
+        ):
             client.chat([AIMessage(role="user", content="hi")])
         sent = captured[0]["messages"]
         assert sent[0]["role"] == "system"
@@ -238,10 +252,12 @@ class TestProviderChatInjectsSystemPrompt:
         client.system_prompt = "REGISTRY_PROMPT"
         captured, fake_post = self._capture_payload(client)
         with patch("raven.ai.providers.lmstudio.requests.post", side_effect=fake_post):
-            client.chat([
-                AIMessage(role="system", content="CALLER_PROMPT"),
-                AIMessage(role="user", content="hi"),
-            ])
+            client.chat(
+                [
+                    AIMessage(role="system", content="CALLER_PROMPT"),
+                    AIMessage(role="user", content="hi"),
+                ]
+            )
         sent = captured[0]["messages"]
         # Only ONE system message — the caller's, not the registry's
         system_msgs = [m for m in sent if m["role"] == "system"]
@@ -251,14 +267,15 @@ class TestProviderChatInjectsSystemPrompt:
     def test_model_orchestrator_chat_propagates_system_prompt(self):
         """ModelOrchestrator.chat() routes through client.chat() — must inherit injection."""
         from raven.ai.model_orchestrator import ModelOrchestrator, ModelRole
+
         client = LMStudioClient({"ai_provider": "lmstudio"})
         client.system_prompt = "OPERATIONAL_GUARDRAIL"
         captured, fake_post = self._capture_payload(client)
         orchestrator = ModelOrchestrator(client)
         # Skip the _ensure_loaded round-trip by stubbing it
-        with patch.object(orchestrator, "_ensure_loaded"), \
-             patch.object(orchestrator, "_model_id", return_value="test-model"), \
-             patch("raven.ai.providers.lmstudio.requests.post", side_effect=fake_post):
+        with patch.object(orchestrator, "_ensure_loaded"), patch.object(
+            orchestrator, "_model_id", return_value="test-model"
+        ), patch("raven.ai.providers.lmstudio.requests.post", side_effect=fake_post):
             orchestrator.chat(ModelRole.FAST, [AIMessage(role="user", content="hi")])
         sent = captured[0]["messages"]
         assert sent[0]["role"] == "system"
@@ -278,6 +295,7 @@ class TestSystemPromptPathTraversal:
         Returns True if path is allowed, False otherwise."""
         import os
         from pathlib import Path as _Path
+
         try:
             target = _Path(raw_path).resolve(strict=False)
             cwd = _Path(os.getcwd()).resolve()
@@ -300,7 +318,9 @@ class TestSystemPromptPathTraversal:
         (tmp_path / "sys.txt").write_text("ok")
         assert self._jail_check("sys.txt") is True
 
-    def test_jail_accepts_resolved_absolute_path_inside_cwd(self, tmp_path, monkeypatch):
+    def test_jail_accepts_resolved_absolute_path_inside_cwd(
+        self, tmp_path, monkeypatch
+    ):
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "sys.txt"
         f.write_text("ok")
@@ -311,6 +331,7 @@ class TestSystemPromptPathTraversal:
         pytest.importorskip("paramiko")
         from fastapi.testclient import TestClient
         from raven.api.main import app
+
         client = TestClient(app)
         resp = client.post("/ai/system-prompt", json={"file": "/etc/passwd"})
         assert resp.status_code == 403
@@ -320,23 +341,29 @@ class TestInitialiseAutoLoad:
     def test_auto_loads_prompt_from_path(self, registry, tmp_path):
         f = tmp_path / "sys.txt"
         f.write_text("Auto-loaded prompt.")
-        registry.initialise_from_config({
-            "ai_provider": "lmstudio",
-            "ai_system_prompt_path": str(f),
-        })
+        registry.initialise_from_config(
+            {
+                "ai_provider": "lmstudio",
+                "ai_system_prompt_path": str(f),
+            }
+        )
         assert registry.get_system_prompt() == "Auto-loaded prompt."
         assert registry.get_client().system_prompt == "Auto-loaded prompt."
 
     def test_skips_if_path_empty(self, registry):
-        registry.initialise_from_config({
-            "ai_provider": "lmstudio",
-            "ai_system_prompt_path": "",
-        })
+        registry.initialise_from_config(
+            {
+                "ai_provider": "lmstudio",
+                "ai_system_prompt_path": "",
+            }
+        )
         assert registry.get_system_prompt() == ""
 
     def test_silent_on_missing_file(self, registry):
-        registry.initialise_from_config({
-            "ai_provider": "lmstudio",
-            "ai_system_prompt_path": "/no/such/file.md",
-        })
+        registry.initialise_from_config(
+            {
+                "ai_provider": "lmstudio",
+                "ai_system_prompt_path": "/no/such/file.md",
+            }
+        )
         assert registry.get_system_prompt() == ""

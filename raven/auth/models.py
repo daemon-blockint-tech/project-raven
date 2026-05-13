@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -13,9 +13,9 @@ from pydantic import BaseModel, Field
 class Role(str, Enum):
     """Three-tier RBAC. Higher roles inherit lower-role permissions."""
 
-    VIEWER = "viewer"        # read-only
-    OPERATOR = "operator"    # can run hunts, mitigations, set targets
-    ADMIN = "admin"          # can rotate AI providers, change system prompt, manage users
+    VIEWER = "viewer"  # read-only
+    OPERATOR = "operator"  # can run hunts, mitigations, set targets
+    ADMIN = "admin"  # can rotate AI providers, change system prompt, manage users
 
     @property
     def rank(self) -> int:
@@ -28,6 +28,7 @@ class Role(str, Enum):
 # ---------------------------------------------------------------------------
 # Domain
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class User:
@@ -46,6 +47,7 @@ class User:
 # ---------------------------------------------------------------------------
 # Request / response payloads
 # ---------------------------------------------------------------------------
+
 
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=1, max_length=64)
@@ -73,6 +75,8 @@ class UserPublic(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=64, pattern=r"^[A-Za-z0-9_.-]+$")
+    username: str = Field(
+        ..., min_length=3, max_length=64, pattern=r"^[A-Za-z0-9_.-]+$"
+    )
     password: str = Field(..., min_length=12, max_length=256)
     roles: List[Role] = Field(default_factory=lambda: [Role.VIEWER])

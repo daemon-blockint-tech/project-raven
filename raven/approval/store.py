@@ -18,6 +18,7 @@ from raven.approval.models import PendingApproval
 # PendingApprovalStore — queue of waiting decisions
 # ---------------------------------------------------------------------------
 
+
 class PendingApprovalStore:
     """Thread-safe in-memory queue of pending approval requests."""
 
@@ -41,7 +42,8 @@ class PendingApprovalStore:
         now = time.time()
         with self._lock:
             items = [
-                item for item in self._items.values()
+                item
+                for item in self._items.values()
                 if item.deadline_at > now and (actor is None or item.actor == actor)
             ]
         return sorted(items, key=lambda x: x.created_at)
@@ -59,6 +61,7 @@ class PendingApprovalStore:
 # ---------------------------------------------------------------------------
 # AllowlistStore — patterns the operator has chosen "always allow"
 # ---------------------------------------------------------------------------
+
 
 class AllowlistStore:
     """Thread-safe permanent allowlist of regex patterns."""

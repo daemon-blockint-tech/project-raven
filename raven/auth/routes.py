@@ -46,7 +46,9 @@ async def refresh(payload: RefreshRequest) -> TokenPair:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     user = user_store().get(claims["sub"])
     if user is None or user.disabled:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive"
+        )
 
     # Rotate refresh token (revoke old, issue new) — defence in depth against theft
     mgr.revoke(claims["jti"])
@@ -66,8 +68,10 @@ async def logout(payload: RefreshRequest, user: User = Depends(current_user)):
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     if claims["sub"] != user.username:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Refresh token does not belong to the current user")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Refresh token does not belong to the current user",
+        )
     mgr.revoke(claims["jti"])
     return {"revoked": True}
 

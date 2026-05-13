@@ -77,7 +77,11 @@ class ABTestRouter:
         if self.run.state != ABTestState.RUNNING:
             return _VARIANT_INCUMBENT
         rng = _rand or random
-        return _VARIANT_CANDIDATE if rng.random() < self.run.traffic_pct else _VARIANT_INCUMBENT
+        return (
+            _VARIANT_CANDIDATE
+            if rng.random() < self.run.traffic_pct
+            else _VARIANT_INCUMBENT
+        )
 
     # ------------------------------------------------------------------
     # Recording outcomes
@@ -131,7 +135,9 @@ class ABTestRouter:
                     reason="abtest_lost",
                 )
             except Exception as exc:
-                log.warning("abtest.rollback.failed run=%s err=%s", self.run.run_id, exc)
+                log.warning(
+                    "abtest.rollback.failed run=%s err=%s", self.run.run_id, exc
+                )
 
 
 def get_router(run_id: str) -> Optional[ABTestRouter]:

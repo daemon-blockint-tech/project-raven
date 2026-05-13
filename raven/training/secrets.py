@@ -11,7 +11,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import logging
-import os
 import threading
 from typing import Optional
 
@@ -54,7 +53,7 @@ class FernetVault:
             return ""
         if not ciphertext.startswith(_PREFIX):
             return ciphertext  # already plaintext (legacy)
-        token = ciphertext[len(_PREFIX):]
+        token = ciphertext[len(_PREFIX) :]
         return self._fernet.decrypt(token.encode("utf-8")).decode("utf-8")
 
 
@@ -69,6 +68,7 @@ def vault() -> FernetVault:
     with _lock:
         if _singleton is None:
             from raven.config import settings
+
             _singleton = FernetVault(secret=settings.secret_key)
         return _singleton
 

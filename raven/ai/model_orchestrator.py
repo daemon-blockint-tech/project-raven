@@ -22,13 +22,13 @@ from .lmstudio_client import AIMessage, AIResponse, LMStudioClient
 
 
 class ModelRole(str, Enum):
-    FAST   = "fast"
+    FAST = "fast"
     REASON = "reason"
     VISION = "vision"
 
 
 _MODEL_IDS: Dict[ModelRole, str] = {
-    ModelRole.FAST:   "ibm/granite-4-micro",
+    ModelRole.FAST: "ibm/granite-4-micro",
     ModelRole.REASON: "nvidia/nemotron-3-nano-4b",
     ModelRole.VISION: "zai-org/glm-4.6v-flash",
 }
@@ -54,7 +54,7 @@ class ModelOrchestrator:
     def __init__(self, client: LMStudioClient):
         self._client = client
         self._active: Dict[ModelRole, bool] = {
-            ModelRole.FAST:   False,
+            ModelRole.FAST: False,
             ModelRole.REASON: False,
             ModelRole.VISION: False,
         }
@@ -131,7 +131,7 @@ class ModelOrchestrator:
         """REASON model: kill-chain planning from environment state."""
         messages = [
             AIMessage(role="system", content=system_prompt),
-            AIMessage(role="user",   content=state_summary),
+            AIMessage(role="user", content=state_summary),
         ]
         return self.chat(ModelRole.REASON, messages, temperature=0.1)
 
@@ -155,8 +155,14 @@ class ModelOrchestrator:
         self._client.model = self._model_id(ModelRole.VISION)
         try:
             messages = [
-                AIMessage(role="system", content="You are a security analyst. Analyze the provided image for threat indicators, anomalies, or evidence relevant to an active investigation."),
-                AIMessage(role="user",   content=f"data:image/png;base64,{image_b64}\n\n{prompt}"),
+                AIMessage(
+                    role="system",
+                    content="You are a security analyst. Analyze the provided image for threat indicators, anomalies, or evidence relevant to an active investigation.",
+                ),
+                AIMessage(
+                    role="user",
+                    content=f"data:image/png;base64,{image_b64}\n\n{prompt}",
+                ),
             ]
             return self._client.chat(messages)
         finally:

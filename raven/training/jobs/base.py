@@ -6,7 +6,7 @@ import abc
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from raven.training.client import TinkerJobStatus, tinker_client
 from raven.training.models import (
@@ -80,7 +80,12 @@ class JobBase(abc.ABC):
             actor=self.actor,
         )
         registry().register_job(job)
-        log.info("training.job.started recipe=%s base=%s rank=%d", self.recipe.value, self.base_model, self.rank)
+        log.info(
+            "training.job.started recipe=%s base=%s rank=%d",
+            self.recipe.value,
+            self.base_model,
+            self.rank,
+        )
         return job
 
     def poll(self, job: TrainingJob) -> TrainingJob:
@@ -108,7 +113,9 @@ class JobBase(abc.ABC):
             registry().update_job(job)
         return job
 
-    def to_model_version(self, job: TrainingJob, name: Optional[str] = None) -> ModelVersion:
+    def to_model_version(
+        self, job: TrainingJob, name: Optional[str] = None
+    ) -> ModelVersion:
         """Register a ModelVersion from a finished job."""
         if job.state != JobState.SUCCEEDED:
             raise ValueError(f"job not in SUCCEEDED state (got {job.state})")

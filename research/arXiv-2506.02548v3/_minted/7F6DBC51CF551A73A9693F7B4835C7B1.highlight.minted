@@ -8,8 +8,8 @@ Here\PYGZsq{}s the result of running `cat \PYGZhy{}n` on /workspace/src\PYGZhy{}
      3	 *
      4	 * SPDX\PYGZhy{}License\PYGZhy{}Identifier: BSD\PYGZhy{}2\PYGZhy{}Clause
      5	 */
-     6	
+     6
      7	\PYGZsh{}pragma once
-     8	
+     8
 [...]
 \end{MintedVerbatim}

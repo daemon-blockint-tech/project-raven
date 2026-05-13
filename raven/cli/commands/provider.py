@@ -14,14 +14,15 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Optional
 
 import typer
 
 from raven.ai.base import SUPPORTED_PROVIDERS
 from raven.ai.registry import ProviderRegistry
 
-app = typer.Typer(name="provider", help="Manage AI provider and profiles.", no_args_is_help=True)
+app = typer.Typer(
+    name="provider", help="Manage AI provider and profiles.", no_args_is_help=True
+)
 
 
 def _registry() -> ProviderRegistry:
@@ -30,9 +31,14 @@ def _registry() -> ProviderRegistry:
 
 @app.command("set")
 def provider_set(
-    provider: str = typer.Argument(..., help="Provider name: lmstudio|openai|openrouter|anthropic|ollama|opencode|nous"),
+    provider: str = typer.Argument(
+        ...,
+        help="Provider name: lmstudio|openai|openrouter|anthropic|ollama|opencode|nous",
+    ),
     key: str = typer.Option("", "--key", "-k", help="API key for cloud providers"),
-    model: str = typer.Option("", "--model", "-m", help="Model name (or provider:model shorthand)"),
+    model: str = typer.Option(
+        "", "--model", "-m", help="Model name (or provider:model shorthand)"
+    ),
     base_url: str = typer.Option("", "--base-url", "-u", help="Override base URL"),
 ):
     """Switch the active AI provider (persists for current session)."""
@@ -52,7 +58,9 @@ def provider_set(
     typer.echo(f"  Model:    {status['model']}")
     typer.echo(f"  API key:  {'set' if status['has_api_key'] else 'not set'}")
     reachable = client.is_available()
-    typer.echo(f"  Status:   {'✓ reachable' if reachable else '✗ unreachable (check key/URL)'}")
+    typer.echo(
+        f"  Status:   {'✓ reachable' if reachable else '✗ unreachable (check key/URL)'}"
+    )
 
 
 @app.command("status")

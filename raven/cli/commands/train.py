@@ -3,23 +3,26 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import typer
 
 from raven.training.client import tinker_client
 from raven.training.eval import evaluate_model
 from raven.training.jobs import CodeRLJob, DistillJob, SFTJob
-from raven.training.models import JobRecipe, ModelStatus
+from raven.training.models import JobRecipe
 from raven.training.registry import registry
 
-app = typer.Typer(name="train", help="Manage Tinker training jobs and model versions.",
-                  no_args_is_help=True)
+app = typer.Typer(
+    name="train",
+    help="Manage Tinker training jobs and model versions.",
+    no_args_is_help=True,
+)
 
 
 # ---------------------------------------------------------------------------
 # Tinker status
 # ---------------------------------------------------------------------------
+
 
 @app.command("status")
 def cmd_status():
@@ -36,9 +39,12 @@ def cmd_status():
 # Datasets
 # ---------------------------------------------------------------------------
 
+
 @app.command("dataset-build")
 def cmd_dataset_build(
-    source: str = typer.Option(..., "--source", help="audit|cybergym|killchain|redteam|distillation"),
+    source: str = typer.Option(
+        ..., "--source", help="audit|cybergym|killchain|redteam|distillation"
+    ),
     out: str = typer.Option(..., "--out", help="Output JSONL path"),
     name: str = typer.Option("dataset", "--name"),
     limit: int = typer.Option(1000, "--limit"),
@@ -46,13 +52,23 @@ def cmd_dataset_build(
     """Build a dataset from one of the runtime sources."""
     if source == "audit":
         from raven.training.datasets import build_audit_dataset
+
         ds = build_audit_dataset(out_path=out, name=name, limit=limit)
     elif source in {"cybergym", "killchain", "redteam"}:
-        typer.echo(f"[note] {source} dataset builder requires runs/tasks/detections via API or fixtures.", err=True)
-        typer.echo("Use the REST endpoint POST /training/datasets after seeding the source data.", err=True)
+        typer.echo(
+            f"[note] {source} dataset builder requires runs/tasks/detections via API or fixtures.",
+            err=True,
+        )
+        typer.echo(
+            "Use the REST endpoint POST /training/datasets after seeding the source data.",
+            err=True,
+        )
         raise typer.Exit(2)
     elif source == "distillation":
-        typer.echo("[note] distillation builder requires a prompt corpus (file). Pass via REST API.", err=True)
+        typer.echo(
+            "[note] distillation builder requires a prompt corpus (file). Pass via REST API.",
+            err=True,
+        )
         raise typer.Exit(2)
     else:
         typer.echo(f"[error] unknown source: {source!r}", err=True)
@@ -64,7 +80,9 @@ def cmd_dataset_build(
 @app.command("dataset-list")
 def cmd_dataset_list():
     for ds in registry().list_datasets():
-        typer.echo(f"{ds.dataset_id}  {ds.source.value:14s}  {ds.example_count:>6d}  {ds.path}")
+        typer.echo(
+            f"{ds.dataset_id}  {ds.source.value:14s}  {ds.example_count:>6d}  {ds.path}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +106,7 @@ def cmd_job_start(
 ):
     """Submit a training job to Tinker."""
     from raven.config import settings
+
     if recipe not in _RECIPES:
         typer.echo(f"[error] recipe must be one of: {list(_RECIPES)}", err=True)
         raise typer.Exit(1)
@@ -122,25 +141,33 @@ def cmd_job_status(job_id: str = typer.Argument(...)):
     if dataset is None:
         typer.echo("[warn] dataset record is missing; polling without it.", err=True)
         from raven.training.models import Dataset, DatasetSource
+
         dataset = Dataset(source=DatasetSource.MANUAL, name="orphan", path="")
-    refreshed = job_cls(dataset=dataset, base_model=job.base_model, rank=job.rank).poll(job)
+    refreshed = job_cls(dataset=dataset, base_model=job.base_model, rank=job.rank).poll(
+        job
+    )
     typer.echo(json.dumps(refreshed.model_dump(), indent=2, default=str))
 
 
 @app.command("job-list")
 def cmd_job_list():
     for j in registry().list_jobs():
-        typer.echo(f"{j.job_id}  {j.recipe.value:9s}  {j.state.value:11s}  {j.base_model}")
+        typer.echo(
+            f"{j.job_id}  {j.recipe.value:9s}  {j.state.value:11s}  {j.base_model}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
 
+
 @app.command("model-list")
 def cmd_model_list():
     for m in registry().list_models():
-        scores = ",".join(f"{k}={v:.2f}" for k, v in m.eval_scores.items()) or "(no eval)"
+        scores = (
+            ",".join(f"{k}={v:.2f}" for k, v in m.eval_scores.items()) or "(no eval)"
+        )
         typer.echo(f"{m.model_id}  {m.status.value:10s}  {m.name:30s}  {scores}")
 
 
@@ -165,8 +192,9 @@ def cmd_model_promote(model_id: str = typer.Argument(...)):
 
 
 @app.command("model-rollback")
-def cmd_model_rollback(model_id: str = typer.Argument(...),
-                       reason: str = typer.Option(None, "--reason")):
+def cmd_model_rollback(
+    model_id: str = typer.Argument(...), reason: str = typer.Option(None, "--reason")
+):
     try:
         result = registry().rollback_model(model_id, reason=reason)
     except KeyError as exc:
