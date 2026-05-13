@@ -71,6 +71,7 @@ class OpenAICompatClient(BaseAIClient):
         tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs: Any,
     ) -> AIResponse:
+        messages = self._build_messages(messages)
         payload: Dict[str, Any] = {
             "messages": [{"role": m.role, "content": m.content} for m in messages],
             "temperature": temperature if temperature is not None else self.temperature,

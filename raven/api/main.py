@@ -546,13 +546,27 @@ async def ai_set_system_prompt(payload: Dict[str, Any]):
 
     Body options (mutually exclusive, checked in order):
       {"prompt": "You are Raven..."}           — raw text
-      {"file": "RAVEN_SYSTEM_PROMPT.md"}       — load from file path
+      {"file": "RAVEN_SYSTEM_PROMPT.md"}       — load from file (must be inside CWD)
     """
+    import os
+    from pathlib import Path as _Path
+
     registry = ProviderRegistry.get_instance()
     if "file" in payload:
-        path = payload["file"]
+        raw_path = str(payload["file"])
+        # Jail: resolved path MUST live inside the server CWD to prevent
+        # arbitrary file read (e.g. /etc/passwd) via this unauthenticated endpoint.
         try:
-            prompt = registry.load_system_prompt_from_file(path)
+            target = _Path(raw_path).resolve(strict=False)
+            cwd = _Path(os.getcwd()).resolve()
+            target.relative_to(cwd)
+        except ValueError:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Path outside server working directory is not allowed: {raw_path!r}",
+            )
+        try:
+            prompt = registry.load_system_prompt_from_file(str(target))
         except FileNotFoundError as e:
             raise HTTPException(status_code=404, detail=str(e))
     elif "prompt" in payload:

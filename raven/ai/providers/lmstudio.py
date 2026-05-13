@@ -88,6 +88,7 @@ class LMStudioClient(BaseAIClient):
         context_length: Optional[int] = None,
         **kwargs: Any,
     ) -> AIResponse:
+        messages = self._build_messages(messages)
         if tools:
             return self._compat_chat(messages, tools=tools,
                                      temperature=temperature, max_tokens=max_tokens)

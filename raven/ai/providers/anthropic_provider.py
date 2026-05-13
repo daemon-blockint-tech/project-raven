@@ -54,6 +54,7 @@ class AnthropicClient(BaseAIClient):
         if self._import_error:
             raise ImportError(self._import_error)
 
+        messages = self._build_messages(messages)
         system_parts = [m.content for m in messages if m.role == "system"]
         user_messages = [
             {"role": m.role, "content": m.content}
