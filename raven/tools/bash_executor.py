@@ -1,6 +1,6 @@
 """Bash command executor for local and remote script execution"""
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Union
 import subprocess
 import time
 from dataclasses import dataclass
@@ -26,19 +26,36 @@ class BashExecutor:
         self.timeout = config.get("bash_timeout", 300)
         
     def execute(self, command: str, timeout: Optional[int] = None,
-                cwd: Optional[str] = None, env: Optional[Dict[str, str]] = None) -> BashResult:
-        """Execute a bash command"""
+                cwd: Optional[str] = None, env: Optional[Dict[str, str]] = None,
+                allow_shell: bool = False) -> BashResult:
+        """Execute a command.
+
+        By default the command is split with :func:`shlex.split` and run with
+        ``shell=False``. This eliminates the shell-injection class of bug for
+        the common case where the caller has built a static command string.
+
+        ``allow_shell=True`` preserves the legacy ``shell=True`` behaviour for
+        callers that *genuinely* need shell features (pipes, redirects, glob
+        expansion). The caller takes responsibility for sanitising input;
+        the result row records this in ``command`` so audit logs can grep
+        for ``allow_shell=true`` usage. Closes VULN-3 (latent shell injection).
+        """
         timeout = timeout or self.timeout
         start_time = time.time()
-        
+
         try:
+            popen_args: Any
+            if allow_shell:
+                popen_args = command
+            else:
+                popen_args = shlex.split(command)
             process = subprocess.Popen(
-                command,
-                shell=True,
+                popen_args,
+                shell=allow_shell,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=cwd,
-                env=env
+                env=env,
             )
             
             try:

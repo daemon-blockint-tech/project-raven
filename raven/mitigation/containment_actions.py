@@ -119,15 +119,36 @@ class ContainmentActions:
             )
     
     def terminate_process(self, host: str, pid: int) -> ContainmentResult:
-        """Terminate a process on a host"""
+        """Terminate a process on a host.
+
+        ``pid`` is coerced to ``int`` to eliminate the latent shell-injection
+        path noted in VULN-3 (``f"kill -9 {pid}"``). A non-integer pid raises
+        ``ValueError`` which becomes a structured failure result rather than
+        a shell-meta-character interpolation.
+        """
         import uuid
         start_time = time.time()
-        
+
         try:
-            # Use SSH to kill process
+            pid_int = int(pid)
+            if pid_int <= 0:
+                raise ValueError(f"pid must be > 0, got {pid_int}")
+        except (TypeError, ValueError) as exc:
+            return ContainmentResult(
+                action_id=str(uuid.uuid4()),
+                action_type="process_termination",
+                target=f"{host}:{pid}",
+                success=False,
+                execution_time=time.time() - start_time,
+                timestamp=time.time(),
+                details={"error": f"invalid pid: {exc}"},
+            )
+
+        try:
+            # Use SSH to kill process — pid_int is now provably a positive int
             if "ssh" in self.tools:
                 ssh_result = self.tools["ssh"].execute_command(
-                    host, f"kill -9 {pid}"
+                    host, f"kill -9 {pid_int}"
                 )
                 success = ssh_result.success
             else:

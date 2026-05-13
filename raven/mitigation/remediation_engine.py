@@ -24,16 +24,33 @@ class RemediationEngine:
         self.config = config
         self.tools = tools
         
+    # Allowed shape of a Debian/RPM-style package id. Closes VULN-3 latent
+    # command-injection by refusing patch_ids that contain shell metacharacters.
+    _PATCH_ID_RE = __import__("re").compile(r"^[A-Za-z0-9][A-Za-z0-9._+:~=-]{0,127}$")
+
     def apply_patch(self, host: str, patch_id: str) -> RemediationResult:
         """Apply a security patch to a host"""
+        import shlex
         import uuid
         start_time = time.time()
-        
+
+        if not self._PATCH_ID_RE.match(patch_id):
+            return RemediationResult(
+                action_id=str(uuid.uuid4()),
+                action_type="patch_application",
+                target=f"{host}:{patch_id}",
+                success=False,
+                execution_time=time.time() - start_time,
+                timestamp=time.time(),
+                details={"error": "invalid patch_id format"},
+            )
+
         try:
             # Use SSH to apply patch
             if "ssh" in self.tools:
+                quoted_id = shlex.quote(patch_id)
                 ssh_result = self.tools["ssh"].execute_command(
-                    host, f"apt-get install -y {patch_id}"
+                    host, f"apt-get install -y {quoted_id}"
                 )
                 success = ssh_result.success
             else:

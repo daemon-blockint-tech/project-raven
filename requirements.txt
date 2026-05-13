@@ -27,7 +27,7 @@ shodan==1.31.0
 python-nmap==0.7.1
 paramiko==3.4.0
 pymetasploit3==1.0.5
-pyghidra==1.3.0
+
 
 # Data Processing
 celery==5.3.6

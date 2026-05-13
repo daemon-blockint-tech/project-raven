@@ -127,6 +127,11 @@ class Settings(BaseSettings):
     model_path: str = "./models"
     anomaly_threshold: float = 0.95
     zero_day_confidence: float = 0.85
+    # Closes VULN-4 (insecure deserialisation). pickle/joblib model loading
+    # is RCE-equivalent on attacker-controlled files. Default off; must be
+    # explicitly enabled per environment with operator acknowledgement that
+    # all model files in model_path are trusted.
+    allow_pickle_models: bool = False
 
     # -----------------------------------------------------------------
     # Shodan
@@ -192,6 +197,42 @@ class Settings(BaseSettings):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v
 
+    # Operator opt-out for the JWT-secret guard — required for the dev default
+    # to be honoured. Without this set, the default secret refuses to boot in
+    # ANY environment (closes VULN-1: hardcoded JWT secret enabling forged
+    # admin tokens). Loud warning emitted on every start when the override
+    # is active.
+    allow_insecure_defaults: bool = False
+
+    @model_validator(mode="after")
+    def _enforce_secret_key_floor(self) -> "Settings":
+        """Default JWT secret is unsafe in every environment.
+
+        The hardcoded fallback is meant for ``python -c`` smoke tests only.
+        Any real run — even local dev — must either provide a real
+        ``SECRET_KEY`` or explicitly opt out via
+        ``RAVEN_ALLOW_INSECURE_DEFAULTS=true``.
+        """
+        if self.secret_key == _DEFAULT_SECRET and not self.allow_insecure_defaults:
+            raise ValueError(
+                "SECRET_KEY is unset (using the dev default). This allows any "
+                "attacker to forge admin JWTs. Either:\n"
+                "  • set SECRET_KEY to a strong random value (e.g. "
+                "`openssl rand -hex 32`), OR\n"
+                "  • set RAVEN_ALLOW_INSECURE_DEFAULTS=true to suppress this "
+                "check (DEVELOPMENT ONLY)."
+            )
+        if self.secret_key == _DEFAULT_SECRET:
+            import warnings
+            warnings.warn(
+                "RAVEN: running with the default JWT secret. Anyone with the "
+                "source code can mint admin tokens. Do not expose this "
+                "instance to any untrusted network.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        return self
+
     @model_validator(mode="after")
     def _enforce_prod_safety(self) -> "Settings":
         """Refuse to start in prod with insecure defaults."""
@@ -201,6 +242,8 @@ class Settings(BaseSettings):
         errors: list[str] = []
         if self.secret_key == _DEFAULT_SECRET or len(self.secret_key) < 32:
             errors.append("SECRET_KEY must be set to a strong random value (>=32 chars) in prod")
+        if self.allow_insecure_defaults:
+            errors.append("RAVEN_ALLOW_INSECURE_DEFAULTS must be False in prod")
         if self.debug:
             errors.append("DEBUG must be False in prod")
         if "*" in self.cors_origins:

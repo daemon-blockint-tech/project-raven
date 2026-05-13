@@ -161,8 +161,31 @@ class AnomalyDetector:
             pickle.dump(model_data, f)
     
     def load_model(self, path: str) -> None:
-        """Load trained model from disk"""
-        with open(path, 'rb') as f:
+        """Load trained model from disk.
+
+        Refuses to deserialise unless ``settings.allow_pickle_models`` is
+        explicitly enabled AND the resolved path stays under
+        ``settings.model_path``. Closes VULN-4 (pickle RCE on
+        attacker-controlled model files).
+        """
+        from pathlib import Path as _Path
+        from raven.config import settings
+
+        if not settings.allow_pickle_models:
+            raise PermissionError(
+                "pickle model loading is disabled. Set ALLOW_PICKLE_MODELS=true "
+                "and confirm every file under MODEL_PATH is trusted."
+            )
+        resolved = _Path(path).resolve(strict=False)
+        root = _Path(settings.model_path).resolve()
+        try:
+            resolved.relative_to(root)
+        except ValueError as exc:
+            raise PermissionError(
+                f"refusing to load model outside MODEL_PATH ({root}): {path}"
+            ) from exc
+
+        with open(resolved, 'rb') as f:
             model_data = pickle.load(f)
         
         self.model = model_data["model"]

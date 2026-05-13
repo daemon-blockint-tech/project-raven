@@ -202,10 +202,31 @@ class ZeroDayDetector:
         joblib.dump(model_data, path)
 
     def load_models(self, path: str) -> None:
-        path = os.path.realpath(path)
-        if not os.path.isfile(path):
-            raise FileNotFoundError(f"Model file not found: {path}")
-        model_data = joblib.load(path)
+        """Load trained zero-day detection models.
+
+        joblib uses pickle under the hood, so loading is RCE-equivalent on
+        attacker-controlled files. Requires ``settings.allow_pickle_models``
+        + the path to live under ``settings.model_path``. Closes VULN-4.
+        """
+        from pathlib import Path as _Path
+        from raven.config import settings
+
+        if not settings.allow_pickle_models:
+            raise PermissionError(
+                "joblib model loading is disabled. Set ALLOW_PICKLE_MODELS=true "
+                "and confirm every file under MODEL_PATH is trusted."
+            )
+        resolved = _Path(path).resolve(strict=False)
+        root = _Path(settings.model_path).resolve()
+        try:
+            resolved.relative_to(root)
+        except ValueError as exc:
+            raise PermissionError(
+                f"refusing to load model outside MODEL_PATH ({root}): {path}"
+            ) from exc
+        if not resolved.is_file():
+            raise FileNotFoundError(f"Model file not found: {resolved}")
+        model_data = joblib.load(str(resolved))
         self.models = model_data["models"]
         self.feature_keys = model_data.get("feature_keys", [])
         self.confidence_threshold = model_data["confidence_threshold"]
