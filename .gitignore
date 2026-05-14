@@ -79,3 +79,7 @@ dmypy.json
 .venv/
 venv/
 env/
+
+# Excluded directories
+.windsurf/
+docs/local/
